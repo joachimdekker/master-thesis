@@ -26,13 +26,13 @@ Consequently, they want to adopt the 'sandbox' environment and develop a tool ca
 
 In contrast with existing research on extracting models from spreadsheets into relational databases @cunha_spreadsheets_2009, where the whole spreadsheet is and all of its data is extracted into a model, focussing on the computational model provides a unique viewpoint where we only consider the output of selected cells and see the excel sheet as an 'input-output' model. It begs the following question:
 
-#block([*(RQ)* Does there exist a formal mapping from Excel sheets to high level code?], inset: 10pt)<researchQuestions:mainQuestion>
+#block([*(RQ)* Does there exist a formal mapping from Excel sheets to readable high level code?], inset: 10pt)<researchQuestions:mainQuestion>
 
-This question contains several other questions, namely
+This question contains several other questions, namely 
 
 #enum(numbering: n => strong[(RQ#n)], indent: 10pt, 
-  [Can a compiler between Excel sheets and high level code be constructed?],
-  [What is the difference between the compiled program and excel formulas?], 
+  [Does there exist a human readable high level code representation of combinations of excel formulas?],
+  [Can a iterative calculation be efficiently implemented?],
   [How can the mapping between excel formulas and code be verified?],
 )<researchQuestions:subQuestions>
 
@@ -124,13 +124,26 @@ This question contains several other questions, namely
 // //   - #strong[RQ3.1] This is what a sub-research question looks like
 
 = Related Work <related-work>
-While little to no literature exists on the conversion of spreadsheets to executable programs, the paradigm of converting loosely based spreadsheets to a more structured format has been exhaustively researched.
+The conversion of code contains a few sections
 
-#citeauthor(<cunha_spreadsheet_2015>) propose the term spreadsheet engineering, which involves 
+== Function Extraction
+#citeauthor(<lano_agile_2017>) describe a way to convert an excel application to code by extracting a UML diagram out of a spreadsheet and converting it to code, but the whole process is manual. // Do we really want to make note of this?
+
+Object oriented models are often used to validate spreadsheets to reduce errors @engels_classsheets_2005, @cunha_spreadsheet_2015. The automated extraction of such a model is also proposed by #citeauthor(<cunha_automatically_2010>), where functional dependencies are used to detect dependencies between columns like in database normalization, and construct a model of this. They augment this with OCL to also describe the models constraints @cunha_relational_2012.
+
+#citeauthor(<sestoft_spreadsheet_2006>) describes a full alternative implementation of spreadsheets, with subsequent master theses expanding upon the work @iversen_runtime_nodate @poulsen_optimized_nodate
+describe how to efficiently calculate the values in a spreadsheet using the support graph: a more organized version of the functional dependencies used in @cunha_automatically_2010. While this technique can be used, the literature mostly uses the support graph for the recalculation of cells. 
+
+Outside the literature, few packages exist that support calling excel calculations. EPPlus @epplus_software_epplus_nodate, Espose Cells @aspose_espose_nodate, Apache POI @apache_software_apache_nodate, and SyncFusion @syncfusion_syncfusion_nodate all use their own calculation engine based on the dependencies, but do not use a support graph like in @sestoft_spreadsheet_2006. The latter also support circular dependencies but uses a different update model than in excel, where the early stopping (i.e. the definition of when the values do not differ that much) of the iterative update cannot be defined, it just updates the sheet a set amount of times.
+
+== Validation of excel formulas
+To verify the semantics of the program, the semantics of Excel should be defined so they can be compared with the semantics of the higher level language.
+
+#citeauthor(<bock_semantics_2020>) defines the operational semantics for a self-made spreadsheet framework @sestoft_sheet-defined_2013 which closely reflects and closely resembles the Excel semantics.
 
 
 
-// Discuss the literature related to your proposal. Focus on concepts and ideas, how this relates to your proposal. Do not describe each paper individually, but as a collective.
+// Discuss the literature related to your proposal. Focu s on concepts and ideas, how this relates to your proposal. Do not describe each paper individually, but as a collective.
 
 // Aim for a "matrix" structure of the related work: What are the features desired from the outcome of your research? How are these features delivered by existing work? Are there gaps unanswered by existing work?
 
@@ -183,6 +196,13 @@ presented in @tab:risk-register.
         [Laptop gets stolen], [1], [5], [5], [Make regular backups of experiment data, list of loaner laptops], 
         [Project planning errors], [3], [3], [9], [Build in 10% contingency, track and review progress every week], 
         [Lack of communication, causing delays], [1], [1], [1], [Send weekly updates to supervisor with progress, blockers, and plans for next week],
+        [Stakeholder communication delays], [4], [4], [16], [Hold in-person impromptu meetings, allocate extra time for information gathering], 
+        [Ambitious project goals], [5], [5], [25], [Select a specific scope, meet with supervisors regularly, build in extra time], 
+        [Holiday delays], [1], [10], [10], [Begin research earlier, add 10% contingency buffer], 
+        [Unavailability of supervisors], [2], [3], [6], [Proactively schedule meetings well in advance], 
+        [Unexpected illness], [2], [3], [6], [Maintain a healthy work-life balance, build in 10% contingency buffer], 
+        [Unforeseen errors or omissions], [3], [3], [9], [Conduct weekly progress reviews, maintain a 10% contingency buffer], 
+        [Motivation and focus challenges], [3], [3], [9], [Use brainstorming, freewriting, and seek feedback],
       ), 
       caption: [Risk Register],
   )
@@ -228,7 +248,7 @@ Difficulty finding motivation and focusing on writing tasks can be overcome thro
 brainstorming sessions, freewriting exercises, and seeking feedback from peers or mentors.
 
 = Ethics <ethics>
-There are no foreseeable ethical doubts or dillemas on all areas. The project will not involve human research, data sets about people or cybersecutiry or online privacy issues. While we could use an LLM like Codex to make the code more 'human readable', this does not pose any threats. No sensitive or personal data is involved. Additionally, the outputs are fully explainable and align with the practices of experienced developers, mitigating any risks of misinterpretation or unintended consequences. As such, no ethical doubts or dilemmas are anticipated in any area of the project.
+There are no foreseeable ethical doubts or dilemmas on all areas. The project will not involve human research, data sets about people or cyber-security or online privacy issues. While we could use an LLM like Codex to make the code more 'human readable', this does not pose any threats. No sensitive or personal data is involved. Additionally, the outputs are fully explainable and align with the practices of experienced developers, mitigating any risks of misinterpretation or unintended consequences. As such, no ethical doubts or dilemmas are anticipated in any area of the project.
 
 // Fill out the ethics self-check via the RMS portal for Faculty of Science#footnote[#link("https://rms.uva.nl/servicedesk/customer/portal/14");];, and present a summary of the result and future actions. The main areas for ethical concerns are:
 
