@@ -20,9 +20,13 @@
 = Introduction <sec:introduction>
 Because of its widespread use and ease-of-use, Microsoft Excel is being used in pension fund companies to maintain and calculate the pension fund for all of its customers. Info Support, as part of the ongoing _GROENpensioen_ project aims to convert these calculations from Microsoft Excel to high performing code.
 
-Pension funds operators use Excel as a 'sandbox' to test model parameters for optimal forecasts. These parameters vary widely and often differ per person to calculate the pension for. Each year, the third-party actuarial calculation tool (which could be seen as a variant of Excel) calculates forecasts for all pension holders. However, changes made by pension fund operators must be manually translated into the tool. As already said, the tool itself is 'very slow' according to Rinse and could be improved. Ideally, they want a faster system that can allow users to quickly visualize projected pension outcomes.
+Pension funds operators use Excel as a 'sandbox' to test model parameters for optimal forecasts. These parameters vary widely and often differ per person to calculate the pension for. Each year, the third-party actuarial calculation tool (which could be seen as a variant of Excel) calculates forecasts for all pension holders. However, changes made by pension fund operators must be manually translated into the tool. The tool itself is 'very slow' according to Rinse and could be improved. Ideally, they want a faster system that can allow users to quickly visualize projected pension outcomes.
 
 Consequently, they want to adopt the 'sandbox' environment and develop a tool capable of optimizing and transforming these Excel-based models to high-performing code. This process entails multiple steps, from compiling excel formulas to a generic programming language to applying optimalizations to the dataflow. In this thesis, we will explore the former problem of compiling excel files to coherent, high-performing higher level programming language code in the context of actuarial computations. This approach allows us to focus on the computational model of the excel engine.
+
+// The actuarial calculations need to be inspected by auditors, so the mapping needs to be verified and do exactly as the operator wants it to be. And it needs to be readable, as the auditor should be able to read the code, not decipher it because it is in bytecode.
+
+// While there are existing calculation 'engines', they do not transform the program to a readable piece of code in a higher level programming lanugage. Furthermore, they often do not support iterative calculation where cells in a cyclic reference are bein updated using fixed point iteration. 
 
 In contrast with existing research on extracting models from spreadsheets into relational databases @cunha_spreadsheets_2009, where the whole spreadsheet is and all of its data is extracted into a model, focussing on the computational model provides a unique viewpoint where we only consider the output of selected cells and see the excel sheet as an 'input-output' model. It begs the following question:
 
@@ -32,6 +36,7 @@ This question contains several other questions, namely
 
 #enum(numbering: n => strong[(RQ#n)], indent: 10pt, 
   [Does there exist a human readable high level code representation of combinations of excel formulas?],
+  [What are the differences between Excel and the compiled code?],
   [Can a iterative calculation be efficiently implemented?],
   [How can the mapping between excel formulas and code be verified?],
 )<researchQuestions:subQuestions>
@@ -139,9 +144,11 @@ Outside the literature, few packages exist that support calling excel calculatio
 == Validation of excel formulas
 To verify the semantics of the program, the semantics of Excel should be defined so they can be compared with the semantics of the higher level language.
 
-#citeauthor(<bock_semantics_2020>) defines the operational semantics for a self-made spreadsheet framework @sestoft_sheet-defined_2013 which closely reflects and closely resembles the Excel semantics.
+#citeauthor(<bock_semantics_2020>) defines the operational semantics for a self-made spreadsheet framework @sestoft_sheet-defined_2013 which closely reflects and closely resembles the Excel semantics. The semantics could serve as a starting point for verifying the compiler steps from Excel formulas to generated code, but need alteration because it is not clear if they fully model the excel semantics.
 
+#citeauthor(<rothermel_methodology_2001>) and #citeauthor(<fisher_automated_2002>) introduce the _What You See Is What You Test_ (WYSIWYT) framework for spreadsheet testing, utilizing definition-use (du) associations to link formulas to their computational or predicate uses. A spreadsheet is considered 'tested' when all du-associations are exercised by at least one test. While users can manually validate du-associations @rothermel_methodology_2001, the framework also supports generating automated test cases using random or goal-oriented approaches to satisfy all du-associations @fisher_automated_2002. For a good compilation, the generated code should pass all of these automated tests to be sufficiently verified.
 
+// A definition-use (du) association in spreadsheets links a cell's defining formula with its computational or predicate uses. Under the du-adequacy criterion, testing is sufficient when every du-association is exercised by at least one test, validated as "correct" by user verification.
 
 // Discuss the literature related to your proposal. Focu s on concepts and ideas, how this relates to your proposal. Do not describe each paper individually, but as a collective.
 
@@ -162,23 +169,48 @@ To verify the semantics of the program, the semantics of Excel should be defined
 // A guideline is to include between 10 and 20 papers on your topic in the related work. The exact number depends on the topic and available literature.
 
 = Methodology <methodology>
-// Present your approach, how you are going to find the answers to your research question. This section should cover answers to the questions:
+== Challenges in Research
 
-// - What will make the research difficult?
+This research faces several challenge mainly due the proprietary nature of Excel. While some research has been conducted on spreadsheet semantics @bock_semantics_2020, it remains unclear if these models can fully represent Excel's functionality and do not describe the dynamic nature of Excels dynamic formulas. 
 
-// - What is the input you expect from the literature survey
+Circular dependencies introduce additional complexity, as the iterative calculation methods used by pension fund operators remain ambiguous. Furthermore, the exact semantics of the iterative calculation (fixed point iteration) in excel can vary, because it depends on what the initial values are. Since it is crucial to maintain consistency in the values, these semantics need to be further analyzed.
 
-// - What sources will you use and how will you use / document them?
+Dynamic formulas such as `IF`, `RAND`, and `TRANSPOSE` add another layer of difficulty, requiring the model to account for undefined values and conditional outputs. Additionally, validating the semantics is challenging due to the limited availability of relevant datasets. The decision to model function call graphs rather than the spreadsheet structure itself introduces the need to research optimal internal data storage mechanisms, avoiding the reliance on a global store.
 
-// - What experiments / research will you do? What proof of concept will you make?
+== Expected Input from the Literature Survey
 
-// - What research method will you use?
+The literature survey will draw from limited but relevant resources. The book by Sestoft provides foundational insights into Excel semantics, while the work of A. A. Bock offers a starting point for formalizing semantics, though further verification is required. Master theses discussing support graphs will inform the development of an internal domain model. Research on program generation will guide the translation of Excel functionality into high-level code.
 
-// - Which hypothesis do you have?
+== Experimental Design and Proof of Concept
 
-// - Present a time line, how results from each step feeds into the next step and ultimately answers your research questions.
+The research will establish mappings between Excel functions and high-level code in the .NET framework (C\# language). This includes designing a domain model that handles cyclic dependencies and dynamic spreadsheet behavior using iterative calculation techniques. A prototype will be developed to demonstrate the feasibility of the approach, focusing on accurately converting selected Excel formulas into human-readable .NET code. Once the initial domain model is constructed, testing will evaluate performance, correctness, and capabilities. Iterative refinement will expand the model to include dynamic formulas and formal semantics for validation.
 
-// - How will you validate your research?
+== Research Method and Validation
+
+A quantitative approach will be used to evaluate the proof of concept, focusing on metrics such as execution time, memory usage, and transformation success rates. We will verify the code readability using software metrics like  Formal verification will employ automated theorem provers, translating the semantics into logical properties to ensure their soundness. Empirical validation will involve testing the model against real-world datasets, comparing outputs to Excel, and validating edge cases such as circular dependencies and dynamic formulas. Iterative refinement will ensure the prototype evolves to meet the research objectives.
+
+== Hypotheses
+
+=== Does there exist a formal mapping from Excel sheets to readable high-level code?
+A formal mapping is hypothesized to exist, especially for static Excel formulas, as their calculations are straightforward and deterministic. However, this mapping will likely require adjustments or constraints when incorporating dynamic formulas and circular dependencies due to their inherent complexity.
+
+=== Does there exist a human-readable high-level code representation of combinations of Excel formulas?
+
+It is anticipated that combinations of static Excel formulas can be effectively represented in human-readable high-level code. However, combinations involving dynamic formulas will require additional abstractions and conditions to preserve readability and functionality.
+
+=== What are the differences between Excel and the compiled code?
+We expect that there will be no differences in numerical output, but that the throughput and efficiency of the programming language is much faster due to the fact that the compiled code only has to calculate this and is made for the task, while Excel is expected to do a lot more.
+
+=== Can an iterative calculation be correctly implemented?
+
+We expect iterative calculations or fixed point calculations to be implementable, but expect that conditions need to be met for the fixed point calculations to be usable in the code, such as the (user-provided) guarantee that the calculation is converging. We expect that in comparison with excel, the calculated values will not differ and we expect that the iterative calculation in the higher level language will be faster due to optimalizations in that language.
+
+=== How can the mapping between Excel formulas and code be verified?
+The mapping is hypothesized to be verifiable through a combination of formal validation methods, such as automated theorem provers, and empirical validation using controlled datasets and real-world Excel sheets. However, we expect that extended semantic modeling will be necessary to validate dynamic behaviors, including undefined or skipped cell values.
+
+== Timeline
+
+The research will begin by defining mappings and researching efficient storage mechanisms for function results. Iterative calculation techniques will be developed and integrated into the domain model. Testing will then evaluate performance and correctness, followed by iterative refinement to support dynamic formulas. Finally, a semantic model will be constructed, and formal verification will validate the compiler’s correctness. The final phase will involve comprehensive testing, documentation, and demonstration of the prototype. Please see @fig:gantt-chart for the full timeline.
 
 = Risk Assessment <risk-assessment>
 This section outlines potential risks associated with this project and proposes mitigation strategies. A
@@ -205,6 +237,7 @@ presented in @tab:risk-register.
         [Motivation and focus challenges], [3], [3], [9], [Use brainstorming, freewriting, and seek feedback],
       ), 
       caption: [Risk Register],
+      placement: auto,
   )
 <tab:risk-register>
 
@@ -213,6 +246,9 @@ At this step in the requirements gathering process, communication with Info Supp
 
 To mitigate this, in-person impromptu meetings with relevant stakeholders should be held to facilitate efficient information exchange. Additionally, allocating extra time for information
 gathering throughout the project timeline is essential.
+
+=== Dataset is insufficient
+The current dataset, while huge, is too simplistic to perform experiments on. There is a lot of validation data that we can use to validate the compilation, but the formulas that are used in the dataset. A bigger dataset should be collected or constructed, but this could add extra time. To mitigate this, we will use the first couple of weeks to find a dataset, but if it is not possible, we will create smaller datasets ourselves.
 
 == Project goals are too ambitious
 The project's scope may be too ambitious for a master thesis, potentially leading to an unrealistic workload and compromised quality. Given previous projects, this is the biggest risk, scoring a high likelihood and high impact. 
