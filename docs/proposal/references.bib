@@ -62,6 +62,24 @@
 	author = {{Apache Software}},
 }
 
+@article{ordonez_camacho_automated_2010,
+	title = {Automated generation of program translation and verification tools using annotated grammars},
+	volume = {75},
+	rights = {https://www.elsevier.com/tdm/userlicense/1.0/},
+	issn = {01676423},
+	url = {https://linkinghub.elsevier.com/retrieve/pii/S0167642309001324},
+	doi = {10.1016/j.scico.2009.10.003},
+	abstract = {Automatically generating program translators from source and target language specifications is a non-trivial problem. In this paper we focus on the problem of automating the process of building translators between operations languages, a family of {DSLs} used to program satellite operations procedures. We exploit their similarities to semi-automatically build transformation tools between these {DSLs}. The input to our method is a collection of annotated context-free grammars. To simplify the overall translation process even more, we also propose an intermediate representation common to all operations languages. Finally, we discuss how to enrich our annotated grammars model with more advanced semantic annotations to provide a verification system for the translation process. We validate our approach by semi-automatically deriving translators between some real world operations languages, using the prototype tool which we implemented for that purpose.},
+	pages = {3--20},
+	number = {1},
+	journaltitle = {Science of Computer Programming},
+	shortjournal = {Science of Computer Programming},
+	author = {Ordóñez Camacho, Diego and Mens, Kim and Brand, Mark Van Den and Vinju, Jurgen},
+	urldate = {2025-01-29},
+	date = {2010-01},
+	langid = {english},
+}
+
 @inproceedings{fisher_automated_2002,
 	title = {Automated test case generation for spreadsheets},
 	url = {https://ieeexplore.ieee.org/document/1007963},
@@ -91,6 +109,39 @@
 	keywords = {Business, {ClassSheets} inference, Context, Data models, Marketing and sales, Object oriented modeling, Programming, Spreadsheets, Unified modeling language},
 }
 
+@inproceedings{weisz_better_2022,
+	location = {New York, {NY}, {USA}},
+	title = {Better Together? An Evaluation of {AI}-Supported Code Translation},
+	isbn = {978-1-4503-9144-3},
+	url = {https://dl.acm.org/doi/10.1145/3490099.3511157},
+	doi = {10.1145/3490099.3511157},
+	series = {{IUI} '22},
+	shorttitle = {Better Together?},
+	abstract = {Generative machine learning models have recently been applied to source code, for use cases including translating code between programming languages, creating documentation from code, and auto-completing methods. Yet, state-of-the-art models often produce code that is erroneous or incomplete. In a controlled study with 32 software engineers, we examined whether such imperfect outputs are helpful in the context of Java-to-Python code translation. When aided by the outputs of a code translation model, participants produced code with fewer errors than when working alone. We also examined how the quality and quantity of {AI} translations affected the work process and quality of outcomes, and observed that providing multiple translations had a larger impact on the translation process than varying the quality of provided translations. Our results tell a complex, nuanced story about the benefits of generative code models and the challenges software engineers face when working with their outputs. Our work motivates the need for intelligent user interfaces that help software engineers effectively work with generative code models in order to understand and evaluate their outputs and achieve superior outcomes to working alone.},
+	pages = {369--391},
+	booktitle = {Proceedings of the 27th International Conference on Intelligent User Interfaces},
+	publisher = {Association for Computing Machinery},
+	author = {Weisz, Justin D. and Muller, Michael and Ross, Steven I. and Martinez, Fernando and Houde, Stephanie and Agarwal, Mayank and Talamadupula, Kartik and Richards, John T.},
+	urldate = {2025-01-29},
+	date = {2022-03-22},
+}
+
+@inproceedings{lopes_chomsky_2005,
+	location = {Berlin, Heidelberg},
+	title = {Chomsky: A Content Language Translation Agent},
+	isbn = {978-3-540-31731-9},
+	doi = {10.1007/11559221_54},
+	shorttitle = {Chomsky},
+	abstract = {This paper describes Chomsky, a content language translation agent. This agent provides a service, which first translates the content expression from its original language into an abstract logic language ({ALL}). Then, the resulting {ALL} expression is translated to the desired target language. {ALL} has been designed as a superset of most known content languages to avoid loosing expressiveness during translation. For more than three supported languages, using an intermediate language approach involves fewer translators than a pair wise approach. Currently, Chomsky supports {FIPA}-{SL}, {KIF}, and Prolog Content Language. In one mode of operation, Chomsky returns the result of the translation request to the client agent. In the other mode, Chomsky receives a message from the intended sender whose content is expressed in language L1, it translates the content to the content language used by the intended receiver (L2), and it sends the message with the L2 content to the intended receiver.},
+	pages = {535--538},
+	booktitle = {Multi-Agent Systems and Applications {IV}},
+	publisher = {Springer},
+	author = {Lopes, António and Botelho, Luís},
+	editor = {Pěchouček, Michael and Petta, Paolo and Varga, László Zsolt},
+	date = {2005},
+	langid = {english},
+}
+
 @inproceedings{engels_classsheets_2005,
 	location = {New York, {NY}, {USA}},
 	title = {{ClassSheets}: automatic generation of spreadsheet applications from object-oriented specifications},
@@ -108,6 +159,46 @@
 	date = {2005-11-07},
 }
 
+@article{szafraniec_code_2023,
+	title = {Code Translation with Compiler Representations},
+	url = {http://arxiv.org/abs/2207.03578},
+	doi = {10.48550/arXiv.2207.03578},
+	abstract = {In this paper, we leverage low-level compiler intermediate representations ({IR}) to improve code translation. Traditional transpilers rely on syntactic information and handcrafted rules, which limits their applicability and produces unnatural-looking code. Applying neural machine translation ({NMT}) approaches to code has successfully broadened the set of programs on which one can get a natural-looking translation. However, they treat the code as sequences of text tokens, and still do not differentiate well enough between similar pieces of code which have different semantics in different languages. The consequence is low quality translation, reducing the practicality of {NMT}, and stressing the need for an approach significantly increasing its accuracy. Here we propose to augment code translation with {IRs}, specifically {LLVM} {IR}, with results on the C++, Java, Rust, and Go languages. Our method improves upon the state of the art for unsupervised code translation, increasing the number of correct translations by 11\% on average, and up to 79\% for the Java -{\textgreater} Rust pair with greedy decoding. We extend previous test sets for code translation, by adding hundreds of Go and Rust functions. Additionally, we train models with high performance on the problem of {IR} decompilation, generating programming source code from {IR}, and study using {IRs} as intermediary pivot for translation.},
+	author = {Szafraniec, Marc and Roziere, Baptiste and Leather, Hugh and Charton, Francois and Labatut, Patrick and Synnaeve, Gabriel},
+	urldate = {2025-01-27},
+	date = {2023-04-24},
+	eprinttype = {arxiv},
+	eprint = {2207.03578 [cs]},
+	keywords = {Computer Science - Computation and Language, Computer Science - Machine Learning, Computer Science - Programming Languages},
+}
+
+@inproceedings{szafraniec_code_2022,
+	title = {Code Translation with Compiler Representations},
+	url = {https://openreview.net/forum?id=XomEU3eNeSQ},
+	abstract = {In this paper, we leverage low-level compiler intermediate representations ({IR}) code translation. Traditional transpilers rely on syntactic information and handcrafted rules, which limits their applicability and produces unnatural-looking code. Applying neural machine translation ({NMT}) approaches to code has successfully broadened the set of programs on which one can get a natural-looking translation. However, they treat the code as sequences of text tokens, and still do not differentiate well enough between similar pieces of code which have different semantics in different languages. The consequence is low quality translation, reducing the practicality of {NMT}, and stressing the need for an approach significantly increasing its accuracy. Here we propose to augment code translation with {IRs}, specifically {LLVM} {IR}, with results on the C++, Java, Rust, and Go languages. Our method improves upon the state of the art for unsupervised code translation, increasing the number of correct translations by 11\% on average, and up to 79\% for the Java → Rust pair with greedy decoding. With beam search, it increases the number of correct translations by 5.5\% in average. We extend previous test sets for code translation, by adding hundreds of Go and Rust functions. Additionally, we train models with high performance on the problem of {IR} decompilation, generating programming source code from {IR}, and study using {IRs} as intermediary pivot for translation.},
+	eventtitle = {The Eleventh International Conference on Learning Representations},
+	author = {Szafraniec, Marc and Roziere, Baptiste and Leather, Hugh James and Labatut, Patrick and Charton, Francois and Synnaeve, Gabriel},
+	urldate = {2025-01-29},
+	date = {2022-09-29},
+	langid = {english},
+}
+
+@article{elliott_compiling_2003,
+	title = {Compiling embedded languages},
+	volume = {13},
+	issn = {1469-7653, 0956-7968},
+	url = {https://www.cambridge.org/core/journals/journal-of-functional-programming/article/compiling-embedded-languages/4B0A7526CC16907F445CCF27277E9B9B},
+	doi = {10.1017/S0956796802004574},
+	abstract = {Functional languages are particularly well-suited to the interpretive implementations of Domain-Specific Embedded Languages ({DSELs}). We describe an implemented technique for producing optimizing compilers for {DSELs}, based on Kamin's idea of {DSELs} for program generation. The technique uses a data type of syntax for basic types, a set of smart constructors that perform rewriting over those types, some code motion transformations, and a back-end code generator. Domain-specific optimization results from chains of domain-independent rewrites on basic types. New {DSELs} are defined directly in terms of the basic syntactic types, plus host language functions and tuples. This definition style makes compilers easy to write and, in fact, almost identical to the simplest embedded interpreters. We illustrate this technique with a language Pan for the computationally intensive domain of image synthesis and manipulation.},
+	pages = {455--481},
+	number = {3},
+	journaltitle = {Journal of Functional Programming},
+	author = {Elliott, Conal and Finne, Sigbjørn and Moor, Oege De},
+	urldate = {2025-01-27},
+	date = {2003-05},
+	langid = {english},
+}
+
 @inproceedings{roy_deeptc-enhancer_2020,
 	location = {Virtual Event Australia},
 	title = {{DeepTC}-enhancer: improving the readability of automatically generated tests},
@@ -122,6 +213,24 @@
 	author = {Roy, Devjeet and Zhang, Ziyi and Ma, Maggie and Arnaoudova, Venera and Panichella, Annibale and Panichella, Sebastiano and Gonzalez, Danielle and Mirakhorli, Mehdi},
 	urldate = {2025-01-25},
 	date = {2020-12-21},
+	langid = {english},
+}
+
+@article{sujeeth_delite_2014,
+	title = {Delite: A Compiler Architecture for Performance-Oriented Embedded Domain-Specific Languages},
+	volume = {13},
+	issn = {1539-9087, 1558-3465},
+	url = {https://dl.acm.org/doi/10.1145/2584665},
+	doi = {10.1145/2584665},
+	shorttitle = {Delite},
+	abstract = {Developing high-performance software is a difficult task that requires the use of low-level, architecture-specific programming models (e.g., {OpenMP} for {CMPs}, {CUDA} for {GPUs}, {MPI} for clusters). It is typically not possible to write a single application that can run efficiently in different environments, leading to multiple versions and increased complexity. Domain-Specific Languages ({DSLs}) are a promising avenue to enable programmers to use high-level abstractions and still achieve good performance on a variety of hardware. This is possible because {DSLs} have higher-level semantics and restrictions than general-purpose languages, so {DSL} compilers can perform higher-level optimization and translation. However, the cost of developing performance-oriented {DSLs} is a substantial roadblock to their development and adoption. In this article, we present an overview of the Delite compiler framework and the {DSLs} that have been developed with it. Delite simplifies the process of {DSL} development by providing common components, like parallel patterns, optimizations, and code generators, that can be reused in {DSL} implementations. Delite {DSLs} are embedded in Scala, a general-purpose programming language, but use metaprogramming to construct an Intermediate Representation ({IR}) of user programs and compile to multiple languages (including C++, {CUDA}, and {OpenCL}). {DSL} programs are automatically parallelized and different parts of the application can run simultaneously on {CPUs} and {GPUs}. We present Delite {DSLs} for machine learning, data querying, graph analysis, and scientific computing and show that they all achieve performance competitive to or exceeding C++ code.},
+	pages = {1--25},
+	number = {4},
+	journaltitle = {{ACM} Transactions on Embedded Computing Systems},
+	shortjournal = {{ACM} Trans. Embed. Comput. Syst.},
+	author = {Sujeeth, Arvind K. and Brown, Kevin J. and Lee, Hyoukjoong and Rompf, Tiark and Chafi, Hassan and Odersky, Martin and Olukotun, Kunle},
+	urldate = {2025-01-27},
+	date = {2014-07},
 	langid = {english},
 }
 
@@ -157,6 +266,37 @@
 	keywords = {Excel reverse engineering, analysis of visual basic for applications, industrial case study, spreadsheet comprehension, visualization tool},
 }
 
+@article{yang_exploring_2024,
+	title = {Exploring and Unleashing the Power of Large Language Models in Automated Code Translation},
+	volume = {1},
+	issn = {2994-970X},
+	url = {https://dl.acm.org/doi/10.1145/3660778},
+	doi = {10.1145/3660778},
+	abstract = {Code translation tools, namely transpilers, are developed for automatic source-to-source translation. Latest learning-based transpilers have shown impressive enhancement against rule-based counterparts in both translation accuracy and readability, owing to their task-specific pre-training on extensive monolingual corpora. Nevertheless, their current performance still remains unsatisfactory for practical deployment, and the associated training resources are also prohibitively expensive. Large Language Models ({LLMs}), pre-trained on huge amounts of human-written code/text, have shown remarkable performance in many code intelligence tasks due to their powerful generality, even without task-specific re-training/fine-tuning. Thus, {LLMs} can potentially circumvent the above limitations, but they have not been exhaustively explored yet. This paper investigates diverse {LLMs} and learning-based transpilers for automated code translation tasks, finding that: although certain {LLMs} have outperformed current transpilers, they still have some accuracy issues, where most of the failures are induced by a lack of comprehension of source programs (38.51\%), missing clear instructions on I/O types in translation (14.94\%), and ignoring discrepancies between source and target programs (41.38\%).  Enlightened by the above findings, we further propose
+              {UniTrans}
+              , a
+              Uni
+              fied code
+              Trans
+              lation framework, applicable to various {LLMs}, for unleashing their power in this field. Specifically,
+              {UniTrans}
+              first crafts a series of test cases for target programs with the assistance of source programs. Next, it harnesses the above auto-generated test cases to augment the code translation and then evaluate their correctness via execution. Afterward,
+              {UniTrans}
+              further (iteratively) repairs incorrectly translated programs prompted by test case execution results. Extensive experiments are conducted on six settings of translation datasets between Python, Java, and C++. Three recent {LLMs} of diverse sizes, including {GPT}-3.5 and {LLaMA}-13B/7B, are tested with
+              {UniTrans}
+              , and all achieve substantial improvements in terms of computational accuracy and exact match accuracy among almost all translation settings, showing the universal effectiveness of
+              {UniTrans}
+              in practice.},
+	pages = {1585--1608},
+	issue = {{FSE}},
+	journaltitle = {Proceedings of the {ACM} on Software Engineering},
+	shortjournal = {Proc. {ACM} Softw. Eng.},
+	author = {Yang, Zhen and Liu, Fang and Yu, Zhongxing and Keung, Jacky Wai and Li, Jia and Liu, Shuo and Hong, Yifan and Ma, Xiaoxue and Jin, Zhi and Li, Ge},
+	urldate = {2025-01-29},
+	date = {2024-07-12},
+	langid = {english},
+}
+
 @article{cambronero_flashfill_2023,
 	title = {{FlashFill}++: Scaling Programming by Example by Cutting to the Chase},
 	volume = {7},
@@ -174,6 +314,41 @@
 	author = {Cambronero, José and Gulwani, Sumit and Le, Vu and Perelman, Daniel and Radhakrishna, Arjun and Simon, Clint and Tiwari, Ashish},
 	urldate = {2025-01-15},
 	date = {2023-01-09},
+	langid = {english},
+}
+
+@article{sujeeth_forge_2014,
+	title = {Forge: generating a high performance {DSL} implementation from a declarative specification},
+	volume = {49},
+	issn = {0362-1340, 1558-1160},
+	url = {https://dl.acm.org/doi/10.1145/2637365.2517220},
+	doi = {10.1145/2637365.2517220},
+	shorttitle = {Forge},
+	abstract = {Domain-specific languages provide a promising path to automatically compile high-level code to parallel, heterogeneous, and distributed hardware. However, in practice high performance {DSLs} still require considerable software expertise to develop and force users into tool-chains that hinder prototyping and debugging. To address these problems, we present Forge, a new meta {DSL} for declaratively specifying high performance embedded {DSLs}. Forge provides {DSL} authors with high-level abstractions (e.g., data structures, parallel patterns, effects) for specifying their {DSL} in a way that permits high performance. From this high-level specification, Forge automatically generates both a naïve Scala library implementation of the {DSL} and a high performance version using the Delite {DSL} framework. Users of a Forge-generated {DSL} can prototype their application using the library version, and then switch to the Delite version to run on multicore {CPUs}, {GPUs}, and clusters without changing the application code. Forge-generated Delite {DSLs} perform within 2x of hand-optimized C++ and up to 40x better than Spark, an alternative high-level distributed programming environment. Compared to a manually implemented Delite {DSL}, Forge provides a factor of 3-6x reduction in lines of code and does not sacrifice any performance. Furthermore, Forge specifications can be generated from existing Scala libraries, are easy to maintain, shield {DSL} developers from changes in the Delite framework, and enable {DSLs} to be retargeted to other frameworks transparently.},
+	pages = {145--154},
+	number = {3},
+	journaltitle = {{ACM} {SIGPLAN} Notices},
+	shortjournal = {{SIGPLAN} Not.},
+	author = {Sujeeth, Arvind K. and Gibbons, Austin and Brown, Kevin J. and Lee, {HyoukJoong} and Rompf, Tiark and Odersky, Martin and Olukotun, Kunle},
+	urldate = {2025-01-27},
+	date = {2014-03-05},
+	langid = {english},
+}
+
+@inproceedings{garrido_formal_2006,
+	location = {Philadelphia, {PA}, {USA}},
+	title = {Formal Specification and Verification of Java Refactorings},
+	isbn = {978-0-7695-2353-8},
+	url = {http://ieeexplore.ieee.org/document/4026866/},
+	doi = {10.1109/SCAM.2006.16},
+	abstract = {There is an extensive literature about refactorings of object-oriented programs, and many refactoring tools for the Java programming language. However, except for a few studies, in practice it is difﬁcult to ﬁnd precise formal speciﬁcations of the preconditions and mechanisms of automated refactorings. Moreover, there is usually no formal proof that a refactoring is correct, i.e., that it preserves the behavior of the program.},
+	eventtitle = {2006 Sixth {IEEE} International Workshop on Source Code Analysis and Manipulation},
+	pages = {165--174},
+	booktitle = {2006 Sixth {IEEE} International Workshop on Source Code Analysis and Manipulation},
+	publisher = {{IEEE}},
+	author = {Garrido, Alejandra and Meseguer, Jose},
+	urldate = {2025-01-27},
+	date = {2006-09},
 	langid = {english},
 }
 
@@ -219,6 +394,18 @@
 	date = {2014},
 }
 
+@inproceedings{guo_graphcodebert_2020,
+	title = {{GraphCodeBERT}: Pre-training Code Representations with Data Flow},
+	url = {https://openreview.net/forum?id=jLoC4ez43PZ},
+	shorttitle = {{GraphCodeBERT}},
+	abstract = {Pre-trained models for programming language have achieved dramatic empirical improvements on a variety of code-related tasks such as code search, code completion, code summarization, etc. However, existing pre-trained models regard a code snippet as a sequence of tokens, while ignoring the inherent structure of code, which provides crucial code semantics and would enhance the code understanding process. We present {GraphCodeBERT}, a pre-trained model for programming language that considers the inherent structure of code. Instead of taking syntactic-level structure of code like abstract syntax tree ({AST}), we use data flow in the pre-training stage, which is a semantic-level structure of code that encodes the relation of "where-the-value-comes-from" between variables. Such a semantic-level structure is neat and does not bring an unnecessarily deep hierarchy of {AST}, the property of which makes the model more efficient. We develop {GraphCodeBERT} based on Transformer. In addition to using the task of masked language modeling, we introduce two structure-aware pre-training tasks. One is to predict code structure edges, and the other is to align representations between source code and code structure. We implement the model in an efficient way with a graph-guided masked attention function to incorporate the code structure. We evaluate our model on four tasks, including code search, clone detection, code translation, and code refinement. Results show that code structure and newly introduced pre-training tasks can improve {GraphCodeBERT} and achieves state-of-the-art performance on the four downstream tasks. We further show that the model prefers structure-level attentions over token-level attentions in the task of code search.},
+	eventtitle = {International Conference on Learning Representations},
+	author = {Guo, Daya and Ren, Shuo and Lu, Shuai and Feng, Zhangyin and Tang, Duyu and Liu, Shujie and Zhou, Long and Duan, Nan and Svyatkovskiy, Alexey and Fu, Shengyu and Tufano, Michele and Deng, Shao Kun and Clement, Colin and Drain, Dawn and Sundaresan, Neel and Yin, Jian and Jiang, Daxin and Zhou, Ming},
+	urldate = {2025-01-29},
+	date = {2020-10-02},
+	langid = {english},
+}
+
 @inproceedings{jaffe_meaningful_2018,
 	location = {New York, {NY}, {USA}},
 	title = {Meaningful variable names for decompiled code: a machine translation approach},
@@ -254,6 +441,21 @@
 	keywords = {Artificial Intelligence, Automatic model inference, {ClassSheets}, Empirical validation, Relational model, Spreadsheets},
 }
 
+@inproceedings{steinhofel_modular_2018,
+	location = {Cham},
+	title = {Modular, Correct Compilation with Automatic Soundness Proofs},
+	isbn = {978-3-030-03418-4},
+	doi = {10.1007/978-3-030-03418-4_25},
+	abstract = {Formal verification of compiler correctness requires substantial effort. A particular challenge is lack of modularity and automation. Any change or update to the compiler can render existing proofs obsolete and cause considerable manual proof effort. We propose a framework for automatically proving the correctness of compilation rules based on simultaneous symbolic execution for the source and target language. The correctness of the whole system follows from the correctness of each compilation rule. To support a new source or target language it is sufficient to formalize that language in terms of symbolic execution, while the corresponding formalization of its counterpart can be re-used. The correctness of translation rules can be checked automatically. Our approach is based on a reduction of correctness assertions to formulas in a program logic capable of symbolic execution of abstract programs. We instantiate the framework for compilation from Java to {LLVM} {IR} and provide a symbolic execution system for a subset of {LLVM} {IR}.},
+	pages = {424--447},
+	booktitle = {Leveraging Applications of Formal Methods, Verification and Validation. Modeling},
+	publisher = {Springer International Publishing},
+	author = {Steinhöfel, Dominic and Hähnle, Reiner},
+	editor = {Margaria, Tiziana and Steffen, Bernhard},
+	date = {2018},
+	langid = {english},
+}
+
 @inproceedings{kahn_natural_1987,
 	location = {Berlin, Heidelberg},
 	title = {Natural semantics},
@@ -286,11 +488,12 @@
 	keywords = {Funcalc, Recalculation, Semantics, Sheet-defined function, Spreadsheet},
 }
 
-@thesis{poulsen_optimized_nodate,
+@thesis{poulsen_optimized_2007,
 	title = {Optimized Recalculation for Spreadsheets with the Use of Support Graph},
 	institution = {{IT} University of Copenhagen},
 	type = {Master Thesis},
 	author = {Poulsen, Morten and Serek, Poul Peter},
+	date = {2007},
 	langid = {english},
 }
 
@@ -325,6 +528,41 @@
 	keywords = {Feature extraction, Genetic Programming, Genetic programming, Maintenance, Market research, Program Synthesis, Redundancy, Search problems, Synthesizers},
 }
 
+@article{waters_program_1988,
+	title = {Program translation via abstraction and reimplementation},
+	volume = {14},
+	issn = {1939-3520},
+	url = {https://ieeexplore.ieee.org/document/7629/?arnumber=7629},
+	doi = {10.1109/32.7629},
+	abstract = {An abstraction-and-reimplementation paradigm is presented in which the source program is first analyzed in order to obtain a programming-language-independent abstract understanding of the computation performed by the program as a whole. The program is then reimplemented in the target language based on this understanding. The key to this approach is the abstract understanding obtained. It allows the translator to benefit from an appreciation of the global features of the source program without being distracted by what are considered irrelevant details. Knowledge-based translation via abstraction and reimplementation is described as one of the goals of the Programmer's Apprentice project. A translator which translates Cobol programs into Hibol (a very-high-level business data processing language) has been constructed. A computer which generates extremely efficient {PDP}-11 object code for Pascal programs has been designed.{\textless}{\textgreater}},
+	pages = {1207--1228},
+	number = {8},
+	journaltitle = {{IEEE} Transactions on Software Engineering},
+	author = {Waters, R.C.},
+	urldate = {2025-01-29},
+	date = {1988-08},
+	note = {Conference Name: {IEEE} Transactions on Software Engineering},
+	keywords = {Artificial intelligence, Data processing, Performance analysis, Program processors, Prototypes, Writing},
+}
+
+@inproceedings{cockx_reasonable_2022,
+	location = {Ljubljana Slovenia},
+	title = {Reasonable Agda is correct Haskell: writing verified Haskell using agda2hs},
+	isbn = {978-1-4503-9438-3},
+	url = {https://dl.acm.org/doi/10.1145/3546189.3549920},
+	doi = {10.1145/3546189.3549920},
+	shorttitle = {Reasonable Agda is correct Haskell},
+	abstract = {Modern dependently typed languages such as Agda can be used to statically enforce the correctness of programs. However, they still lack the large ecosystem of a more popular language like Haskell. To combine the strength of both approaches, we present agda2hs, a tool that translates an expressive subset of Agda to readable Haskell, erasing dependent types and proofs in the process. Thanks to Agda’s support for erasure annotations, this process is both safe and transparent to the user. Compared to other tools for program extraction, agda2hs uses a syntax that is already familiar to functional programmers, allows for both intrinsic and extrinsic approaches to verification, and produces Haskell code that is easy to read and audit by programmers with no knowledge of Agda.},
+	eventtitle = {Haskell '22: 15th {ACM} {SIGPLAN} International Haskell Symposium},
+	pages = {108--122},
+	booktitle = {Proceedings of the 15th {ACM} {SIGPLAN} International Haskell Symposium},
+	publisher = {{ACM}},
+	author = {Cockx, Jesper and Melkonian, Orestis and Escot, Lucas and Chapman, James and Norell, Ulf},
+	urldate = {2025-01-29},
+	date = {2022-09-06},
+	langid = {english},
+}
+
 @inproceedings{biermann_rewriting_2018,
 	location = {Cham},
 	title = {Rewriting High-Level Spreadsheet Structures into Higher-Order Functional Programs},
@@ -341,11 +579,12 @@
 	keywords = {Array Formula, Cell Array, Form C6R, Higher-order Functional Programs, {IN} {TRANSITIONAL} {CELL}},
 }
 
-@thesis{iversen_runtime_nodate,
+@thesis{iversen_runtime_2006,
 	title = {Runtime code generation to speed up spreadsheet computations},
 	institution = {{IT} University of Copenhagen},
 	type = {Master Thesis},
 	author = {Iversen, Thomas S},
+	date = {2006-07-30},
 	langid = {english},
 }
 
@@ -463,4 +702,47 @@ Volume: 2011-142},
 	date = {2012},
 	langid = {english},
 	keywords = {Code Smells, {EUSES} Corpus, Spreadsheets},
+}
+
+@inproceedings{chen_tree--tree_2018,
+	title = {Tree-to-tree Neural Networks for Program Translation},
+	volume = {31},
+	url = {https://proceedings.neurips.cc/paper_files/paper/2018/hash/d759175de8ea5b1d9a2660e45554894f-Abstract.html},
+	abstract = {Program translation is an important tool to migrate legacy code in one language into an ecosystem built in a different language. In this work, we are the first to employ deep neural networks toward tackling this problem. We observe that program translation is a modular procedure, in which a sub-tree of the source tree is translated into the corresponding target sub-tree at each step. To capture this intuition, we design a tree-to-tree neural network to translate a source tree into a target one. Meanwhile, we develop an attention mechanism for the tree-to-tree model, so that when the decoder expands one non-terminal in the target tree, the attention mechanism locates the corresponding sub-tree in the source tree to guide the expansion of the decoder. We evaluate the program translation capability of our tree-to-tree model against several state-of-the-art approaches. Compared against other neural translation models, we observe that our approach is consistently better than the baselines with a margin of up to 15 points. Further, our approach can improve the previous state-of-the-art program translation approaches by a margin of 20 points on the translation of real-world projects.},
+	booktitle = {Advances in Neural Information Processing Systems},
+	publisher = {Curran Associates, Inc.},
+	author = {Chen, Xinyun and Liu, Chang and Song, Dawn},
+	urldate = {2025-01-29},
+	date = {2018},
+}
+
+@inproceedings{roziere_unsupervised_2020,
+	title = {Unsupervised Translation of Programming Languages},
+	volume = {33},
+	url = {https://proceedings.neurips.cc/paper/2020/hash/ed23fbf18c2cd35f8c7f8de44f85c08d-Abstract.html},
+	abstract = {A transcompiler, also known as source-to-source translator, is a system that converts source code from a high-level programming language (such as C++ or Python) to another. Transcompilers are primarily used for interoperability, and to port codebases written in an obsolete or deprecated language (e.g. {COBOL}, Python 2) to a modern one. They typically rely on handcrafted rewrite rules, applied to the source code abstract syntax tree. Unfortunately, the resulting translations often lack readability, fail to respect the target language conventions, and require manual modifications in order to work properly. The overall translation process is time-consuming and requires expertise in both the source and target languages, making code-translation projects expensive. Although neural models significantly outperform their rule-based counterparts in the context of natural language translation, their applications to transcompilation have been limited due to the scarcity of parallel data in this domain. In this paper, we propose to leverage recent approaches in unsupervised machine translation to train a fully unsupervised neural transcompiler. We train our model on source code from open source {GitHub} projects, and show that it can translate functions between C++, Java, and Python with high accuracy. Our method relies exclusively on monolingual source code, requires no expertise in the source or target languages, and can easily be generalized to other programming languages. We also build and release a test set composed of 852 parallel functions, along with unit tests to check the correctness of translations. We show that our model outperforms rule-based commercial baselines by a significant margin.},
+	pages = {20601--20611},
+	booktitle = {Advances in Neural Information Processing Systems},
+	publisher = {Curran Associates, Inc.},
+	author = {Roziere, Baptiste and Lachaux, Marie-Anne and Chanussot, Lowik and Lample, Guillaume},
+	urldate = {2025-01-29},
+	date = {2020},
+}
+
+@article{lano_using_2024,
+	title = {Using model-driven engineering to automate software language translation},
+	volume = {31},
+	issn = {1573-7535},
+	url = {https://doi.org/10.1007/s10515-024-00419-y},
+	doi = {10.1007/s10515-024-00419-y},
+	abstract = {The porting or translation of software applications from one programming language to another is a common requirement of organisations that utilise software, and the increasing number and diversity of programming languages makes this capability as relevant today as in previous decades. Several approaches have been used to address this challenge, including machine learning and the manual definition of direct language-to-language translation rules, however the accuracy of these approaches remains unsatisfactory. In this paper we describe a new approach to program translation using model-driven engineering techniques: reverse-engineering source programs into specifications in the {UML} and {OCL} formalisms, and then forward-engineering the specifications to the required target language. This approach can provide assurance of semantic preservation, and additionally has the advantage of extracting precise specifications of software from code. We provide an evaluation based on a comprehensive dataset of examples, including industrial cases, and compare our results to those of other approaches and tools. Our specific contributions are: (1) Reverse-engineering source programs to detailed semantic models of software behaviour, to enable semantically-correct translations and reduce re-testing costs; (2) Program abstraction processes defined by precise and explicit rules, which can be edited and configured by users; (3) A set of reusable {OCL} library components appropriate for representing program semantics, and which can also be used for {OCL} specification of new applications; (4) A systematic procedure for building program abstractors based on language grammars and semantics.},
+	pages = {20},
+	number = {1},
+	journaltitle = {Automated Software Engineering},
+	shortjournal = {Autom Softw Eng},
+	author = {Lano, Kevin and Siala, Hanan},
+	urldate = {2025-01-29},
+	date = {2024-02-28},
+	langid = {english},
+	keywords = {Artificial Intelligence, Model-driven engineering, Program translation, Re-engineering, Reverse engineering},
 }
