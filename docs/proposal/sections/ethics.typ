@@ -1,0 +1,6 @@
+= Ethics <ethics> // Add pension data possibility
+There are no foreseeable ethical doubts or dilemmas on all areas. The project will not involve human research, or cyber-security or online privacy issues.
+
+Datasets from pension fund operators could contain personal information of active customers, however, this information will most likely be anonymized. Furthermore, the datasets will most likely be numbers only, only containing the portfolio of people, without any identifiers to trace back to an individual person and will as such comply to privacy regulations. Hence, we do not expect ethical issues in this domain.
+
+While we could use an LLM like Codex @chen_evaluating_2021 to make the code more 'human readable', this does not pose any threats. No sensitive or personal data is involved. Additionally, the outputs are fully explainable and align with the practices of experienced developers, mitigating any risks of misinterpretation or unintended consequences. As such, no ethical doubts or dilemmas are anticipated in any area of the project.

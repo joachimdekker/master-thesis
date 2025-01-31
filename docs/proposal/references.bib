@@ -46,6 +46,21 @@
 	langid = {english},
 }
 
+@article{burstall_transformation_1977,
+	title = {A Transformation System for Developing Recursive Programs},
+	volume = {24},
+	doi = {10.1145/321992.321996},
+	abstract = {A system of rules for transforming programs is described, with the programs in the form of recursion equations. An initially very simple, lucid, and hopefully correct program is transformed into a more efficient one by altering the recursion structure. Illustrative examples of program transformations are given, and a tentative implementation is described. Alternative structures for programs are shown, and a possible initial phase for an automatic or semiautomatic program-manipulation system is indicated.},
+	pages = {44--67},
+	number = {1},
+	journaltitle = {Journal of the {ACM}},
+	author = {Burstall, Rod M. and Darlington, John},
+	date = {1977-01-01},
+	doi = {10.1145/321992.321996},
+	note = {{MAG} {ID}: 2023299380
+S2ID: f54a584f23c0940a6314c3782dd59b9893b8ae0a},
+}
+
 @inproceedings{lano_agile_2017,
 	title = {Agile Model-driven Engineering of Financial Applications.},
 	url = {https://nms.kcl.ac.uk/kevin.lano/finmdd/flexmde17f.pdf},
@@ -159,6 +174,25 @@
 	date = {2005-11-07},
 }
 
+@article{kovacs_closure-free_2024,
+	title = {Closure-Free Functional Programming in a Two-Level Type Theory},
+	volume = {8},
+	issn = {2475-1421},
+	url = {https://dl.acm.org/doi/10.1145/3674648},
+	doi = {10.1145/3674648},
+	abstract = {Many abstraction tools in functional programming rely heavily on general-purpose        compiler optimization to achieve adequate performance. For example, monadic        binding is a higher-order function which yields runtime closures in the absence        of sufficient compile-time inlining and beta-reductions, thereby significantly        degrading performance. In current systems such as the Glasgow Haskell Compiler,        there is no strong guarantee that general-purpose optimization can eliminate        abstraction overheads, and users only have indirect and fragile control over        code generation through inlining directives and compiler options. We propose a        two-stage language to simultaneously get strong guarantees about code generation        and strong abstraction features. The object language is a simply-typed        first-order language which can be compiled without runtime closures. The        compile-time language is a dependent type theory. The two are integrated in a        two-level type theory.                We demonstrate two applications of the system. First, we develop monads and        monad transformers. Here, abstraction overheads are eliminated by staging and we        can reuse almost all definitions from the existing Haskell ecosystem. Second,        we develop pull-based stream fusion. Here we make essential use of dependent        types to give a concise definition of a
+              {concatMap}
+              operation with        guaranteed fusion. We provide an Agda implementation and a typed Template        Haskell implementation of these developments.},
+	pages = {659--692},
+	issue = {{ICFP}},
+	journaltitle = {Proceedings of the {ACM} on Programming Languages},
+	shortjournal = {Proc. {ACM} Program. Lang.},
+	author = {Kovács, András},
+	urldate = {2025-01-30},
+	date = {2024-08-15},
+	langid = {english},
+}
+
 @article{szafraniec_code_2023,
 	title = {Code Translation with Compiler Representations},
 	url = {http://arxiv.org/abs/2207.03578},
@@ -244,6 +278,21 @@
 	title = {Espose Cells},
 	url = {https://products.aspose.com/cells/},
 	author = {{Aspose}},
+}
+
+@misc{chen_evaluating_2021,
+	title = {Evaluating Large Language Models Trained on Code},
+	url = {http://arxiv.org/abs/2107.03374},
+	doi = {10.48550/arXiv.2107.03374},
+	abstract = {We introduce Codex, a {GPT} language model fine-tuned on publicly available code from {GitHub}, and study its Python code-writing capabilities. A distinct production version of Codex powers {GitHub} Copilot. On {HumanEval}, a new evaluation set we release to measure functional correctness for synthesizing programs from docstrings, our model solves 28.8\% of the problems, while {GPT}-3 solves 0\% and {GPT}-J solves 11.4\%. Furthermore, we find that repeated sampling from the model is a surprisingly effective strategy for producing working solutions to difficult prompts. Using this method, we solve 70.2\% of our problems with 100 samples per problem. Careful investigation of our model reveals its limitations, including difficulty with docstrings describing long chains of operations and with binding operations to variables. Finally, we discuss the potential broader impacts of deploying powerful code generation technologies, covering safety, security, and economics.},
+	number = {{arXiv}:2107.03374},
+	publisher = {{arXiv}},
+	author = {Chen, Mark and Tworek, Jerry and Jun, Heewoo and Yuan, Qiming and Pinto, Henrique Ponde de Oliveira and Kaplan, Jared and Edwards, Harri and Burda, Yuri and Joseph, Nicholas and Brockman, Greg and Ray, Alex and Puri, Raul and Krueger, Gretchen and Petrov, Michael and Khlaaf, Heidy and Sastry, Girish and Mishkin, Pamela and Chan, Brooke and Gray, Scott and Ryder, Nick and Pavlov, Mikhail and Power, Alethea and Kaiser, Lukasz and Bavarian, Mohammad and Winter, Clemens and Tillet, Philippe and Such, Felipe Petroski and Cummings, Dave and Plappert, Matthias and Chantzis, Fotios and Barnes, Elizabeth and Herbert-Voss, Ariel and Guss, William Hebgen and Nichol, Alex and Paino, Alex and Tezak, Nikolas and Tang, Jie and Babuschkin, Igor and Balaji, Suchir and Jain, Shantanu and Saunders, William and Hesse, Christopher and Carr, Andrew N. and Leike, Jan and Achiam, Josh and Misra, Vedant and Morikawa, Evan and Radford, Alec and Knight, Matthew and Brundage, Miles and Murati, Mira and Mayer, Katie and Welinder, Peter and {McGrew}, Bob and Amodei, Dario and {McCandlish}, Sam and Sutskever, Ilya and Zaremba, Wojciech},
+	urldate = {2025-01-31},
+	date = {2021-07-14},
+	eprinttype = {arxiv},
+	eprint = {2107.03374 [cs]},
+	keywords = {Computer Science - Machine Learning},
 }
 
 @article{amalfitano_exact_2016,
@@ -394,6 +443,23 @@
 	date = {2014},
 }
 
+@inproceedings{yallop_generating_2019,
+	location = {Cascais Portugal},
+	title = {Generating mutually recursive definitions},
+	isbn = {978-1-4503-6226-9},
+	url = {https://dl.acm.org/doi/10.1145/3294032.3294078},
+	doi = {10.1145/3294032.3294078},
+	abstract = {Many functional programs — state machines (Krishnamurthi 2006), top-down and bottom-up parsers (Hutton and Meijer 1996; Hinze and Paterson 2003), evaluators (Abelson et al. 1984), {GUI} initialization graphs (Syme 2006), \&c. — are conveniently expressed as groups of mutually recursive bindings. One therefore expects program generators, such as those written in {MetaOCaml}, to be able to build programs with mutual recursion.},
+	eventtitle = {{POPL} '19: 46th Annual {ACM} {SIGPLAN} Symposium on Principles of Programming Languages},
+	pages = {75--81},
+	booktitle = {Proceedings of the 2019 {ACM} {SIGPLAN} Workshop on Partial Evaluation and Program Manipulation},
+	publisher = {{ACM}},
+	author = {Yallop, Jeremy and Kiselyov, Oleg},
+	urldate = {2025-01-30},
+	date = {2019-01-14},
+	langid = {english},
+}
+
 @inproceedings{guo_graphcodebert_2020,
 	title = {{GraphCodeBERT}: Pre-training Code Representations with Data Flow},
 	url = {https://openreview.net/forum?id=jLoC4ez43PZ},
@@ -404,6 +470,14 @@
 	urldate = {2025-01-29},
 	date = {2020-10-02},
 	langid = {english},
+}
+
+@online{gordon_lambda_2021,
+	title = {{LAMBDA}: The ultimate Excel worksheet},
+	url = {https://www.microsoft.com/en-us/research/blog/lambda-the-ultimatae-excel-worksheet-function/?OCID=msr_blog_lambda_tw},
+	titleaddon = {Microsoft Research Blog},
+	author = {Gordon, Andy and Peyton Jones, Simon},
+	date = {2021-01-25},
 }
 
 @inproceedings{jaffe_meaningful_2018,
@@ -745,4 +819,22 @@ Volume: 2011-142},
 	date = {2024-02-28},
 	langid = {english},
 	keywords = {Artificial Intelligence, Model-driven engineering, Program translation, Re-engineering, Reverse engineering},
+}
+
+@article{ushakova_verification_2018,
+	title = {Verification of Programs with Mutual Recursion in Pifagor Language},
+	volume = {52},
+	issn = {1558-108X},
+	url = {https://doi.org/10.3103/S0146411618070301},
+	doi = {10.3103/S0146411618070301},
+	abstract = {In the article, we consider verification of programs with mutual recursion in the data driven functional parallel language Pifagor. In this language the program could be represented as a data flow graph, that has no control connections, and only has data relations. Under these conditions it is possible to simplify the process of formal verification, since there is no need to analyse resource conflicts, which are present in the systems with ordinary architectures. The proof of programs correctness is based on the elimination of mutual recursions by program transformation. The universal method of mutual recursion of an arbitrary number of functions elimination consists in constructing the universal recursive function that simulates all the functions in mutual recursion. A natural number is assigned to each function in mutual recursion. The universal recursive function takes as its argument the number of a function to be simulated and the arguments of this function. In some cases of the indirect recursion it is possible to use a simpler method of program transformation, namely, the merging of the functions code into a single function. To remove mutual recursion of an arbitrary number of functions, it is suggested to construct a graph of all connected functions and transform this graph by removing functions that are not connected with the target function, then by merging functions with indirect recursion and finally by constructing the universal recursive function. It is proved that in the Pifagor language such transformations of functions as code merging and universal recursive function construction do not change the correctness of the initial program. The example of partial correctness proof is given for the program that parses a simple arithmetic expression. We construct the graph of all connected functions and demonstrate two methods of proofs: by means of code merging and by means of the universal recursive function.},
+	pages = {850--866},
+	number = {7},
+	journaltitle = {Automatic Control and Computer Sciences},
+	shortjournal = {Aut. Control Comp. Sci.},
+	author = {Ushakova, M. S. and Legalov, A. I.},
+	urldate = {2025-01-30},
+	date = {2018-12-01},
+	langid = {english},
+	keywords = {Pifagor programming language, correctness of recursions, data driven functional parallel programming, elimination of mutual recursion, universal recursive function},
 }
