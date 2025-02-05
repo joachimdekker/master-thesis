@@ -58,7 +58,7 @@ In phase two, we will be working on the thesis full-time, devoting the full week
         group(..range(3).map(n => ([#(n+22)], 7))),
       )
       
-      taskgroup(title: [*Research*], {
+      taskgroup(title: align(left, [*Research*]), {
         task([Domain Model for \ Simple Mappings], weeks(1, 4), style: (stroke: 2pt + gray))
         task([Code Generation], weeks(4, 8), style: (stroke: 2pt + gray))
         task([Generation of \ Cyclic References \ and Mutual Recursion ], weeks(9, 12), style: (stroke: 2pt + gray))
@@ -67,7 +67,7 @@ In phase two, we will be working on the thesis full-time, devoting the full week
   
       taskgroup(title: [*Validation*], {
         task([Test Setup], weeks(6, 8), style: (stroke: 2pt + gray))
-        task([Formal semantic \ verification framework], weeks(9, 14), style: (stroke: 2pt + gray))
+        task([Empirical verification of semantics], weeks(9, 14), style: (stroke: 2pt + gray))
         task([Comparison of performance], weeks(9, 16), style: (stroke: 2pt + gray))
       })
   
@@ -122,10 +122,10 @@ placement: auto
 <fig:gantt-chart>
 
 == Research
-The research starts with the creation of a simple domain model for the Excel mappings and the generation of the code thereof. This research is to prepare the next phase and will take place in febuari and march. At the end of the first phase, we want to release an _alpha_ version of the tool that can compile simple excel worksheets to code. Afterwards, we will look for optimisations in the tool to compare the efficiency of the tool during Block 5. During that time, we will also extend the domain to support cyclic references and look for the optimal way to represent them. At the end of may, we plan to release the beta version, which should also support the cyclic references.
+The research starts with the creation of a simple domain model for the Excel mappings and the generation of the code thereof. This research is to prepare the next phase and will take place in febuari and march. At the end of the first phase, we want to release an _alpha_ version of the tool that can compile simple excel worksheets to code. Afterwards, we will look for optimisations in the tool to compare the efficiency of the tool during Block 5. During that time, we will also extend the domain to support cyclic references and look for the optimal way to represent them. At the end of may, we plan to release the _beta_ version, which should also support the cyclic references.
 
 == Validation
-To research the validity of the program and thesis, we will perform a formal validation and testing approach. We want to set-up the testing setup at the end of march, which will help the comparison and testing of the methods applied from the research. For the formal verification, we focus for a month on defining a technique to validate the compilation, and formalize the semantics of the excel formulas. Furthermore, during the formal verification and the research of the optimalizations, we will be performing performance tests to compare the methods, but this will take relatively little time in comparison to the other tasks.
+To research the validity of the program and thesis, we will perform an empirical testing approach. We want to set-up the testing setup at the end of march, which will help the comparison and testing of the methods applied from the research. For the formal verification, we focus for a month on defining a technique to validate the compilation, and formalize the semantics of the excel formulas. Furthermore, during the formal verification and the research of the optimalizations, we will be performing performance tests to compare the methods, but this will take relatively little time in comparison to the other tasks.
 
 == Thesis Writing
 Thesis writing is planned alongside research and validation, ensuring it aligns with the current progress and research. We will begin writing the draft in March, and update it incrementally, ensuring a good draft at the end of May. Afterwards, based on feedback from the supervisors, a release candidate will be created, incorporating the feedback. After a final round of formal feedback, the thesis will be finalized and ready for hand-in by early July.

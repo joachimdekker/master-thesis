@@ -11,7 +11,6 @@ presented in @tab:risk-register.
         [], [Likelihood], [Impact], [Score], [], 
         [Scope creep], [5], [5], [25], [Regular meetings with supervisor to calibrate project goals], 
         [Supervisor goes on holiday], [1], [1], [1], [Add holidays into planning],
-        [Laptop gets stolen], [1], [5], [5], [Make regular backups of experiment data and use version-control], 
         [Project planning errors], [3], [3], [9], [Build in 10% contingency, track and review progress every week], 
         [Lack of communication, causing delays], [1], [1], [1], [Send weekly updates to supervisor with progress, blockers, and plans for next week],
         [Stakeholder communication delays], [4], [4], [16], [Hold in-person impromptu meetings, allocate extra time for information gathering], 
@@ -20,6 +19,7 @@ presented in @tab:risk-register.
         [Unavailability of supervisors], [1], [3], [3], [Proactively schedule meetings well in advance], 
         [Unexpected illness], [2], [3], [6], [Maintain a healthy work-life balance, build in 10% contingency buffer], 
         [Unforeseen errors or omissions], [3], [3], [9], [Conduct weekly progress reviews, maintain a 10% contingency buffer], 
+        [Items gets stolen or data corruption], [1], [5], [5], [Make regular backups of data and use version-control for code],
         [Motivation and focus challenges], [2], [3], [6], [Use brainstorming, freewriting, and seek feedback],
       ), 
       caption: [Risk Register],
@@ -34,7 +34,7 @@ To mitigate this, in-person impromptu meetings with relevant stakeholders should
 gathering throughout the project timeline is essential.
 
 === Dataset is insufficient <subsec:insufficient-data>
-The current dataset, while huge, is too simplistic to perform experiments on. There is a lot of validation data that we can use to validate the compilation, but the formulas that are used in the dataset. A bigger dataset should be collected or constructed, but this could add extra time. To mitigate this, we will use the first couple of weeks to find a dataset, but if it is not possible, we will create smaller datasets ourselves.
+The current dataset, while huge, is too simplistic to perform experiments on. There is a lot of validation data that we can use to validate the compilation, but the formulas that are used in the dataset are too simple. A bigger dataset should be collected or constructed, but this could add extra time. To mitigate this, we will use the first couple of weeks to find a dataset, but if it is not possible, we will create smaller datasets ourselves.
 
 == Project goals are too ambitious
 The project's scope may be too ambitious for a master thesis, potentially leading to an unrealistic workload and compromised quality. Given previous projects, this is the biggest risk, scoring a high likelihood and high impact. 
