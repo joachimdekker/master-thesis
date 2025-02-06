@@ -28,19 +28,5 @@
 #include "sections/ethics.typ"
 #include "sections/planning.typ"
 
-
-// Fill out the ethics self-check via the RMS portal for Faculty of Science#footnote[#link("https://rms.uva.nl/servicedesk/customer/portal/14");];, and present a summary of the result and future actions. The main areas for ethical concerns are:
-
-// - Research that includes active involvement of human research participants and/or gathering of new data from human participants
-
-// - Research that involves the inclusion, combination, use, and/or analysis of already existing data sets about people
-
-// - Design or development of AI-technologies/algorithms, or deployment and/or use of AI-technologies/algorithms for practical applications
-
-// - Research that involves cyber security and/or online privacy issues
-
-// If the self-check does not lead to an adequate answer to doubts and dilemmas, consult the Ethical Review Committee (ECIS-SP for SE students) via the Ethics portal.
-
-
 #pagebreak()
 #bibliography("references.bib", full: false, style: "ieee")

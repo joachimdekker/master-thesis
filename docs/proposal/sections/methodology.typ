@@ -6,7 +6,7 @@ Creating a readable program from an Excel structure will be challenging. Excel i
 
 Since Excel formulas need to be converted into object-oriented, imperative code, several challenges arise. The first challenge is extracting functions from the computations---that is, determining where to combine computations and where to split them into separate functions. There are many possibilities that need to be examined. Furthermore, scoping becomes an issue when building upon these functions. In a standard spreadsheet application, all cell computations are in scope; however, when using imperative code, reusing cached computations is nontrivial. A cell's value might be evaluated in one scope, but if it needs to be reused in another, sharing that value becomes challenging without resorting to global variables. This would hurt readability.
 
-Circular dependencies add further complexity through mutual recursion. The exact semantics of Excel's iterative calculation (fixed point iteration) can vary, as they depend on the initial values. Since maintaining consistency in the values is crucial, these semantics need to be further analyzed. This could prove difficult, since we do not have access to the source code of Excel.
+Circular dependencies add further complexity through mutual recursion. The exact semantics of Excels iterative calculation (fixed point iteration) can vary, as they depend on the initial values. Since maintaining consistency in the values is crucial, these semantics need to be further analyzed. This could prove difficult, since we do not have access to the source code of Excel.
 
 Furthermore, many of the optimizations in algorithms for simplifying mutual recursion---introduced by circular dependencies---overlook the fact that every function can be used multiple times. As such, there should be an efficient way to store the data computed from these functions.
 
@@ -30,21 +30,6 @@ A quantitative approach will be used to evaluate the proof of concept, focusing 
 
 == Hypotheses
 Below, we explain our hypotheses on the research questions outlined in @subsec:research-questions. 
-// === Does there exist a human-readable high-level code representation of complex compositions of excel formulas?
-// We hypothesize there exists a human-readable representation of most formulas. However, we do believe there are certain restrictions on the compilation, especially when it comes to the complex dynamic formulas.
-
-// ==== Does there exist a mapping for Dynamic Excel formulas?
-// Our hypothesis is that a mapping for dynamic formulas will exist, but with restrictions. In highly complex scenarios, where multiple dynamic formulas are being used, compilation to normal imperative code may be difficult due to their use of the spreadsheet datastructure (something we are trying to remove).
-
-// ==== Does there exist a mapping for cyclic references?
-
-
-// ==== What are the differences between the Excel Formulas and the compiled code?
-
-// === How can the mapping between excel formulas and code be verified?
-// We theorize the mapping can be verified using two ways: empirical and formal. For empirical verification, we hyptohesise it can be done, but will require a lot of test cases to cover the complexity and edge-cases of excel formulas.
-
-// For formal verification, we expect that we can model most of excel formulas. There will be some difficulty defining the formal semantics for the more complex formulas. We believe not the full semantics of the dynamic formulas can be mapped, due to their inherent complexities and their reliance on the spreadsheet datastructure.
 
 
 #enum(numbering: n => strong[(RQ#n)], indent: -35pt, spacing: 12pt,

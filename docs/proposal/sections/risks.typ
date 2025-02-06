@@ -21,6 +21,7 @@ presented in @tab:risk-register.
         [Unforeseen errors or omissions], [3], [3], [9], [Conduct weekly progress reviews, maintain a 10% contingency buffer], 
         [Items gets stolen or data corruption], [1], [5], [5], [Make regular backups of data and use version-control for code],
         [Motivation and focus challenges], [2], [3], [6], [Use brainstorming, freewriting, and seek feedback],
+        [Insufficient Data], [4], [6], [24], [Obtain parts of data by mailing employees]
       ), 
       caption: [Risk Register],
       placement: auto,
@@ -35,6 +36,8 @@ gathering throughout the project timeline is essential.
 
 === Dataset is insufficient <subsec:insufficient-data>
 The current dataset, while huge, is too simplistic to perform experiments on. There is a lot of validation data that we can use to validate the compilation, but the formulas that are used in the dataset are too simple. A bigger dataset should be collected or constructed, but this could add extra time. To mitigate this, we will use the first couple of weeks to find a dataset, but if it is not possible, we will create smaller datasets ourselves.
+
+Furthermore, it does not represent the excel calculation tool that the pension fund employees use. To obtain this excel file will be hard, but may be possible in collaboration with Info Support. However, there exists a risk that it is not possible. A mitigation might be to obtain an older dataset, or a part of the dataset.
 
 == Project goals are too ambitious
 The project's scope may be too ambitious for a master thesis, potentially leading to an unrealistic workload and compromised quality. Given previous projects, this is the biggest risk, scoring a high likelihood and high impact. 
@@ -54,17 +57,10 @@ availability.
 == Minor risks
 The following risks are minor risks and have a low likelihood or impact.
 
-Unexpected illness could lead to disruptions and delay project progress. This risk can be minimized by
-prioritizing a healthy work-life balance and avoiding overwork to minimize burnout risk. A 10% contingency time
-buffer will also be built into the schedule to accommodate potential sickness.
+Unexpected illness could lead to delay in project progress. This risk can be minimized by prioritizing a healthy work-life balance and avoiding overwork to minimize the risk of a burnout. Furthermore, a 10% contingency time buffer will also be built into the schedule to accommodate potential sickness.
 
-Data loss due to laptop theft is a low-probability risk that still requires mitigation. Implementing robust data
-backup strategies including both automatic and manual cloud backups will be essential. Regularly storing code in
-a version control system like Git and committing changes frequently will also be crucial.
+Data loss due to laptop theft is a low-probability risk but will have a large impact if it happens. Implementing robust data backup strategies including both automatic and manual cloud backups, as well as regularly storing code in a version control system like Git and committing changes frequently will be taken as risk measures.
 
-Despite careful planning, unforeseen errors or omissions can occur. This risk can be mitigated by conducting
-weekly progress reviews with supervisors to identify potential issues early on. Maintaining a 10% contingency
-buffer within the schedule will also help address unexpected challenges.
+Despite careful planning, unforeseen errors or omissions can occur. This risk can be mitigated by conducting weekly progress reviews with supervisors to identify potential issues early in the process. Furthermore, maintaining a 10% contingency buffer within the schedule will help address unexpected errors.
 
-Difficulty finding motivation and focusing on writing tasks can be overcome through various techniques such as
-brainstorming sessions, freewriting exercises, and seeking feedback from peers or mentors.
+The author sometimes suffers from a difficulty finding motivation and focusing on writing tasks. However, this can be overcome through various techniques such as brainstorming sessions, freewriting exercises, and seeking feedback from peers or mentors.
