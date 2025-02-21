@@ -7,4 +7,19 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="EPPlus" Version="7.6.0" />
+      <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ExcelCompiler.Config\ExcelCompiler.Config.csproj" />
+      <ProjectReference Include="..\ExcelCompiler.Extraction\ExcelCompiler.Extraction.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <None CopyToOutputDirectory="PreserveNewest" Include="appsettings.json"/>
+        <None CopyToOutputDirectory="PreserveNewest" Include="appsettings.*.json"/>
+    </ItemGroup>
+
 </Project>
