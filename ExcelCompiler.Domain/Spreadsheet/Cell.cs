@@ -1,6 +1,14 @@
 namespace ExcelCompiler.Domain.Spreadsheet;
 
-public abstract record Cell(Location location, List<Cell>? dependencies = null)
+public abstract record Cell
 {
-    public List<Cell> Dependencies => dependencies ?? [];
+    protected Cell(Location location, List<Cell>? dependencies = null)
+    {
+        Location = location;
+        Dependencies = dependencies ?? [];
+    }
+
+    public Location Location { get; init; }
+    
+    public List<Cell> Dependencies { get; init; }
 }

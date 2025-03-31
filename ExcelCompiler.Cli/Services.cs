@@ -11,6 +11,7 @@ public static class Services
     public static void AddNamedConfiguration(this IServiceCollection builder, IConfiguration configuration)
     {
         builder.Configure<FileConfiguration>(configuration.GetSection("File"));
+        builder.Configure<OutputConfiguration>(configuration.GetSection("Output"));
     }
     
     public static void AddServices(this IServiceCollection builder)

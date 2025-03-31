@@ -14,7 +14,7 @@ public partial record Location
     [GeneratedRegex("^(?<column>^[A-Z]+)(?<row>[1-9][0-9]*)$")]
     static partial Regex A1FormatRegex { get; }
     
-    public static Location FromA1Format(string a1Format, int worksheetIndex = 0)
+    public static Location FromA1(string a1Format, int worksheetIndex = 0)
     {
         // Get the numbers out of the string
         var match = A1FormatRegex.Match(a1Format);

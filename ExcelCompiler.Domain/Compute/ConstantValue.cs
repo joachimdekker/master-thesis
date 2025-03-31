@@ -1,8 +1,10 @@
+using ExcelCompiler.Domain.Spreadsheet;
+
 namespace ExcelCompiler.Domain.Compute;
 
-public class ConstantValue<TValue>(TValue value) : Function("constant" + nameof(TValue), new List<Function>())
+public class ConstantValue<TValue>(TValue value, Location location) : ComputeUnit(location)
 {
-    TValue Value { get; } = value;
+    public TValue Value { get; } = value;
     
-    Type Type { get; } = typeof(TValue);
+    public Type Type { get; } = typeof(TValue);
 }

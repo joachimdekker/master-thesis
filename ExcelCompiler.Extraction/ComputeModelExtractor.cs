@@ -6,6 +6,7 @@ using ExcelCompiler.Domain.Spreadsheet;
 using Irony.Parsing;
 using OfficeOpenXml;
 using XLParser;
+using Range = ExcelCompiler.Domain.Compute.Range;
 
 namespace ExcelCompiler.Extraction;
 
@@ -18,139 +19,173 @@ public partial class ComputeModelExtractor
     [GeneratedRegex("[A-Z]+[1-9][0-9]*")]
     static partial Regex A1FormatRegex { get; }
 
-    public List<Cell> Extract(Stream excelFile)
+    public SupportGraph Extract(Stream excelFile, Location resultLocation)
     {
         using var p = new ExcelPackage(excelFile);
 
-        List<Cell> cells = new();
-        Location startCell = Location.FromA1Format("F17");
+        List<Cell> cells = [];
+        
+        Location startCell = resultLocation;
+        SupportGraph graph = new SupportGraph();
 
-        Queue<Location> cellsToProcess = new([startCell]);
-        HashSet<Location> processedCells = new();
+        Dictionary<Location, ComputeUnit> processedCells = [];
+        
 
+        ComputeUnit? root = GetComputeUnit(startCell, p);
+        
+        if (root is null) return graph;
+        
+        // Add the root to the graph
+        graph.Roots.Add(root);
+        
+        // Prepare the traversal algorithm
+        // We use a stack for DFS to make linking the graph easier
+        List<Location> locationToTraverse = GetNextLocations(root);
+        Stack<(Location Location, ComputeUnit Parent)> cellsToProcess = new(locationToTraverse.Select(l => (l, root)));
+        
+        
         while (cellsToProcess.Count > 0)
         {
-            var cellLocation = cellsToProcess.Dequeue();
-            var cell = p.Workbook.Worksheets[cellLocation.WorksheetIndex].Cells[cellLocation.Row, cellLocation.Column];
-            
-            // Check if the cell contains a value or a formula
-            bool isFormula = cell.Formula is not null and not "";
+            (Location cellLocation, ComputeUnit parent) = cellsToProcess.Pop();
+            var cu = GetComputeUnit(cellLocation, p);
 
-            if (!isFormula && cell.Value is null or "") continue;
-            
-            processedCells.Add(cellLocation);
-            if (!isFormula)
+            if (cu is null)
             {
-                Cell valueCell = new ValueCell(cellLocation, cell.Value.ToString()!);
-
-                cells.Add(valueCell);
                 continue;
             }
-
-            ParseTreeNode node = ExcelFormulaParser.Parse(cell.Formula!);
-
-            // Get every cell that is mentioned in the formula
-            var matches = A1FormatRegex.Matches(cell.Formula!);
-
-            foreach (Match match in matches)
+            
+            // Get the next locations
+            List<Location> nextLocations = GetNextLocations(cu);
+            foreach (var nextLocation in nextLocations)
             {
-                var matchString = match.Value;
-                var location = Location.FromA1Format(matchString);
-
-                if (processedCells.Contains(location)) continue;
-
-                cellsToProcess.Enqueue(location);
+                if (processedCells.TryGetValue(nextLocation, out var nextCu))
+                {
+                    // If the next location is already processed, add a dependency to the current unit
+                    cu.AddDependency(nextCu);
+                    continue;
+                }
+                 
+                cellsToProcess.Push((nextLocation, cu));
             }
-
-            // Convert the parse tree node to a formula
-            Function formula = ConvertParseTreeToFormula(node);
-
-            FormulaCell cellToAdd = new(cellLocation, formula);
-            cells.Add(cellToAdd);
+            
+            // Add the formula to the graph
+            processedCells[cellLocation] = cu;
+            parent.AddDependency(cu);
         }
         
-        return cells;
+        return graph;
     }
 
-    private Function ConvertParseTreeToFormula(ParseTreeNode node)
+    private List<Location> GetNextLocations(ComputeUnit root)
     {
-        if (node.IsParentheses()) return ConvertParseTreeToFormula(node.ChildNodes[1]);
+        return root switch 
+        {
+            FunctionComposition function => function.Arguments.SelectMany(GetNextLocations).ToList(),
+            Reference reference => [reference.CellReference],
+            Range range => range.GetLocations().ToList(),
+            _ => [],
+        };
+    }
+
+    private ComputeUnit? GetComputeUnit(Location cellLocation, ExcelPackage excelFile)
+    {
+        var cell = excelFile.Workbook.Worksheets[cellLocation.WorksheetIndex].Cells[cellLocation.Row, cellLocation.Column];
+            
+        // Check if the cell contains a value or a formula
+        bool isFormula = cell.Formula is not null and not "";
+        if (!isFormula && cell.Value is null or "") return null!;
+            
+        if (!isFormula)
+        {
+            ComputeUnit valueCell = new ConstantValue<string>(cell.Value.ToString()!, cellLocation);
+            return valueCell;
+        }
+
+        ParseTreeNode node = ExcelFormulaParser.Parse(cell.Formula!);
         
-        
+        // Convert the parse tree node to a formula
+        ComputeUnit formula = ConvertParseTreeToFormula(node, cellLocation);
+        return formula;
+    }
+
+    private ComputeUnit ConvertParseTreeToFormula(ParseTreeNode node, Location location)
+    {
+        if (node.IsParentheses()) return ConvertParseTreeToFormula(node.ChildNodes[1], location);
         
         return node.Type() switch
         {
-            GrammarNames.Formula => ConvertParseTreeToFormula(node.ChildNodes[0]),
-            GrammarNames.FunctionCall => ParseFunctionCall(node),
-            GrammarNames.Text => new ConstantValue<string>(node.Token.ValueString),
-            GrammarNames.Number => new ConstantValue<double>(double.Parse(node.Token.ValueString)),
-            GrammarNames.Reference => ParseReference(node),
+            GrammarNames.Formula => ConvertParseTreeToFormula(node.ChildNodes[0], location),
+            GrammarNames.FunctionCall => ParseFunctionCall(node, location),
+            GrammarNames.Text => new ConstantValue<string>(node.Token.ValueString, location),
+            GrammarNames.Number => new ConstantValue<decimal>(decimal.Parse(node.Token.ValueString), location),
+            GrammarNames.Reference => ParseReference(node, location),
             GrammarNames.UDFunctionCall => throw new ArgumentException(
                 "User-defined functions are not supported at this time.", nameof(node)),
             _ => node switch
             {
-                { ChildNodes.Count: 1 } childNode => ConvertParseTreeToFormula(childNode),
+                { ChildNodes.Count: 1 } childNode => ConvertParseTreeToFormula(childNode, location),
                 _ => throw new ArgumentException("Unsupported parse tree node.", nameof(node))
             }
         };
     }
 
 
-    private Function ParseReference(ParseTreeNode node)
+    private ComputeUnit ParseReference(ParseTreeNode node, Location location)
     {
         if (node.IsRange())
         {
-            return new Function("Range", [
-                ParseReferenceItem(node.ChildNodes[0]),
-                ParseReferenceItem(node.ChildNodes[2])
-            ]);
+            return new FunctionComposition("Range", [
+                ParseReferenceItem(node.ChildNodes[0], location),
+                ParseReferenceItem(node.ChildNodes[2], location)
+            ], location);
         }
         
-        return ParseReferenceItem(node.ChildNodes[0]);
+        return ParseReferenceItem(node.ChildNodes[0], location);
     }
 
-    private Function ParseReferenceItem(ParseTreeNode node) => node.Type() switch
+    private ComputeUnit ParseReferenceItem(ParseTreeNode node, Location location) => node.Type() switch
     {
-        GrammarNames.Cell => new Reference(node.ChildNodes[0].Token.ValueString),
-        GrammarNames.NamedRange => new Reference("NamedRange:" + node.ChildNodes[0].Token.ValueString),
-        GrammarNames.HorizontalRange => new Reference("HorizontalRange:" + node.ChildNodes[0].Token.ValueString),
-        GrammarNames.VerticalRange => new Reference("VerticalRange:" + node.ChildNodes[0].Token.ValueString),
+        GrammarNames.Cell => new Reference(Location.FromA1(node.ChildNodes[0].Token.ValueString), location),
+        GrammarNames.NamedRange => Range.FromString(node.ChildNodes[0].Token.ValueString, location),
+        // GrammarNames.HorizontalRange => Range.FromString(node.ChildNodes[0].Token.ValueString, location),
+        // GrammarNames.VerticalRange => Range.FromString(node.ChildNodes[0].Token.ValueString, location),
         GrammarNames.RefError => throw new ArgumentException(
             "References to error values are not supported at this time"),
         GrammarNames.StructuredReference => throw new ArgumentException(
-            "Structured References are not supported at this time")
+            "Structured References are not supported at this time"),
+        _ => throw new ArgumentOutOfRangeException("This is not supported at the time.")
     };
 
-    private Function ParseFunctionCall(ParseTreeNode node)
+    private ComputeUnit ParseFunctionCall(ParseTreeNode node, Location location)
     {
         if (node.IsBinaryOperation())
         {
             // Binary operator
-            return new Function(node.ChildNodes[1].Token.ValueString, [
-                ConvertParseTreeToFormula(node.ChildNodes[0]),
-                ConvertParseTreeToFormula(node.ChildNodes[2])
-            ]);
+            return new FunctionComposition(node.ChildNodes[1].Token.ValueString, [
+                ConvertParseTreeToFormula(node.ChildNodes[0], location),
+                ConvertParseTreeToFormula(node.ChildNodes[2], location)
+            ], location);
         }
         
         if (node.ChildNodes[0].Type() == GrammarNames.FunctionName)
         {
             // Excel function call
-            return new Function(node.ChildNodes[0].Token.ValueString,
-                node.ChildNodes[1..].Select(ConvertParseTreeToFormula).ToList());
+            return new FunctionComposition(node.ChildNodes[0].Token.ValueString,
+                node.ChildNodes[1..].Select(c => ConvertParseTreeToFormula(c, location)).ToList(), location);
         }
         
         // It can also be a unary operator like a percentage or something
 
         if (node.IsUnaryPrefixOperation())
         {
-            return new Function(node.ChildNodes[0].Token.ValueString + node.ChildNodes[1].Token.ValueString, []);
+            return new FunctionComposition(node.ChildNodes[0].Token.ValueString + node.ChildNodes[1].Token.ValueString, [], location);
         }
 
         if (node.IsUnaryPostfixOperation())
         {
             // There is only one unary postfix operation: '%', and thus we convert the value to decimal
             double value = double.Parse(node.ChildNodes[0].Token.ValueString);
-            return new Function(value.ToString(CultureInfo.InvariantCulture), []);
+            return new FunctionComposition(value.ToString(CultureInfo.InvariantCulture), [], location);
         }
         
         throw new ArgumentException("Unsupported parse tree node.", nameof(node));

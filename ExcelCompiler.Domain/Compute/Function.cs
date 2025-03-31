@@ -1,20 +1,13 @@
-using System.Text.Json;
+using ExcelCompiler.Domain.Spreadsheet;
 
 namespace ExcelCompiler.Domain.Compute;
 
-public class Function
+public class Function : ComputeUnit
 {
-    public string Raw { get; internal set; }
-    
-    public string Name { get; internal set; }
-    
-    public List<Function> Arguments { get; internal set; }
-
-    public Function(string name, List<Function> arguments)
+    public Function(string name, Location location) : base(location)
     {
         Name = name;
-        Arguments = arguments;
     }
-    
-    public override string ToString() => JsonSerializer.Serialize(this);
+
+    public string Name { get; }
 }

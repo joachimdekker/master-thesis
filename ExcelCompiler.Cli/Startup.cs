@@ -1,4 +1,5 @@
 ﻿using ExcelCompiler.Cli;
+using ExcelCompiler.Generators;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -19,7 +20,8 @@ IServiceCollection services = new ServiceCollection();
 services.AddLogging(lb => lb.AddSimpleConsole().SetMinimumLevel(LogLevel.Trace));
 services.AddNamedConfiguration(config);
 services.AddServices();
-services.AddSingleton<ConversionWorker>();
+services.AddScoped<ConversionWorker>();
+services.AddScoped<OneLinerStringExcelGenerator>();
 
 IServiceProvider provider = services.BuildServiceProvider();
 

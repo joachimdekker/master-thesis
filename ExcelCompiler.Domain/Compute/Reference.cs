@@ -1,18 +1,24 @@
+using System.Runtime.InteropServices.JavaScript;
+using ExcelCompiler.Domain.Spreadsheet;
+
 namespace ExcelCompiler.Domain.Compute;
 
-public class Reference : Function
+public class Reference : ComputeUnit
 {
-    public int Row { get; }
+    public Location CellReference { get; internal set; }
     
-    public int Column { get; }
-    
-    public Reference(int row, int column) : base("R" + row + "C" + column, [])
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Reference"/> class.
+    /// </summary>
+    /// <param name="reference">The reference to another cell.</param>
+    /// <param name="location">The location of the reference.</param>
+    /// <example>There is a reference in cell <c>A1</c> that references to <c>B2</c>, then we use
+    /// <code>
+    /// var reference = new Reference(Location.FromA1("B2"), Location.FromA1("A1"));
+    /// </code>
+    /// </example>
+    public Reference(Location reference, Location location) : base(location)
     {
-        Row = row;
-        Column = column;
-    }
-
-    public Reference(string raw) : base(raw, new List<Function>())
-    {
+        CellReference = reference;
     }
 }

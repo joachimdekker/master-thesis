@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Generators", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Config", "ExcelCompiler.Config\ExcelCompiler.Config.csproj", "{BEFA06A3-939B-4A2E-8C13-B17D6EA7E65A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Transformations", "ExcelCompiler.Transformations\ExcelCompiler.Transformations.csproj", "{D943DAE8-9D69-417B-A73A-3D32F19C5316}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{BEFA06A3-939B-4A2E-8C13-B17D6EA7E65A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BEFA06A3-939B-4A2E-8C13-B17D6EA7E65A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BEFA06A3-939B-4A2E-8C13-B17D6EA7E65A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D943DAE8-9D69-417B-A73A-3D32F19C5316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D943DAE8-9D69-417B-A73A-3D32F19C5316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D943DAE8-9D69-417B-A73A-3D32F19C5316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D943DAE8-9D69-417B-A73A-3D32F19C5316}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
