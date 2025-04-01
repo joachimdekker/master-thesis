@@ -48,7 +48,7 @@ public class SupportGraph
         
         foreach (var root in Roots)
         {
-            var unit = Traverse(root).FirstOrDefault(x => x.Cell == referenceCellReference);
+            var unit = Traverse(root).FirstOrDefault(x => x.Location == referenceCellReference);
             if (unit is not null)
             {
                 return unit;

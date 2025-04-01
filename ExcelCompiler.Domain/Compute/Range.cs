@@ -7,7 +7,7 @@ public class Range : ComputeUnit
     public Location From { get; }
     public Location To { get; }
     
-    public Range(Location from, Location to, Location cell) : base(cell)
+    public Range(Location from, Location to, Location location) : base(location)
     {
         if (from.WorksheetIndex != to.WorksheetIndex) 
             throw new ArgumentException("From and To locations must be in the same worksheet.");
