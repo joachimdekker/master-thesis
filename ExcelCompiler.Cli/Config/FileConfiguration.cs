@@ -1,4 +1,4 @@
-namespace ExcelCompiler.Config;
+namespace ExcelCompiler.Cli.Config;
 
 public class FileConfiguration
 {

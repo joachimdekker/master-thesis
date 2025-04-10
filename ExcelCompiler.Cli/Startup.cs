@@ -1,5 +1,8 @@
 ﻿using ExcelCompiler.Cli;
+using ExcelCompiler.Domain.Compute;
+using ExcelCompiler.Domain.Spreadsheet;
 using ExcelCompiler.Generators;
+using ExcelCompiler.Transformations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,10 +24,15 @@ services.AddLogging(lb => lb.AddSimpleConsole().SetMinimumLevel(LogLevel.Trace))
 services.AddNamedConfiguration(config);
 services.AddServices();
 services.AddScoped<ConversionWorker>();
+services.AddScoped<ProjectCreationWorker>();
 services.AddScoped<OneLinerStringExcelGenerator>();
 
 IServiceProvider provider = services.BuildServiceProvider();
 
 // Run the worker
 ConversionWorker worker = provider.GetRequiredService<ConversionWorker>();
-await worker.ExecuteAsync();
+SupportGraph graph = await worker.ExecuteAsync([Location.FromA1("F17"), ]);
+
+// Run the project creation worker
+ProjectCreationWorker projectWorker = provider.GetRequiredService<ProjectCreationWorker>();
+await projectWorker.ExecuteAsync(graph);

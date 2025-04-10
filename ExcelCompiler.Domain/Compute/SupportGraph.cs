@@ -20,41 +20,12 @@ public class SupportGraph
     /// </remarks>
     public List<ComputeUnit> Roots { get; init; } = [];
     
-    public SupportGraph() { } 
+    public Dictionary<Location,ComputeUnit> Cells { get; init; } = [];
+    
+    public SupportGraph() { }
     
     public SupportGraph(List<ComputeUnit> roots)
     {
         Roots = roots;
-    }
-
-    /// <summary>
-    /// Gets the entry point of certain location in the support graph.
-    /// </summary>
-    /// <remarks>
-    /// This method is used primarily for resolving references. We pick the first point from the root where the location matches.
-    /// </remarks>
-    /// <param name="referenceCellReference"></param>
-    /// <returns></returns>
-    public ComputeUnit GetReference(Location referenceCellReference)
-    {
-        IEnumerable<ComputeUnit> Traverse(ComputeUnit unit)
-        {
-            yield return unit;
-            foreach (var child in unit.Dependencies.SelectMany(Traverse))
-            {
-                yield return child;
-            }
-        }
-        
-        foreach (var root in Roots)
-        {
-            var unit = Traverse(root).FirstOrDefault(x => x.Location == referenceCellReference);
-            if (unit is not null)
-            {
-                return unit;
-            }
-        }
-        
-        throw new InvalidOperationException($"No entry point found for {referenceCellReference}");
     }
 }

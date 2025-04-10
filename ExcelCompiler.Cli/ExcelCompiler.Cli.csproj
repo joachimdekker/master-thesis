@@ -13,9 +13,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ExcelCompiler.Config\ExcelCompiler.Config.csproj" />
       <ProjectReference Include="..\ExcelCompiler.Extraction\ExcelCompiler.Extraction.csproj" />
       <ProjectReference Include="..\ExcelCompiler.Generators\ExcelCompiler.Generators.csproj" />
+      <ProjectReference Include="..\ExcelCompiler.Transformations\ExcelCompiler.Transformations.csproj" />
     </ItemGroup>
     
     <ItemGroup>

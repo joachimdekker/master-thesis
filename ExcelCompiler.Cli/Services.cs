@@ -1,5 +1,7 @@
-using ExcelCompiler.Config;
+using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Extraction;
+using ExcelCompiler.Generators;
+using ExcelCompiler.Transformations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -17,5 +19,12 @@ public static class Services
     public static void AddServices(this IServiceCollection builder)
     {
         builder.AddScoped<ComputeModelExtractor>();
+        
+        builder.AddScoped<LinkDependencies>();
+        builder.AddScoped<ExpandFunctionCompositions>();
+        
+        // Generation
+        builder.AddScoped<OneLinerStringExcelGenerator>();
+        builder.AddScoped<ProjectGenerator>();
     }
 }

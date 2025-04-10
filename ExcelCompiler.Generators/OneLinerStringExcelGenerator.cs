@@ -1,5 +1,6 @@
 ﻿using ExcelCompiler.Domain.Compute;
 using Microsoft.Extensions.Logging;
+using Range = ExcelCompiler.Domain.Compute.Range;
 
 namespace ExcelCompiler.Generators;
 
@@ -20,8 +21,8 @@ public class OneLinerStringExcelGenerator
         // Compute the roots in paralel
         foreach (ComputeUnit root in graph.Roots)
         {
-            string? rootCode = string.Join("", root.Dependencies.Select(GenerateCode));
-            code += rootCode;
+            string? rootCode = GenerateCode(root);
+            code += $"Console.WriteLine({rootCode});\n";
         }
         
         // Write the code to the file
@@ -32,12 +33,28 @@ public class OneLinerStringExcelGenerator
 
     private string GenerateCode(ComputeUnit unit)
     {
+        // string code = unit switch
+        // {
+        //     ConstantValue<string> constant => $"\"{constant.Value}\"",
+        //     ConstantValue<int> constant => $"{constant.Value}",
+        //     ConstantValue<double> constant => $"{constant.Value}",
+        //     FunctionComposition function => string.Join(" + ", function.Arguments.Select(GenerateCode)),
+        //     Function function => $"{function.Name}({string.Join(", ", function.Dependencies.Select(GenerateCode))});",
+        //     _ => throw new NotImplementedException($"Unknown type {unit.GetType()}")
+        // };
+
         string code = unit switch
         {
-            ConstantValue<string> constant => $"\"{constant.Value}\";",
-            ConstantValue<int> constant => $"{constant.Value};",
-            ConstantValue<double> constant => $"{constant.Value};",
-            FunctionComposition function => string.Join(" + ", function.Arguments.Select(GenerateCode)),
+            ConstantValue<string> constant => $"\"{constant.Value}\"",
+            ConstantValue<decimal> constant => $"{constant.Value}",
+            ConstantValue<int> constant => $"{constant.Value}",
+            ConstantValue<double> constant => $"{constant.Value}",
+            Reference reference => GenerateCode(reference.Dependencies[0]),
+            Function { Name: "+" } function =>
+                $"({string.Join(" + ", function.Dependencies.Select(GenerateCode))})",
+            Function { Name: "-" } function =>
+                $"({string.Join(" - ", function.Dependencies.Select(GenerateCode))})",
+            Function { Name: "SUM", Dependencies: [Range range] } => $"(new int[] {{{string.Join(", ", range.Dependencies.Select(GenerateCode))}}}).Sum()",
             _ => throw new NotImplementedException($"Unknown type {unit.GetType()}")
         };
 
@@ -56,9 +73,9 @@ using System.Threading.Tasks;
 
 namespace ExcelProgram;
 
-public class Program 
+public static class Program 
 {{
-public void Main(string[] args)
+public static void Main(string[] args)
 {{
 {code}
 }}

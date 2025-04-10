@@ -19,9 +19,9 @@ public abstract class ComputeUnit
     public List<ComputeUnit> Dependents { get; init; }
     public Location Location { get; init; }
     
-    public bool IsRoot => Dependencies.Count == 0;
+    public bool IsRoot => Dependents.Count == 0;
     
-    public bool IsLeaf => Dependents.Count == 0;
+    public bool IsLeaf => Dependencies.Count == 0;
     
     public string? Raw { get; internal set; }
     

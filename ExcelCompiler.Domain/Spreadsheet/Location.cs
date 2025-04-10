@@ -14,6 +14,21 @@ public partial record Location
     [GeneratedRegex("^(?<column>^[A-Z]+)(?<row>[1-9][0-9]*)$")]
     static partial Regex A1FormatRegex { get; }
     
+    public string ToA1()
+    {
+        // Convert the column number to letters
+        var columnLetters = string.Empty;
+        var column = Column;
+        while (column > 0)
+        {
+            column--;
+            columnLetters = (char)('A' + (column % 26)) + columnLetters;
+            column /= 26;
+        }
+
+        return $"{columnLetters}{Row}";
+    }
+    
     public static Location FromA1(string a1Format, int worksheetIndex = 0)
     {
         // Get the numbers out of the string

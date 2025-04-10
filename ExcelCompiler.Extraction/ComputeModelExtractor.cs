@@ -19,38 +19,21 @@ public partial class ComputeModelExtractor
     [GeneratedRegex("[A-Z]+[1-9][0-9]*")]
     static partial Regex A1FormatRegex { get; }
 
-    public SupportGraph Extract(Stream excelFile, Location resultLocation)
+    public List<ComputeUnit> Extract(Stream excelFile, IEnumerable<Location> resultLocation)
     {
         using var p = new ExcelPackage(excelFile);
-
-        List<Cell> cells = [];
-        
-        Location startCell = resultLocation;
-        SupportGraph graph = new SupportGraph();
-
+        List<ComputeUnit> units = new List<ComputeUnit>();
         Dictionary<Location, ComputeUnit> processedCells = [];
-        
-
-        ComputeUnit? root = GetComputeUnit(startCell, p);
-        
-        if (root is null) return graph;
-        
-        // Add the root to the graph
-        graph.Roots.Add(root);
-        
-        // Prepare the traversal algorithm
-        // We use a stack for DFS to make linking the graph easier
-        List<Location> locationToTraverse = GetNextLocations(root);
-        Stack<(Location Location, ComputeUnit Parent)> cellsToProcess = new(locationToTraverse.Select(l => (l, root)));
-        
+        Stack<Location> cellsToProcess = new(resultLocation);
         
         while (cellsToProcess.Count > 0)
         {
-            (Location cellLocation, ComputeUnit parent) = cellsToProcess.Pop();
+            Location cellLocation = cellsToProcess.Pop();
             var cu = GetComputeUnit(cellLocation, p);
 
             if (cu is null)
             {
+                Console.WriteLine($"Warning: Cell {cellLocation} is empty or contains an error.");
                 continue;
             }
             
@@ -61,19 +44,22 @@ public partial class ComputeModelExtractor
                 if (processedCells.TryGetValue(nextLocation, out var nextCu))
                 {
                     // If the next location is already processed, add a dependency to the current unit
-                    cu.AddDependency(nextCu);
+                    // cu.AddDependency(nextCu);
                     continue;
                 }
                  
-                cellsToProcess.Push((nextLocation, cu));
+                cellsToProcess.Push(nextLocation);
             }
             
             // Add the formula to the graph
             processedCells[cellLocation] = cu;
-            parent.AddDependency(cu);
+            // parent.AddDependency(cu);
+            units.Add(cu);
         }
         
-        return graph;
+        
+        
+        return units;
     }
 
     private List<Location> GetNextLocations(ComputeUnit root)
@@ -97,7 +83,16 @@ public partial class ComputeModelExtractor
             
         if (!isFormula)
         {
-            ComputeUnit valueCell = new ConstantValue<string>(cell.Value.ToString()!, cellLocation);
+            ComputeUnit valueCell = cell.Value switch
+            {
+                string str => new ConstantValue<string>(str, cellLocation),
+                double d => new ConstantValue<double>(d, cellLocation),
+                decimal d => new ConstantValue<decimal>(d, cellLocation),
+                bool b => new ConstantValue<bool>(b, cellLocation),
+                DateTime dt => new ConstantValue<DateTime>(dt, cellLocation),
+                _ => throw new ArgumentException("Unsupported cell value type.", nameof(cell))
+            };
+            
             return valueCell;
         }
 
@@ -153,6 +148,7 @@ public partial class ComputeModelExtractor
             "References to error values are not supported at this time"),
         GrammarNames.StructuredReference => throw new ArgumentException(
             "Structured References are not supported at this time"),
+        GrammarNames.ReferenceFunctionCall => Range.FromString(node.Print(), location),
         _ => throw new ArgumentOutOfRangeException("This is not supported at the time.")
     };
 
@@ -167,11 +163,11 @@ public partial class ComputeModelExtractor
             ], location);
         }
         
-        if (node.ChildNodes[0].Type() == GrammarNames.FunctionName)
+        if (node.IsFunction())
         {
             // Excel function call
-            return new FunctionComposition(node.ChildNodes[0].Token.ValueString,
-                node.ChildNodes[1..].Select(c => ConvertParseTreeToFormula(c, location)).ToList(), location);
+            return new FunctionComposition(node.GetFunction(),
+                node.GetFunctionArguments().Select(c => ConvertParseTreeToFormula(c, location)).ToList(), location);
         }
         
         // It can also be a unary operator like a percentage or something
