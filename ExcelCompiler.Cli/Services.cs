@@ -18,13 +18,18 @@ public static class Services
     
     public static void AddServices(this IServiceCollection builder)
     {
+        
+        builder.AddScoped<ConversionWorker>();
+        builder.AddScoped<ProjectCreationWorker>();
+        
         builder.AddScoped<ComputeModelExtractor>();
         
         builder.AddScoped<LinkDependencies>();
         builder.AddScoped<ExpandFunctionCompositions>();
         
         // Generation
-        builder.AddScoped<OneLinerStringExcelGenerator>();
+        //builder.AddScoped<IFileGenerator, OneLinerStringExcelGenerator>();
+        builder.AddScoped<IFileGenerator, RoslynSimpleGenerator>();
         builder.AddScoped<ProjectGenerator>();
     }
 }

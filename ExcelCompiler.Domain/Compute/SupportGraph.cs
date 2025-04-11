@@ -28,4 +28,31 @@ public class SupportGraph
     {
         Roots = roots;
     }
+
+    /// <summary>
+    /// Gets the topological sorted order of the cells in the support graph.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<ComputeUnit> TopologicalSortedByCell()
+    {
+        HashSet<Location> visited = new HashSet<Location>();
+
+        foreach (var cell in Roots.SelectMany(root => TopologicalSortedByCell(root, visited)))
+        {
+            yield return cell;
+        }
+    }
+    
+    private static IEnumerable<ComputeUnit> TopologicalSortedByCell(ComputeUnit cell, HashSet<Location> visited)
+    {
+        if (visited.Add(cell.Location))
+        {
+            yield return cell;
+        }
+
+        foreach (var dep in cell.Dependencies.SelectMany(dependency => TopologicalSortedByCell(dependency, visited)))
+        {
+            yield return dep;
+        }
+    }
 }

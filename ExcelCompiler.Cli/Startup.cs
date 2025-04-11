@@ -23,9 +23,6 @@ IServiceCollection services = new ServiceCollection();
 services.AddLogging(lb => lb.AddSimpleConsole().SetMinimumLevel(LogLevel.Trace));
 services.AddNamedConfiguration(config);
 services.AddServices();
-services.AddScoped<ConversionWorker>();
-services.AddScoped<ProjectCreationWorker>();
-services.AddScoped<OneLinerStringExcelGenerator>();
 
 IServiceProvider provider = services.BuildServiceProvider();
 

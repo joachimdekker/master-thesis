@@ -7,14 +7,14 @@ namespace ExcelCompiler.Cli;
 public class ProjectCreationWorker
 {
     private readonly ProjectGenerator _projectGenerator;
-    private readonly OneLinerStringExcelGenerator _programGenerator;
+    private readonly IFileGenerator _programGenerator;
     private readonly OutputConfiguration _configuration;
 
 
-    public ProjectCreationWorker(ProjectGenerator projectGenerator, IOptions<OutputConfiguration> configuration, OneLinerStringExcelGenerator oneLinerStringExcelGenerator)
+    public ProjectCreationWorker(ProjectGenerator projectGenerator, IOptions<OutputConfiguration> configuration, IFileGenerator fileGenerator)
     {
         _projectGenerator = projectGenerator;
-        _programGenerator = oneLinerStringExcelGenerator;
+        _programGenerator = fileGenerator;
         _configuration = configuration.Value;
     }
     
@@ -32,6 +32,6 @@ public class ProjectCreationWorker
         // Create the main file
         string projectFilePath = Path.Combine(directory.FullName, "Main.cs");
         Stream mainFile = File.Create(projectFilePath);
-        await _programGenerator.GenerateFile(graph, mainFile);
+        await _programGenerator.Generate(graph, mainFile, cancellationToken);
     }
 }

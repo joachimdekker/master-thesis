@@ -4,7 +4,7 @@ using Range = ExcelCompiler.Domain.Compute.Range;
 
 namespace ExcelCompiler.Generators;
 
-public class OneLinerStringExcelGenerator
+public class OneLinerStringExcelGenerator : IFileGenerator
 {
     private readonly ILogger<OneLinerStringExcelGenerator> _logger;
     
@@ -13,7 +13,7 @@ public class OneLinerStringExcelGenerator
         _logger = logger;
     }
 
-    public async Task GenerateFile(SupportGraph graph, Stream outputStream)
+    public async Task Generate(SupportGraph graph, Stream outputStream, CancellationToken cancellationToken = default)
     {
         string code = "";
         
@@ -33,16 +33,6 @@ public class OneLinerStringExcelGenerator
 
     private string GenerateCode(ComputeUnit unit)
     {
-        // string code = unit switch
-        // {
-        //     ConstantValue<string> constant => $"\"{constant.Value}\"",
-        //     ConstantValue<int> constant => $"{constant.Value}",
-        //     ConstantValue<double> constant => $"{constant.Value}",
-        //     FunctionComposition function => string.Join(" + ", function.Arguments.Select(GenerateCode)),
-        //     Function function => $"{function.Name}({string.Join(", ", function.Dependencies.Select(GenerateCode))});",
-        //     _ => throw new NotImplementedException($"Unknown type {unit.GetType()}")
-        // };
-
         string code = unit switch
         {
             ConstantValue<string> constant => $"\"{constant.Value}\"",
@@ -64,22 +54,24 @@ public class OneLinerStringExcelGenerator
     public async Task WriteToFile(string code, Stream outputStream)
     {
         await using StreamWriter writer = new StreamWriter(outputStream);
-        await writer.WriteAsync($@"
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+        await writer.WriteAsync($$"""
 
-namespace ExcelProgram;
+                                  using System;
+                                  using System.Collections.Generic;
+                                  using System.Linq;
+                                  using System.Text;
+                                  using System.Threading.Tasks;
 
-public static class Program 
-{{
-public static void Main(string[] args)
-{{
-{code}
-}}
-}}
-");
+                                  namespace ExcelProgram;
+
+                                  public static class Program 
+                                  {
+                                  public static void Main(string[] args)
+                                  {
+                                  {{code}}
+                                  }
+                                  }
+
+                                  """);
     }
 }
