@@ -55,9 +55,9 @@ public abstract class ComputeUnit
             return true;
         }
 
-        for (int i = 0; i < Dependencies.Count; i++)
+        foreach (var t in Dependencies)
         {
-            var found = Dependencies[i].TryGetByLocation(location, out computeUnit);
+            var found = t.TryGetByLocation(location, out computeUnit);
             if (found)
             {
                 return found;

@@ -10,7 +10,6 @@ public class ProjectCreationWorker
     private readonly IFileGenerator _programGenerator;
     private readonly OutputConfiguration _configuration;
 
-
     public ProjectCreationWorker(ProjectGenerator projectGenerator, IOptions<OutputConfiguration> configuration, IFileGenerator fileGenerator)
     {
         _projectGenerator = projectGenerator;

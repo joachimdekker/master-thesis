@@ -9,7 +9,7 @@ public class ExpandFunctionCompositions
         List<ComputeUnit> results = new List<ComputeUnit>();
         foreach (var unit in units)
         {
-            if (unit is  not FunctionComposition functionComposition)
+            if (unit is not FunctionComposition functionComposition)
             {
                 results.Add(unit);
                 continue;
