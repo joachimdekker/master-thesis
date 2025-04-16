@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using ExcelCompiler.Domain.Compute;
-using ExcelCompiler.Domain.Spreadsheet;
+using ExcelCompiler.Domain.Structure;
 using Range = ExcelCompiler.Domain.Compute.Range;
 
 namespace ExcelCompiler.Transformations;

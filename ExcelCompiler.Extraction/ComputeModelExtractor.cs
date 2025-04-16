@@ -1,8 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using ExcelCompiler.Domain;
 using ExcelCompiler.Domain.Compute;
-using ExcelCompiler.Domain.Spreadsheet;
+using ExcelCompiler.Domain.Structure;
 using Irony.Parsing;
 using OfficeOpenXml;
 using XLParser;

@@ -1,11 +1,8 @@
 ﻿using ExcelCompiler.Cli;
 using ExcelCompiler.Domain.Compute;
-using ExcelCompiler.Domain.Spreadsheet;
-using ExcelCompiler.Generators;
-using ExcelCompiler.Transformations;
+using ExcelCompiler.Domain.Structure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OfficeOpenXml;
 

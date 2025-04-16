@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ExcelCompiler.Domain\ExcelCompiler.Domain.csproj" />
+      <ProjectReference Include="..\ExcelCompiler.Representations\ExcelCompiler.Representations.csproj" />
     </ItemGroup>
 
     <ItemGroup>

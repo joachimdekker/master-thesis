@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Cli", "ExcelCompiler.Cli\ExcelCompiler.Cli.csproj", "{6FD6BE41-054B-4942-A36F-4A167440CDFD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Domain", "ExcelCompiler.Domain\ExcelCompiler.Domain.csproj", "{276B59DA-8AA5-486A-9B28-4BDAAA3A9B5F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Representations", "ExcelCompiler.Representations\ExcelCompiler.Representations.csproj", "{276B59DA-8AA5-486A-9B28-4BDAAA3A9B5F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.Extraction", "ExcelCompiler.Extraction\ExcelCompiler.Extraction.csproj", "{9526ED69-418F-4A63-AC78-267751646CBF}"
 EndProject

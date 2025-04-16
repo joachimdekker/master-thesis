@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using ExcelCompiler.Domain.Spreadsheet;
+using Location = ExcelCompiler.Domain.Structure.Location;
 
 namespace ExcelCompiler.Domain.Compute;
 

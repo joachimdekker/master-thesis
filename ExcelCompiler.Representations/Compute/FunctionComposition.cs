@@ -1,5 +1,5 @@
 using System.Text.Json;
-using ExcelCompiler.Domain.Spreadsheet;
+using Location = ExcelCompiler.Domain.Structure.Location;
 
 namespace ExcelCompiler.Domain.Compute;
 

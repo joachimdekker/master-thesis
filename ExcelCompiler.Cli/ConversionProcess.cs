@@ -1,10 +1,8 @@
 using ExcelCompiler.Cli.Config;
-using ExcelCompiler.Domain;
 using ExcelCompiler.Domain.Compute;
-using ExcelCompiler.Domain.Spreadsheet;
+using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Extraction;
 using ExcelCompiler.Transformations;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

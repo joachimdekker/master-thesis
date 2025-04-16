@@ -1,3 +1,4 @@
+using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Domain.Compute;
 using ExcelCompiler.Generators;
 using Microsoft.Extensions.Options;

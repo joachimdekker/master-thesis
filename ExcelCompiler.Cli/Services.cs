@@ -4,7 +4,6 @@ using ExcelCompiler.Generators;
 using ExcelCompiler.Transformations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 namespace ExcelCompiler.Cli;
 

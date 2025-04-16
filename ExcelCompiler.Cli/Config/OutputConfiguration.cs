@@ -1,4 +1,4 @@
-namespace ExcelCompiler.Cli;
+namespace ExcelCompiler.Cli.Config;
 
 public record OutputConfiguration
 {
