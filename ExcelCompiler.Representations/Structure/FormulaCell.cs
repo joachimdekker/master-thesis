@@ -2,4 +2,4 @@
 
 namespace ExcelCompiler.Domain.Structure;
 
-public record FormulaCell(Location location, FunctionComposition formula) : Cell(location);
+public record FormulaCell(Location Location, Function ComputePlan) : Cell(Location);

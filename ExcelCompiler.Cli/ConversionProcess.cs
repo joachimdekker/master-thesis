@@ -1,8 +1,7 @@
 using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Domain.Compute;
 using ExcelCompiler.Domain.Structure;
-using ExcelCompiler.Extraction;
-using ExcelCompiler.Transformations;
+using ExcelCompiler.Passes;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,17 +10,15 @@ namespace ExcelCompiler.Cli;
 public class ConversionWorker
 {
     private readonly ILogger<ConversionWorker> _logger;
-    private readonly ComputeModelExtractor _extractor;
+    private readonly FrontendPass _extractor;
     private readonly FileConfiguration _options;
     private readonly LinkDependencies _linker;
-    private readonly ExpandFunctionCompositions _expandFunctionCompositions;
 
-    public ConversionWorker(ILogger<ConversionWorker> logger, IOptions<FileConfiguration> options, ComputeModelExtractor extractor, LinkDependencies linker, ExpandFunctionCompositions expandFunctionCompositions)
+    public ConversionWorker(ILogger<ConversionWorker> logger, IOptions<FileConfiguration> options, LinkDependencies linker, FrontendPass expandFunctionCompositions)
     {
         _logger = logger;
-        _extractor = extractor;
+        _extractor = expandFunctionCompositions;
         _linker = linker;
-        _expandFunctionCompositions = expandFunctionCompositions;
         _options = options.Value;
     }
 
@@ -37,11 +34,10 @@ public class ConversionWorker
         _logger.LogInformation("Opening file {Location}", _options.Location);
         Stream excelFile = File.OpenRead(_options.Location);
         
-        List<ComputeUnit> units = _extractor.Extract(excelFile, outputs);
+        var units = _extractor.Transform(excelFile);
         _logger.LogInformation("Finished extracting cells");
         
         // Process the graph
-        units = _expandFunctionCompositions.Transform(units);
         SupportGraph graph = _linker.Link(units, outputs);
 
         return graph;

@@ -1,3 +1,3 @@
 namespace ExcelCompiler.Domain.Structure;
 
-public record ValueCell(Location location, string value) : Cell(location);
+public record ValueCell<T>(Location Location, T Value) : Cell(Location);

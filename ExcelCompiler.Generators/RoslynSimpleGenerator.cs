@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using Range = ExcelCompiler.Domain.Compute.Range;
+using Range = ExcelCompiler.Domain.Structure.Range;
 
 namespace ExcelCompiler.Generators;
 
@@ -90,16 +90,16 @@ public class RoslynSimpleGenerator : IFileGenerator
         ConstantValue<decimal> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
         ConstantValue<int> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
         ConstantValue<double> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
-        Reference reference => IdentifierName(reference.CellReference.ToA1()),
+        CellReference reference => IdentifierName(reference.Reference.ToA1()),
         Function { Name: "+" } function =>
             BinaryExpression(SyntaxKind.AddExpression, GenerateCode(function.Dependencies[0]), GenerateCode(function.Dependencies[1])),
         Function { Name: "-" } function =>
             BinaryExpression(SyntaxKind.SubtractExpression, GenerateCode(function.Dependencies[0]), GenerateCode(function.Dependencies[1])),
-        Function { Name: "SUM", Dependencies: [Range range]} => InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, 
+        Function { Name: "SUM", Dependencies: [RangeReference range]} => InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, 
             ArrayCreationExpression(
                 ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword)))
                     .AddRankSpecifiers(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())))
-                ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression).AddExpressions(range.GetLocations().Select(l => IdentifierName(l.ToA1())).ToArray<ExpressionSyntax>())),
+                ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression).AddExpressions(range.Reference.GetLocations().Select(l => IdentifierName(l.ToA1())).ToArray<ExpressionSyntax>())),
             IdentifierName("Sum"))),
         _ => throw new NotSupportedException("Unknown type " + unit.GetType())
     };

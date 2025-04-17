@@ -7,4 +7,5 @@ public class ConstantValue<TValue>(TValue value, Location location) : ComputeUni
     public TValue Value { get; } = value;
     
     public Type Type { get; } = typeof(TValue);
+    public override bool IsConstant => true;
 }

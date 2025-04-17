@@ -20,8 +20,6 @@ public class SupportGraph
     /// </remarks>
     public List<ComputeUnit> Roots { get; init; } = [];
     
-    public Dictionary<Location,ComputeUnit> Cells { get; init; } = [];
-    
     public SupportGraph() { }
     
     public SupportGraph(List<ComputeUnit> roots)

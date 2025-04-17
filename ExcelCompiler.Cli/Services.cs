@@ -1,7 +1,6 @@
 using ExcelCompiler.Cli.Config;
-using ExcelCompiler.Extraction;
 using ExcelCompiler.Generators;
-using ExcelCompiler.Transformations;
+using ExcelCompiler.Passes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,11 +19,9 @@ public static class Services
         
         builder.AddScoped<ConversionWorker>();
         builder.AddScoped<ProjectCreationWorker>();
-        
-        builder.AddScoped<ComputeModelExtractor>();
-        
+
+        builder.AddScoped<FrontendPass>();
         builder.AddScoped<LinkDependencies>();
-        builder.AddScoped<ExpandFunctionCompositions>();
         
         // Generation
         //builder.AddScoped<IFileGenerator, OneLinerStringExcelGenerator>();

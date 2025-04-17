@@ -5,9 +5,9 @@ namespace ExcelCompiler.Domain.Structure;
 /// <summary>
 /// Represents a location in a spreadsheet in R1C1 format.
 /// </summary>
-public partial record Location
+public partial record Location : Reference
 {
-    public int WorksheetIndex { get; init; } = 0;
+    public Spreadsheet? Spreadsheet { get; init; }
     public int Row { get; init; }
     public int Column { get; init; }
 
@@ -29,7 +29,7 @@ public partial record Location
         return $"{columnLetters}{Row}";
     }
     
-    public static Location FromA1(string a1Format, int worksheetIndex = 0)
+    public static Location FromA1(string a1Format, Spreadsheet? spreadsheet = null)
     {
         // Get the numbers out of the string
         var match = A1FormatRegex.Match(a1Format);
@@ -44,7 +44,7 @@ public partial record Location
         {
             Column = column,
             Row = row,
-            WorksheetIndex = worksheetIndex
+            Spreadsheet = spreadsheet
         };
     }
 

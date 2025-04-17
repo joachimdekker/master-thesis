@@ -23,6 +23,8 @@ public abstract class ComputeUnit
     public bool IsLeaf => Dependencies.Count == 0;
     
     public string? Raw { get; internal set; }
+
+    public abstract bool IsConstant { get; }
     
     public ComputeUnit(Location location)
     {

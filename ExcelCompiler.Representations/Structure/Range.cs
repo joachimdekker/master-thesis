@@ -1,15 +1,14 @@
-using Location = ExcelCompiler.Domain.Structure.Location;
+namespace ExcelCompiler.Domain.Structure;
 
-namespace ExcelCompiler.Domain.Compute;
-
-public class Range : ComputeUnit
+public record Range : Reference
 {
+    public Spreadsheet? Spreadsheet => From.Spreadsheet;
     public Location From { get; }
     public Location To { get; }
     
-    public Range(Location from, Location to, Location location) : base(location)
+    public Range(Location from, Location to)
     {
-        if (from.WorksheetIndex != to.WorksheetIndex) 
+        if (from.Spreadsheet != to.Spreadsheet) 
             throw new ArgumentException("From and To locations must be in the same worksheet.");
         
         From = from;
@@ -27,22 +26,22 @@ public class Range : ComputeUnit
                 {
                     Column = col,
                     Row = row,
-                    WorksheetIndex = From.WorksheetIndex,
+                    Spreadsheet = From.Spreadsheet,
                 };
             }
         }
     }
 
-    public static Range FromString(string range, Location location)
+    public static Range FromString(string range, Spreadsheet? spreadsheet = null)
     {
         // Get the first and last cell in the range
         var cells = range.Split(':');
         if (cells.Length != 2)
             throw new ArgumentException("Invalid range format. Expected format: A1:B2");
         
-        var from = Location.FromA1(cells[0]);
-        var to = Location.FromA1(cells[1]);
+        var from = Location.FromA1(cells[0], spreadsheet);
+        var to = Location.FromA1(cells[1], spreadsheet);
         
-        return new Range(from, to, location);
+        return new Range(from, to);
     }
 }
