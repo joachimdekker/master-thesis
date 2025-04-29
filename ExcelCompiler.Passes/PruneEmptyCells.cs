@@ -49,9 +49,9 @@ public class PruneEmptyCells
             dependent.RemoveDependency(node);
         }
 
-        foreach (var dependency in node.Dependencies.ToList())
+        if (node.Dependencies.Count != 0)
         {
-            throw new InvalidOperationException("Something is horribly wrong. We have pruned a node with known dependencies...");
+            throw new InvalidOperationException("Something is horribly wrong. We have pruned an empty node with known dependencies...");
         }
     }
 }
