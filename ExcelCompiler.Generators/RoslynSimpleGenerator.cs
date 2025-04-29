@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+using Location = ExcelCompiler.Domain.Structure.Location;
 using Range = ExcelCompiler.Domain.Structure.Range;
 
 namespace ExcelCompiler.Generators;
@@ -17,6 +18,8 @@ public class RoslynSimpleGenerator : IFileGenerator
     {
         _logger = logger;
     }
+    
+    private string LocationToVarName(Location loc) => loc.Spreadsheet!.Replace(" ", "") + loc.ToA1();
     
     public async Task Generate(SupportGraph graph, Stream outputStream, CancellationToken cancellationToken = default)
     {
@@ -69,18 +72,18 @@ public class RoslynSimpleGenerator : IFileGenerator
     private IEnumerable<StatementSyntax> Generate(SupportGraph graph)
     {
         // Create a variable per cell and start at the roots
-        foreach (var cell in graph.TopologicalSortedByCell().Reverse())
+        foreach (var cell in graph.EntryPointsOfCells().Reverse())
         {
             yield return LocalDeclarationStatement(
                 VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
-                .AddVariables(VariableDeclarator(cell.Location.ToA1()).WithInitializer(EqualsValueClause(GenerateCode(cell))))
+                .AddVariables(VariableDeclarator(LocationToVarName(cell.Location)).WithInitializer(EqualsValueClause(GenerateCode(cell))))
             );
         }
         
         // Console.Log the roots
         foreach (var root in graph.Roots)
         {
-            yield return ConsoleLog(IdentifierName(root.Location.ToA1()));
+            yield return ConsoleLog(IdentifierName(LocationToVarName(root.Location)));
         }
     }
 
@@ -90,7 +93,7 @@ public class RoslynSimpleGenerator : IFileGenerator
         ConstantValue<decimal> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
         ConstantValue<int> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
         ConstantValue<double> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
-        CellReference reference => IdentifierName(reference.Reference.ToA1()),
+        CellReference reference => IdentifierName(LocationToVarName(reference.Reference)),
         Function { Name: "+" } function =>
             BinaryExpression(SyntaxKind.AddExpression, GenerateCode(function.Dependencies[0]), GenerateCode(function.Dependencies[1])),
         Function { Name: "-" } function =>
@@ -99,7 +102,7 @@ public class RoslynSimpleGenerator : IFileGenerator
             ArrayCreationExpression(
                 ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword)))
                     .AddRankSpecifiers(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())))
-                ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression).AddExpressions(range.Reference.GetLocations().Select(l => IdentifierName(l.ToA1())).ToArray<ExpressionSyntax>())),
+                ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression).AddExpressions(range.Dependencies.Select(l => IdentifierName(LocationToVarName(l.Location))).ToArray<ExpressionSyntax>())),
             IdentifierName("Sum"))),
         _ => throw new NotSupportedException("Unknown type " + unit.GetType())
     };

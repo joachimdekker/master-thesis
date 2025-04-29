@@ -13,11 +13,13 @@ public class ConversionWorker
     private readonly FrontendPass _extractor;
     private readonly FileConfiguration _options;
     private readonly LinkDependencies _linker;
+    private readonly PruneEmptyCells _pruner;
 
-    public ConversionWorker(ILogger<ConversionWorker> logger, IOptions<FileConfiguration> options, LinkDependencies linker, FrontendPass expandFunctionCompositions)
+    public ConversionWorker(ILogger<ConversionWorker> logger, IOptions<FileConfiguration> options, LinkDependencies linker, FrontendPass expandFunctionCompositions, PruneEmptyCells pruner)
     {
         _logger = logger;
         _extractor = expandFunctionCompositions;
+        _pruner = pruner;
         _linker = linker;
         _options = options.Value;
     }
@@ -34,11 +36,16 @@ public class ConversionWorker
         _logger.LogInformation("Opening file {Location}", _options.Location);
         Stream excelFile = File.OpenRead(_options.Location);
         
-        var units = _extractor.Transform(excelFile);
-        _logger.LogInformation("Finished extracting cells");
+        // Extract the Excel Workbook
+        Workbook workbook = _extractor.Transform(excelFile);
+        
+        // Temporary
+        outputs = outputs.Select(o => o with {Spreadsheet = workbook.Spreadsheets[0].Name}).ToList();
         
         // Process the graph
-        SupportGraph graph = _linker.Link(units, outputs);
+        SupportGraph graph = _linker.Link(workbook, outputs);
+        graph = _pruner.Transform(graph);
+        _logger.LogInformation("Finished linking");
 
         return graph;
     }

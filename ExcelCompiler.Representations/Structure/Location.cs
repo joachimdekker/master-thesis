@@ -7,11 +7,11 @@ namespace ExcelCompiler.Domain.Structure;
 /// </summary>
 public partial record Location : Reference
 {
-    public Spreadsheet? Spreadsheet { get; init; }
+    public string? Spreadsheet { get; set; }
     public int Row { get; init; }
     public int Column { get; init; }
 
-    [GeneratedRegex("^(?<column>^[A-Z]+)(?<row>[1-9][0-9]*)$")]
+    [GeneratedRegex(@"^(?:(?:'(?<sheet>[^']+)'|(?<sheet>[^'!\s]+))!)?(?:\$?(?<col>[A-Za-z]{1,3})\$?(?<row>[0-9]{1,7}))$")]
     static partial Regex A1FormatRegex { get; }
     
     public string ToA1()
@@ -29,11 +29,12 @@ public partial record Location : Reference
         return $"{columnLetters}{Row}";
     }
     
-    public static Location FromA1(string a1Format, Spreadsheet? spreadsheet = null)
+    public static Location FromA1(string a1Format, string? spreadsheet = null)
     {
         // Get the numbers out of the string
         var match = A1FormatRegex.Match(a1Format);
-        var extractedColumn = match.Groups["column"].Value;
+        var extractedSpreadsheet = match.Groups["sheet"].Success ? match.Groups["sheet"].Value : null;
+        var extractedColumn = match.Groups["col"].Value;
         var extractedRow = match.Groups["row"].Value;
         
         // Convert to R1C1 format
@@ -44,7 +45,7 @@ public partial record Location : Reference
         {
             Column = column,
             Row = row,
-            Spreadsheet = spreadsheet
+            Spreadsheet = extractedSpreadsheet ?? spreadsheet,
         };
     }
 

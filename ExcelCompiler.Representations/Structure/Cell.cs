@@ -9,3 +9,10 @@ public abstract record Cell
 
     public Location Location { get; init; }
 }
+
+public record EmptyCell : Cell
+{
+    public EmptyCell(Location location) : base(location)
+    {
+    }
+}

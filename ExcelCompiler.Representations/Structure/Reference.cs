@@ -1,30 +1,43 @@
+using Irony.Parsing;
+
 namespace ExcelCompiler.Domain.Structure;
+
+using XLParser;
 
 public abstract record Reference
 {
     public bool IsSingleReference => this is Location;
 
-    public static Reference Parse(string reference, List<Spreadsheet>? spreadsheets = null)
+    public static Reference Parse(string reference, Workbook? workbook = null, string? spreadsheet = null)
     {
-        // Get the spreadsheet
-        string[] parts = reference.Split('!');
-        string referenceWithoutSheet = parts[0];
-        Spreadsheet? spreadsheet = null!;
-        if (parts.Length == 2)
+        var tree = XLParser.ExcelFormulaParser.ParseToTree(reference);
+
+        if (tree.Status != ParseTreeStatus.Parsed)
         {
-            string spreadsheetName = parts[0];
-            string referenceWithoutSpreadsheet = parts[1];
-            spreadsheet = spreadsheets?.FirstOrDefault(s => s.Name == spreadsheetName);
+            throw new Exception("Could not parse reference.");
         }
         
-        // Very rough approximation for checking if the reference is a range or a single location
-        if (referenceWithoutSheet.Contains(':'))
+        // Get the references
+        var references = tree.Root.GetParserReferences(); // 'Sheet 2'!A2:B2
+        
+        // Should be only one reference
+        var parsedReference = references.Single();
+
+        return parsedReference.ReferenceType switch
         {
-            return Range.FromString(referenceWithoutSheet, spreadsheet);
-        }
-        else
-        {
-            return Location.FromA1(referenceWithoutSheet, spreadsheet);
-        }
+            ReferenceType.Cell => Location.FromA1(parsedReference.MaxLocation, spreadsheet ?? parsedReference.Worksheet),
+            ReferenceType.CellRange => Range.FromString(parsedReference.LocationString, spreadsheet ?? parsedReference.Worksheet),
+            ReferenceType.Table => new TableReference()
+            {
+                TableName = parsedReference.Name,
+                ColumnName = parsedReference.TableColumns.Single()
+            },
+            _ => throw new Exception("Unknown reference type.")
+        };
+    }
+
+    private static Spreadsheet? GetSpreadsheet(string parsedReferenceWorksheet, Workbook? workbook)
+    {
+        return workbook?.Spreadsheets.FirstOrDefault(s => s.Name == parsedReferenceWorksheet);
     }
 }

@@ -20,8 +20,10 @@ public static class Services
         builder.AddScoped<ConversionWorker>();
         builder.AddScoped<ProjectCreationWorker>();
 
+        // Passes
         builder.AddScoped<FrontendPass>();
         builder.AddScoped<LinkDependencies>();
+        builder.AddScoped<PruneEmptyCells>();
         
         // Generation
         //builder.AddScoped<IFileGenerator, OneLinerStringExcelGenerator>();

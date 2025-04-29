@@ -2,9 +2,9 @@ namespace ExcelCompiler.Domain.Structure;
 
 public record Range : Reference
 {
-    public Spreadsheet? Spreadsheet => From.Spreadsheet;
-    public Location From { get; }
-    public Location To { get; }
+    public string? Spreadsheet => From.Spreadsheet;
+    public Location From { get; init;  }
+    public Location To { get; init; }
     
     public Range(Location from, Location to)
     {
@@ -32,7 +32,7 @@ public record Range : Reference
         }
     }
 
-    public static Range FromString(string range, Spreadsheet? spreadsheet = null)
+    public static Range FromString(string range, string? spreadsheet = null)
     {
         // Get the first and last cell in the range
         var cells = range.Split(':');

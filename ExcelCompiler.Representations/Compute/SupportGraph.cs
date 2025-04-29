@@ -27,30 +27,46 @@ public class SupportGraph
         Roots = roots;
     }
 
-    /// <summary>
-    /// Gets the topological sorted order of the cells in the support graph.
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<ComputeUnit> TopologicalSortedByCell()
+    public IEnumerable<ComputeUnit> TopologicalSorted()
     {
-        HashSet<Location> visited = new HashSet<Location>();
+        HashSet<ComputeUnit> visited = new HashSet<ComputeUnit>();
 
-        foreach (var cell in Roots.SelectMany(root => TopologicalSortedByCell(root, visited)))
+        foreach (var cell in Roots.SelectMany(root => TopologicalSorted(root, visited)))
         {
             yield return cell;
         }
     }
     
-    private static IEnumerable<ComputeUnit> TopologicalSortedByCell(ComputeUnit cell, HashSet<Location> visited)
+    private static IEnumerable<ComputeUnit> TopologicalSorted(ComputeUnit cell, HashSet<ComputeUnit> visited)
     {
-        if (visited.Add(cell.Location))
+        if (!visited.Add(cell))
         {
-            yield return cell;
+            yield break;
         }
-
-        foreach (var dep in cell.Dependencies.SelectMany(dependency => TopologicalSortedByCell(dependency, visited)))
+        
+        foreach (var dep in cell.Dependencies.SelectMany(dependency => TopologicalSorted(dependency, visited)))
         {
             yield return dep;
+        }
+        
+        yield return cell;
+    }
+
+    /// <summary>
+    /// Get the entry points of all cells, topologically sorted.
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<ComputeUnit> EntryPointsOfCells()
+    {
+        HashSet<Location> visited = new HashSet<Location>();
+        foreach (var computeUnit in TopologicalSorted().Reverse())
+        {
+            if (!visited.Add(computeUnit.Location))
+            {
+                continue;
+            }
+            
+            yield return computeUnit;
         }
     }
 }

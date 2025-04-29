@@ -13,8 +13,14 @@ public class Workbook
     
     public Dictionary<string, Reference> NamedRanges { get; init; } = [];
 
+    public List<Table> Tables { get; init; } = [];
+
     public Cell GetCell(Location location)
     {
-        return location.Spreadsheet[location];
+        if (location.Spreadsheet is null)
+            throw new ArgumentException("Location must have a spreadsheet.");
+        
+        Spreadsheet spreadsheet = Spreadsheets.Single(sp => sp.Name == location.Spreadsheet);
+        return spreadsheet[location];
     }
 }

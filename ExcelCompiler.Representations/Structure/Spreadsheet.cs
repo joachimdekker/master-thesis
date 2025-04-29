@@ -8,6 +8,8 @@ public class Spreadsheet
 
     private Dictionary<(int Row, int Column), Cell> _cells { get; } = [];
     
+    public List<Table> Tables { get; } = [];
+    
     public Cell this[int row, int column]
     {
         get => _cells[(row, column)];
@@ -18,16 +20,16 @@ public class Spreadsheet
     {
         get
         {
-            if(location.Spreadsheet is not null && location.Spreadsheet != this)
+            if(location.Spreadsheet is not null && location.Spreadsheet != this.Name)
             {
                 throw new IndexOutOfRangeException("Location is not on this spreadsheet.");
             }
             
-            return _cells[(location.Row, location.Column)];
+            return !_cells.TryGetValue((location.Row, location.Column), out var cell) ? new EmptyCell(location) : cell;
         }
         set
         {
-            if (location.Spreadsheet is not null && location.Spreadsheet != this)
+            if (location.Spreadsheet is not null && location.Spreadsheet != this.Name)
             {
                 throw new IndexOutOfRangeException("Location is not on this spreadsheet.");
             }

@@ -3,8 +3,10 @@ using ExcelCompiler.Domain.Compute;
 using ExcelCompiler.Domain.Structure;
 using Irony.Parsing;
 using OfficeOpenXml;
+using OfficeOpenXml.Table;
 using XLParser;
 using Range = ExcelCompiler.Domain.Structure.Range;
+using TableReference = ExcelCompiler.Domain.Structure.TableReference;
 
 namespace ExcelCompiler.Passes;
 
@@ -17,10 +19,10 @@ public class FrontendPass
         using var p = new ExcelPackage(excelFile);
         
         // Convert the named ranges
-        _namedRanges = p.Workbook.Names
-            .ToDictionary(namedRange => namedRange.Name, namedRange => Reference.Parse(namedRange.Address));
+        // _namedRanges = p.Workbook.Names
+        //     .ToDictionary(namedRange => namedRange.Name, namedRange => Reference.Parse(namedRange.Address));
         
-        Workbook workbook = new Workbook(name: p.File.Name)
+        Workbook workbook = new Workbook(name: "ExcelWorkbook")
         {
             NamedRanges = _namedRanges,
         };
@@ -34,11 +36,14 @@ public class FrontendPass
             foreach (var cell in sheet.DimensionByValue)
             {
                 // Convert the cell.
-                Location location = Location.FromA1(cell.Address, spreadsheet);
+                Location location = Location.FromA1(cell.Address, spreadsheet.Name);
                 ComputeUnit? computeUnit = GetComputeUnit(location, p);
                 Cell? newCell = computeUnit switch
                 {
                     ConstantValue<string> @string => new ValueCell<string>(location, @string.Value),
+                    ConstantValue<double> @double => new ValueCell<double>(location, @double.Value),
+                    ConstantValue<decimal> @decimal => new ValueCell<decimal>(location, @decimal.Value),
+                    ConstantValue<bool> @bool => new ValueCell<bool>(location, @bool.Value),
                     Function f => new FormulaCell(location, f),
                     _ => null,
                 };
@@ -49,6 +54,46 @@ public class FrontendPass
                 }
             }
             
+            
+            // Get all the tables in the excel file
+            foreach (ExcelTable excelTable in sheet.Tables)
+            {
+                Range tableRange = (Reference.Parse(excelTable.Range.Address) as Range)!;
+                // Temp to fix the spreadsheet linkage problem.
+                tableRange.From.Spreadsheet = spreadsheet.Name;
+                tableRange.To.Spreadsheet = spreadsheet.Name;
+                
+                Dictionary<string, Range> columns = excelTable.Columns.ToDictionary(col => col.Name, col =>
+                {
+                    int column = tableRange.From.Column + col.Position;
+                    int startRow = excelTable.ShowHeader ? tableRange.From.Row + 1 : tableRange.From.Row;
+                    int endRow = excelTable.ShowTotal ? tableRange.To.Row - 1 : tableRange.To.Row;
+                    
+                    return new Range(
+                        from: new Location()
+                        {
+                            Spreadsheet = tableRange.From.Spreadsheet,
+                            Row = startRow,
+                            Column = column,
+                        },
+                        to: new Location()
+                        {
+                            Spreadsheet = tableRange.To.Spreadsheet,
+                            Row = endRow,
+                            Column = column,
+                        }
+                    );
+                });
+                
+                Table table = new Table(excelTable.Name)
+                {
+                    Columns = columns,
+                    Location = tableRange,
+                };
+                
+                spreadsheet.Tables.Add(table);
+            }
+            
             workbook.Spreadsheets.Add(spreadsheet);
         }
 
@@ -57,7 +102,7 @@ public class FrontendPass
 
     private ComputeUnit? GetComputeUnit(Location cellLocation, ExcelPackage excelFile)
     {
-        var cell = excelFile.Workbook.Worksheets[cellLocation.Spreadsheet?.Name].Cells[cellLocation.Row, cellLocation.Column];
+        var cell = excelFile.Workbook.Worksheets[cellLocation.Spreadsheet].Cells[cellLocation.Row, cellLocation.Column];
             
         // Check if the cell contains a value or a formula
         bool isFormula = cell.Formula is not null and not "";
@@ -95,7 +140,7 @@ public class FrontendPass
             GrammarNames.FunctionCall => ParseFunctionCall(node, location),
             GrammarNames.Text => new ConstantValue<string>(node.Token.ValueString, location),
             GrammarNames.Number => new ConstantValue<decimal>(decimal.Parse(node.Token.ValueString), location),
-            //GrammarNames.Reference => ParseReference(node, location),
+            GrammarNames.Reference => ParseReference(node, location),
             GrammarNames.UDFunctionCall => throw new ArgumentException(
                 "User-defined functions are not supported at this time.", nameof(node)),
             _ => node switch
@@ -117,27 +162,21 @@ public class FrontendPass
         //     ], location);
         // }
         
-        return ParseReferenceItem(node.ChildNodes[0], location);
+        return ParseReferenceItem(node, location);
     }
 
-    private ComputeUnit ParseReferenceItem(ParseTreeNode node, Location location) => node.Type() switch
+    private ComputeUnit ParseReferenceItem(ParseTreeNode node, Location location)
     {
-        GrammarNames.Cell => new CellReference(Location.FromA1(node.ChildNodes[0].Token.ValueString), location),
-        GrammarNames.NamedRange => _namedRanges[node.ChildNodes[0].Token.ValueString] switch
+        Reference reference = Reference.Parse(node.Print());
+
+        return reference switch
         {
-            Location loc => new CellReference(location, loc),
-            Range range => new RangeReference(location, range),
-            _ => throw new ArgumentOutOfRangeException()
-        },
-        // GrammarNames.HorizontalRange => Range.FromString(node.ChildNodes[0].Token.ValueString, location),
-        // GrammarNames.VerticalRange => Range.FromString(node.ChildNodes[0].Token.ValueString, location),
-        GrammarNames.RefError => throw new ArgumentException(
-            "References to error values are not supported at this time"),
-        GrammarNames.StructuredReference => throw new ArgumentException(
-            "Structured References are not supported at this time"),
-        GrammarNames.ReferenceFunctionCall => new RangeReference(location, Range.FromString(node.Print())),
-        _ => throw new ArgumentOutOfRangeException("This is not supported at the time.")
-    };
+            Location locationRef => new CellReference(location, locationRef with {Spreadsheet = locationRef.Spreadsheet ?? location.Spreadsheet}),
+            Range range => new RangeReference(location, range with {To = range.To with {Spreadsheet = range.To.Spreadsheet ?? location.Spreadsheet}, From = range.From with {Spreadsheet = range.From.Spreadsheet ?? location.Spreadsheet}}),
+            TableReference tableRef => new Domain.Compute.TableReference(location, tableRef),
+            _ => throw new ArgumentException("Unsupported reference type.", nameof(reference))
+        };
+    }
 
     private ComputeUnit ParseFunctionCall(ParseTreeNode node, Location location)
     {
@@ -158,6 +197,8 @@ public class FrontendPass
             {
                 func.AddDependency(child);
             }
+
+            return func;
         }
         
         // It can also be a unary operator like a percentage or something
