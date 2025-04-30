@@ -1,0 +1,1 @@
+#let citeauthor(ref) = cite(ref, form: "prose")
