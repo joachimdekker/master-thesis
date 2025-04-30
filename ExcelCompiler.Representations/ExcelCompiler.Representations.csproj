@@ -8,8 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="CodeLayout\" />
-      <Folder Include="Compute\Specialized\" />
       <Folder Include="Data\" />
     </ItemGroup>
 
