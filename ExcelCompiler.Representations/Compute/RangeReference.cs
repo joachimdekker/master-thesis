@@ -1,7 +1,7 @@
-using ExcelCompiler.Domain.Structure;
-using Range = ExcelCompiler.Domain.Structure.Range;
+using ExcelCompiler.Representations.Structure;
+using Range = ExcelCompiler.Representations.Structure.Range;
 
-namespace ExcelCompiler.Domain.Compute;
+namespace ExcelCompiler.Representations.Compute;
 
 public class RangeReference : ComputeUnit
 {

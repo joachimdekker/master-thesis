@@ -1,6 +1,7 @@
-using Location = ExcelCompiler.Domain.Structure.Location;
+using ExcelCompiler.Representations.Compute.Specialized;
+using Location = ExcelCompiler.Representations.Structure.Location;
 
-namespace ExcelCompiler.Domain.Compute;
+namespace ExcelCompiler.Representations.Compute;
 
 /// <summary>
 /// Represents a structure that contains a graph of functions and their dependencies.
@@ -19,6 +20,8 @@ public class SupportGraph
     /// There can be multiple roots, since we support multiple outcomes in the program.
     /// </remarks>
     public List<ComputeUnit> Roots { get; init; } = [];
+    
+    public List<Table> Tables { get; init; } = [];
     
     public SupportGraph() { }
     

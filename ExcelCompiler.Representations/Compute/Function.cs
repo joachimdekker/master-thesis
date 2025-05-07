@@ -1,16 +1,14 @@
-using Location = ExcelCompiler.Domain.Structure.Location;
+using Location = ExcelCompiler.Representations.Structure.Location;
 
-namespace ExcelCompiler.Domain.Compute;
+namespace ExcelCompiler.Representations.Compute;
 
 public class Function : ComputeUnit
 {
-    public Function(string name, Location location) : base(location)
+    public Function(Location location, string name) : base(location)
     {
         Name = name;
     }
     
-    
-
-    public string Name { get; }
+    public string Name { get; }  // "-"
     public override bool IsConstant => false;
 }

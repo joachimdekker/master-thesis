@@ -1,3 +1,3 @@
-namespace ExcelCompiler.Domain.CodeLayout.Statements;
+namespace ExcelCompiler.Representations.CodeLayout.Statements;
 
 public abstract record Statement;

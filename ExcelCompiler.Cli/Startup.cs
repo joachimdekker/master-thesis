@@ -1,6 +1,7 @@
 ﻿using ExcelCompiler.Cli;
-using ExcelCompiler.Domain.Compute;
 using ExcelCompiler.Domain.Structure;
+using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,7 +26,7 @@ IServiceProvider provider = services.BuildServiceProvider();
 
 // Run the worker
 ConversionWorker worker = provider.GetRequiredService<ConversionWorker>();
-SupportGraph graph = await worker.ExecuteAsync([Location.FromA1("F10"), ]);
+SupportGraph graph = await worker.ExecuteAsync([Location.FromA1("F10", "Monthly budget report"), ]);
 
 // Run the project creation worker
 ProjectCreationWorker projectWorker = provider.GetRequiredService<ProjectCreationWorker>();

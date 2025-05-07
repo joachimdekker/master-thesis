@@ -1,3 +1,3 @@
-namespace ExcelCompiler.Domain.CodeLayout.TopLevel;
+namespace ExcelCompiler.Representations.CodeLayout.TopLevel;
 
 public record Property(string Name, Type Type);

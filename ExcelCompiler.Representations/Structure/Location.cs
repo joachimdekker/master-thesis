@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
+using ExcelCompiler.Domain.Structure;
 
-namespace ExcelCompiler.Domain.Structure;
+namespace ExcelCompiler.Representations.Structure;
 
 /// <summary>
 /// Represents a location in a spreadsheet in R1C1 format.

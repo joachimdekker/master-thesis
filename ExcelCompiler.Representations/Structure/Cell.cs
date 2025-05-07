@@ -1,4 +1,4 @@
-namespace ExcelCompiler.Domain.Structure;
+namespace ExcelCompiler.Representations.Structure;
 
 public abstract record Cell
 {

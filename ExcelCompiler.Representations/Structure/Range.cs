@@ -1,4 +1,6 @@
-namespace ExcelCompiler.Domain.Structure;
+using ExcelCompiler.Domain.Structure;
+
+namespace ExcelCompiler.Representations.Structure;
 
 public record Range : Reference
 {
@@ -13,6 +15,14 @@ public record Range : Reference
         
         From = from;
         To = to;
+    }
+
+    public bool Contains(Location location)
+    {
+        if (location.Spreadsheet != From.Spreadsheet)
+            return false;
+        
+        return location.Row >= From.Row && location.Row <= To.Row && location.Column >= From.Column && location.Column <= To.Column;
     }
     
     public IEnumerable<Location> GetLocations()

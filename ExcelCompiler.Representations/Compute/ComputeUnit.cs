@@ -1,8 +1,8 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using Location = ExcelCompiler.Domain.Structure.Location;
+using Location = ExcelCompiler.Representations.Structure.Location;
 
-namespace ExcelCompiler.Domain.Compute;
+namespace ExcelCompiler.Representations.Compute;
 
 /// <summary>
 /// Represents a unit of computation in the spreadsheet.
@@ -24,7 +24,7 @@ public abstract class ComputeUnit
     
     public string? Raw { get; internal set; }
 
-    public abstract bool IsConstant { get; }
+    public virtual bool IsConstant => false;
     
     public ComputeUnit(Location location)
     {
@@ -37,6 +37,14 @@ public abstract class ComputeUnit
     {
         Dependencies.Add(dependency);
         dependency.Dependents.Add(this);
+    }
+    
+    public void AddDependencies(IEnumerable<ComputeUnit> dependencies)
+    {
+        foreach (var dependency in dependencies)
+        {
+            AddDependency(dependency);
+        }
     }
     
     public void RemoveDependency(ComputeUnit dependency)
@@ -66,5 +74,13 @@ public abstract class ComputeUnit
         }
 
         return false;
+    }
+    
+    public bool ComputationalEquivalent(ComputeUnit other)
+    {
+        if (other.GetType() != GetType()) return false;
+        if (other.Dependencies.Count != Dependencies.Count) return false;
+
+        return !Dependencies.Where((t, i) => !t.ComputationalEquivalent(other.Dependencies[i])).Any();
     }
 }

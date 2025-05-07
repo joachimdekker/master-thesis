@@ -1,4 +1,6 @@
-namespace ExcelCompiler.Domain.Structure;
+using ExcelCompiler.Domain.Structure;
+
+namespace ExcelCompiler.Representations.Structure;
 
 public class Workbook
 {
@@ -9,11 +11,13 @@ public class Workbook
         Name = name;
     }
     
+    public Cell this[Location location] => GetCell(location);
+    
     public List<Spreadsheet> Spreadsheets { get; } = [];
     
     public Dictionary<string, Reference> NamedRanges { get; init; } = [];
 
-    public List<Table> Tables { get; init; } = [];
+    public IEnumerable<Table> Tables => Spreadsheets.SelectMany(sp => sp.Tables);
 
     public Cell GetCell(Location location)
     {

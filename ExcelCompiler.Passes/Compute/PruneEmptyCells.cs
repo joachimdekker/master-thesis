@@ -1,14 +1,10 @@
-using System.Runtime.CompilerServices;
-using ExcelCompiler.Domain.Compute;
+using ExcelCompiler.Representations.Compute;
 
-namespace ExcelCompiler.Passes;
+namespace ExcelCompiler.Passes.Compute;
 
+[CompilerPass]
 public class PruneEmptyCells
 {
-    public PruneEmptyCells()
-    {
-    }
-    
     public SupportGraph Transform(SupportGraph graph)
     {
         // Traverse the support graph and remove empty cells

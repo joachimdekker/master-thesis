@@ -1,5 +1,3 @@
-﻿using ExcelCompiler.Domain.Compute;
+﻿namespace ExcelCompiler.Representations.Structure;
 
-namespace ExcelCompiler.Domain.Structure;
-
-public record FormulaCell(Location Location, Function ComputePlan) : Cell(Location);
+public record FormulaCell(Location Location, string Formula) : Cell(Location);

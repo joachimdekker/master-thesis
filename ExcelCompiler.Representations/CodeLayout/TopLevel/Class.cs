@@ -1,4 +1,4 @@
-namespace ExcelCompiler.Domain.CodeLayout.TopLevel;
+namespace ExcelCompiler.Representations.CodeLayout.TopLevel;
 
 // Top-level code structure
 public record Class(string Name, Property[] Members, Method[] Methods);

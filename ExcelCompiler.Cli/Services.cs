@@ -1,3 +1,4 @@
+using System.Reflection;
 using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Generators;
 using ExcelCompiler.Passes;
@@ -8,26 +9,32 @@ namespace ExcelCompiler.Cli;
 
 public static class Services
 {
-    public static void AddNamedConfiguration(this IServiceCollection builder, IConfiguration configuration)
+    public static void AddNamedConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        builder.Configure<FileConfiguration>(configuration.GetSection("File"));
-        builder.Configure<OutputConfiguration>(configuration.GetSection("Output"));
+        services.Configure<FileConfiguration>(configuration.GetSection("File"));
+        services.Configure<OutputConfiguration>(configuration.GetSection("Output"));
     }
     
-    public static void AddServices(this IServiceCollection builder)
+    public static void AddServices(this IServiceCollection services)
     {
+        // High Level Workers
+        services.AddScoped<ConversionWorker>();
+        services.AddScoped<ProjectCreationWorker>();
         
-        builder.AddScoped<ConversionWorker>();
-        builder.AddScoped<ProjectCreationWorker>();
-
-        // Passes
-        builder.AddScoped<FrontendPass>();
-        builder.AddScoped<LinkDependencies>();
-        builder.AddScoped<PruneEmptyCells>();
+        // Get all subclasses of ICompilerPass and add them to the service collection.
+        var passes = typeof(CompilerPassAttribute).Assembly
+            .GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && 
+                t.GetCustomAttribute<CompilerPassAttribute>() != null);
+        
+        foreach (var pass in passes)
+        {
+            services.AddScoped(pass);
+        }
         
         // Generation
         //builder.AddScoped<IFileGenerator, OneLinerStringExcelGenerator>();
-        builder.AddScoped<IFileGenerator, RoslynSimpleGenerator>();
-        builder.AddScoped<ProjectGenerator>();
+        services.AddScoped<IFileGenerator, RoslynSimpleGenerator>();
+        services.AddScoped<ProjectGenerator>();
     }
 }

@@ -1,6 +1,4 @@
-using ExcelCompiler.Domain.Compute;
-
-namespace ExcelCompiler.Domain.Structure;
+namespace ExcelCompiler.Representations.Structure;
 
 public class Spreadsheet
 {

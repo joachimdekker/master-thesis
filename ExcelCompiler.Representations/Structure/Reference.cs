@@ -1,4 +1,6 @@
+using ExcelCompiler.Representations.Structure;
 using Irony.Parsing;
+using Range = ExcelCompiler.Representations.Structure.Range;
 
 namespace ExcelCompiler.Domain.Structure;
 
@@ -6,7 +8,7 @@ using XLParser;
 
 public abstract record Reference
 {
-    public bool IsSingleReference => this is Location;
+    public bool IsSingleReference => this is Representations.Structure.Location;
 
     public static Reference Parse(string reference, Workbook? workbook = null, string? spreadsheet = null)
     {
@@ -25,7 +27,7 @@ public abstract record Reference
 
         return parsedReference.ReferenceType switch
         {
-            ReferenceType.Cell => Location.FromA1(parsedReference.MaxLocation, spreadsheet ?? parsedReference.Worksheet),
+            ReferenceType.Cell => Representations.Structure.Location.FromA1(parsedReference.MaxLocation, spreadsheet ?? parsedReference.Worksheet),
             ReferenceType.CellRange => Range.FromString(parsedReference.LocationString, spreadsheet ?? parsedReference.Worksheet),
             ReferenceType.Table => new TableReference()
             {

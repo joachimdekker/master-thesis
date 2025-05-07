@@ -1,4 +1,6 @@
-namespace ExcelCompiler.Domain.Structure;
+using ExcelCompiler.Domain.Structure;
+
+namespace ExcelCompiler.Representations.Structure;
 
 public record TableReference : Reference
 {

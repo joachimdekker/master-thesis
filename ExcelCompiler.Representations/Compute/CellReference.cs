@@ -1,6 +1,6 @@
-using ExcelCompiler.Domain.Structure;
+using ExcelCompiler.Representations.Structure;
 
-namespace ExcelCompiler.Domain.Compute;
+namespace ExcelCompiler.Representations.Compute;
 
 public class CellReference : ComputeUnit
 {

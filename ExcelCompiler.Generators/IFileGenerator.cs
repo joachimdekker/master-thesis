@@ -1,4 +1,4 @@
-using ExcelCompiler.Domain.Compute;
+using ExcelCompiler.Representations.Compute;
 
 namespace ExcelCompiler.Generators;
 

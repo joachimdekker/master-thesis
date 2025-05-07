@@ -1,6 +1,6 @@
-using Location = ExcelCompiler.Domain.Structure.Location;
+using Location = ExcelCompiler.Representations.Structure.Location;
 
-namespace ExcelCompiler.Domain.Compute;
+namespace ExcelCompiler.Representations.Compute;
 
 public class ConstantValue<TValue>(TValue value, Location location) : ComputeUnit(location)
 {

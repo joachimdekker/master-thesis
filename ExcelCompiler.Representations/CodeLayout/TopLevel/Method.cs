@@ -1,5 +1,5 @@
-using ExcelCompiler.Domain.CodeLayout.Statements;
+using ExcelCompiler.Representations.CodeLayout.Statements;
 
-namespace ExcelCompiler.Domain.CodeLayout.TopLevel;
+namespace ExcelCompiler.Representations.CodeLayout.TopLevel;
 
 public record Method(string Name, Statement[] Body);

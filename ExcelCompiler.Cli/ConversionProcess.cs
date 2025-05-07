@@ -1,7 +1,10 @@
 using ExcelCompiler.Cli.Config;
-using ExcelCompiler.Domain.Compute;
 using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Passes;
+using ExcelCompiler.Passes.Compute;
+using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Structure;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -10,17 +13,14 @@ namespace ExcelCompiler.Cli;
 public class ConversionWorker
 {
     private readonly ILogger<ConversionWorker> _logger;
-    private readonly FrontendPass _extractor;
+    private readonly IServiceProvider _serviceProvider;
+    
     private readonly FileConfiguration _options;
-    private readonly LinkDependencies _linker;
-    private readonly PruneEmptyCells _pruner;
 
-    public ConversionWorker(ILogger<ConversionWorker> logger, IOptions<FileConfiguration> options, LinkDependencies linker, FrontendPass expandFunctionCompositions, PruneEmptyCells pruner)
+    public ConversionWorker(ILogger<ConversionWorker> logger, IServiceProvider serviceProvider, IOptions<FileConfiguration> options)
     {
         _logger = logger;
-        _extractor = expandFunctionCompositions;
-        _pruner = pruner;
-        _linker = linker;
+        _serviceProvider = serviceProvider;
         _options = options.Value;
     }
 
@@ -32,19 +32,29 @@ public class ConversionWorker
             return null!;
         }
         
+        // Get the Compiler Passes from the service provider
+        
+        // Structure
+        ExcellToStructurePass excelToStructurePass = _serviceProvider.GetRequiredService<ExcellToStructurePass>();
+        
+        // Compute
+        StructureToComputePass structureToComputePass = _serviceProvider.GetRequiredService<StructureToComputePass>();
+        ConstructComputeGraph constructComputeGraphPass = _serviceProvider.GetRequiredService<ConstructComputeGraph>();
+        PruneEmptyCells pruneEmptyCellsPass = _serviceProvider.GetRequiredService<PruneEmptyCells>();
+        ExtractComputeTables extractComputeTablesPass = _serviceProvider.GetRequiredService<ExtractComputeTables>();
+        
         // Open the stream
         _logger.LogInformation("Opening file {Location}", _options.Location);
         Stream excelFile = File.OpenRead(_options.Location);
         
         // Extract the Excel Workbook
-        Workbook workbook = _extractor.Transform(excelFile);
-        
-        // Temporary
-        outputs = outputs.Select(o => o with {Spreadsheet = workbook.Spreadsheets[0].Name}).ToList();
+        Workbook workbook = excelToStructurePass.Transform(excelFile);
         
         // Process the graph
-        SupportGraph graph = _linker.Link(workbook, outputs);
-        graph = _pruner.Transform(graph);
+        var units = structureToComputePass.Transform(workbook, outputs);
+        var tables = extractComputeTablesPass.Transform(workbook, units);
+        var graph = constructComputeGraphPass.Transform(units, tables, outputs.ToList());
+        graph = pruneEmptyCellsPass.Transform(graph);
         _logger.LogInformation("Finished linking");
 
         return graph;
