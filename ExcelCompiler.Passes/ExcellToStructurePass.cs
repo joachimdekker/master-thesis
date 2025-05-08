@@ -1,4 +1,5 @@
-﻿using ExcelCompiler.Domain.Structure;
+﻿using System.Diagnostics;
+using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Structure;
 using Irony.Parsing;
@@ -115,8 +116,8 @@ public class ExcellToStructurePass
             
             return valueCell;
         }
-
-        return new FormulaCell(cellLocation, cell.Formula);
+        
+        return new FormulaCell(cellLocation, cell.Value.GetType(), cell.Formula!);
 
         // ParseTreeNode node = ExcelFormulaParser.Parse(cell.Formula!);
         //

@@ -17,7 +17,6 @@
 
     <ItemGroup>
       <Folder Include="Code\" />
-      <Folder Include="Data\" />
       <Folder Include="Structure\" />
     </ItemGroup>
 

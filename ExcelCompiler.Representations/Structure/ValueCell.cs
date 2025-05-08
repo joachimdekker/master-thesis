@@ -1,6 +1,6 @@
 namespace ExcelCompiler.Representations.Structure;
 
-public record ValueCell(Location Location, Type Type, object Value) : Cell(Location);
+public record ValueCell(Location Location, Type Type, object Value) : Cell(Location, Type);
 
 public record ValueCell<T> : ValueCell
 {

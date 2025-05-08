@@ -2,7 +2,9 @@ using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Passes;
 using ExcelCompiler.Passes.Compute;
+using ExcelCompiler.Passes.Data;
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -24,14 +26,8 @@ public class ConversionWorker
         _options = options.Value;
     }
 
-    public async Task<SupportGraph> ExecuteAsync(ICollection<Location> outputs, CancellationToken cancellationToken = default)
+    public async Task<(SupportGraph SupportGraph, List<IDataRepository> Repositories)> ExecuteAsync(ICollection<Location> outputs, CancellationToken cancellationToken = default)
     {
-        if (cancellationToken.IsCancellationRequested)
-        {
-            _logger.LogInformation("Cancellation requested");
-            return null!;
-        }
-        
         // Get the Compiler Passes from the service provider
         
         // Structure
@@ -43,20 +39,33 @@ public class ConversionWorker
         PruneEmptyCells pruneEmptyCellsPass = _serviceProvider.GetRequiredService<PruneEmptyCells>();
         ExtractComputeTables extractComputeTablesPass = _serviceProvider.GetRequiredService<ExtractComputeTables>();
         
+        // Data
+        ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
+        
         // Open the stream
         _logger.LogInformation("Opening file {Location}", _options.Location);
+        _logger.LogInformation("Starting Excel file processing for {Location}", _options.Location);
         Stream excelFile = File.OpenRead(_options.Location);
         
         // Extract the Excel Workbook
+        _logger.LogInformation("Executing Excel to Structure pass");
         Workbook workbook = excelToStructurePass.Transform(excelFile);
         
+        // Extract data
+        _logger.LogInformation("Executing Extract Repositories pass");
+        var repositories = extractRepositoriesPass.Transform(workbook);
+        
         // Process the graph
+        _logger.LogInformation("Executing Structure to Compute pass");
         var units = structureToComputePass.Transform(workbook, outputs);
+        _logger.LogInformation("Executing Extract Compute Tables pass");
         var tables = extractComputeTablesPass.Transform(workbook, units);
+        _logger.LogInformation("Executing Construct Compute Graph pass");
         var graph = constructComputeGraphPass.Transform(units, tables, outputs.ToList());
+        _logger.LogInformation("Executing Prune Empty Cells pass");
         graph = pruneEmptyCellsPass.Transform(graph);
-        _logger.LogInformation("Finished linking");
+        _logger.LogInformation("Completed all compiler passes successfully");
 
-        return graph;
+        return (graph, repositories);
     }
 }

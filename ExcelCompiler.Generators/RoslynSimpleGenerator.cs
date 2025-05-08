@@ -1,4 +1,6 @@
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Compute.Specialized;
+using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.Logging;
 using Microsoft.CodeAnalysis;
@@ -8,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using Location = ExcelCompiler.Representations.Structure.Location;
 using Range = ExcelCompiler.Representations.Structure.Range;
+using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
 
 namespace ExcelCompiler.Generators;
@@ -23,10 +26,10 @@ public class RoslynSimpleGenerator : IFileGenerator
     
     private string LocationToVarName(Location loc) => loc.Spreadsheet!.Replace(" ", "") + loc.ToA1();
     
-    public async Task Generate(SupportGraph graph, Stream outputStream, CancellationToken cancellationToken = default)
+    public async Task Generate(SupportGraph graph, List<IDataRepository> repositories, Stream outputStream, CancellationToken cancellationToken = default)
     {
         // Create Main method
-        IEnumerable<StatementSyntax> body = Generate(graph);
+        IEnumerable<StatementSyntax> body = Generate(graph, repositories);
         var mainMethod = MethodDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), "Main")
             .AddModifiers(Token(SyntaxKind.StaticKeyword))
             .AddParameterListParameters(
@@ -71,14 +74,14 @@ public class RoslynSimpleGenerator : IFileGenerator
         );
     }
 
-    private IEnumerable<StatementSyntax> Generate(SupportGraph graph)
+    private IEnumerable<StatementSyntax> Generate(SupportGraph graph, List<IDataRepository> repositories)
     {
         // Create a variable per cell and start at the roots
         foreach (var cell in graph.EntryPointsOfCells().Reverse())
         {
             yield return LocalDeclarationStatement(
                 VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
-                .AddVariables(VariableDeclarator(LocationToVarName(cell.Location)).WithInitializer(EqualsValueClause(GenerateCode(cell, graph))))
+                .AddVariables(VariableDeclarator(LocationToVarName(cell.Location)).WithInitializer(EqualsValueClause(GenerateCode(cell, graph, repositories))))
             );
         }
         
@@ -89,7 +92,7 @@ public class RoslynSimpleGenerator : IFileGenerator
         }
     }
 
-    private ExpressionSyntax GenerateCode(ComputeUnit unit, SupportGraph graph) => unit switch
+    private ExpressionSyntax GenerateCode(ComputeUnit unit, SupportGraph graph, List<IDataRepository> repositories) => unit switch
     {
         ConstantValue<string> constant => LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(constant.Value)),
         ConstantValue<decimal> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
@@ -97,9 +100,9 @@ public class RoslynSimpleGenerator : IFileGenerator
         ConstantValue<double> constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(constant.Value)),
         CellReference reference => IdentifierName(LocationToVarName(reference.Reference)),
         Function { Name: "+" } function =>
-            BinaryExpression(SyntaxKind.AddExpression, GenerateCode(function.Dependencies[0], graph), GenerateCode(function.Dependencies[1], graph)),
+            BinaryExpression(SyntaxKind.AddExpression, GenerateCode(function.Dependencies[0], graph, repositories), GenerateCode(function.Dependencies[1], graph, repositories)),
         Function { Name: "-" } function =>
-            BinaryExpression(SyntaxKind.SubtractExpression, GenerateCode(function.Dependencies[0], graph), GenerateCode(function.Dependencies[1], graph)),
+            BinaryExpression(SyntaxKind.SubtractExpression, GenerateCode(function.Dependencies[0], graph, repositories), GenerateCode(function.Dependencies[1], graph, repositories)),
         Function { Name: "SUM", Dependencies: [RangeReference range]} => InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, 
             ArrayCreationExpression(
                 ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword)))
@@ -110,12 +113,12 @@ public class RoslynSimpleGenerator : IFileGenerator
             ArrayCreationExpression(
                 ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword)))
                     .AddRankSpecifiers(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())))
-            ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression).AddExpressions(GetTableDeps(tableRef.Reference, graph).Select(l => IdentifierName(LocationToVarName(l))).ToArray<ExpressionSyntax>())),
+            ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression).AddExpressions(GetTableDeps(tableRef.Reference, graph, repositories))),
             IdentifierName("Sum"))),
         _ => throw new NotSupportedException("Unknown type " + unit.GetType())
     };
 
-    private IEnumerable<Location> GetTableDeps(Representations.Structure.TableReference tableRefReference, SupportGraph graph)
+    private ExpressionSyntax[] GetTableDeps(Representations.Structure.TableReference tableRefReference, SupportGraph graph, List<IDataRepository> repositories)
     {
         // Get the column in the graph
         var table = graph.Tables.Single(t => t.Name == tableRefReference.TableName);
@@ -123,6 +126,23 @@ public class RoslynSimpleGenerator : IFileGenerator
         // Get the column
         var column = table.Columns.Single(c => c.Name == tableRefReference.ColumnName);
         
+        // Create an array with the column values
+        var repository = repositories.Single(r => r.Name == tableRefReference.TableName) as InMemoryDataRepository;
+
+        if (column.ColumnType is TableColumn.TabelColumnType.Computed)
+        {
+            return GetComputedDeps(table, column);
+        }
+
+        return repository!.GetDataFromColumn(column.Name)
+            .Select(value => LiteralExpression(
+                SyntaxKind.NumericLiteralExpression, 
+                Literal(Convert.ToDouble(value))))
+            .ToArray<ExpressionSyntax>();
+    }
+
+    private ExpressionSyntax[] GetComputedDeps(Table table, TableColumn column)
+    {
         // Get the locations
         var columnIndex = table.Columns.IndexOf(column);
         var columnPlace = table.Location.From.Column + columnIndex;
@@ -142,6 +162,7 @@ public class RoslynSimpleGenerator : IFileGenerator
             });
         
         // Get the locations
-        return range.GetLocations();
+        return range.GetLocations()
+            .Select(l => IdentifierName(LocationToVarName(l))).ToArray<ExpressionSyntax>();
     }
 }

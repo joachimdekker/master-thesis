@@ -26,8 +26,8 @@ IServiceProvider provider = services.BuildServiceProvider();
 
 // Run the worker
 ConversionWorker worker = provider.GetRequiredService<ConversionWorker>();
-SupportGraph graph = await worker.ExecuteAsync([Location.FromA1("F10", "Monthly budget report"), ]);
+(SupportGraph graph, var repositories) = await worker.ExecuteAsync([Location.FromA1("F10", "Monthly budget report"), ]);
 
 // Run the project creation worker
 ProjectCreationWorker projectWorker = provider.GetRequiredService<ProjectCreationWorker>();
-await projectWorker.ExecuteAsync(graph);
+await projectWorker.ExecuteAsync(graph, repositories);
