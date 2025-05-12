@@ -35,6 +35,7 @@ public class RoslynGenerator
             .AddUsings(UsingDirective(IdentifierName("System.Linq")))
             .AddUsings(UsingDirective(IdentifierName("System.Text")))
             .AddUsings(UsingDirective(IdentifierName("System.Threading.Tasks")))
+            .AddMembers(FileScopedNamespaceDeclaration(IdentifierName("ExcelCompiler.Generated")))
             .AddMembers(GenerateClass(@class));
         
         return compilationUnit;
