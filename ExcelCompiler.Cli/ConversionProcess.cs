@@ -3,6 +3,7 @@ using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Passes;
 using ExcelCompiler.Passes.Compute;
 using ExcelCompiler.Passes.Data;
+using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Structure;
@@ -26,7 +27,7 @@ public class ConversionWorker
         _options = options.Value;
     }
 
-    public async Task<(SupportGraph SupportGraph, List<IDataRepository> Repositories)> ExecuteAsync(ICollection<Location> outputs, CancellationToken cancellationToken = default)
+    public async Task<Project> ExecuteAsync(ICollection<Location> outputs, CancellationToken cancellationToken = default)
     {
         // Get the Compiler Passes from the service provider
         
@@ -42,6 +43,9 @@ public class ConversionWorker
         // Data
         ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
         
+        // Code Layout
+        ComputeToCodePass computeToCodePass = _serviceProvider.GetRequiredService<ComputeToCodePass>();
+        
         // Open the stream
         _logger.LogInformation("Opening file {Location}", _options.Location);
         _logger.LogInformation("Starting Excel file processing for {Location}", _options.Location);
@@ -54,6 +58,11 @@ public class ConversionWorker
         // Extract data
         _logger.LogInformation("Executing Extract Repositories pass");
         var repositories = extractRepositoriesPass.Transform(workbook);
+
+        var dataManager = new DataManager()
+        {
+            Repositories = repositories
+        };
         
         // Process the graph
         _logger.LogInformation("Executing Structure to Compute pass");
@@ -66,6 +75,9 @@ public class ConversionWorker
         graph = pruneEmptyCellsPass.Transform(graph);
         _logger.LogInformation("Completed all compiler passes successfully");
 
-        return (graph, repositories);
+        // Transform to code (layout)
+        var project = computeToCodePass.Transform(graph, dataManager);
+        
+        return project;
     }
 }

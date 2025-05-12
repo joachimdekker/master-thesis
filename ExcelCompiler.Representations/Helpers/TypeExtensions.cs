@@ -1,4 +1,4 @@
-namespace ExcelCompiler.Passes.Helpers;
+namespace ExcelCompiler.Representations.Helpers;
 
 public static class TypeExtensions
 {

@@ -26,7 +26,7 @@ public class InMemoryDataRepository : IDataRepository
     {
         // Get the index of the column based on the schema
         ColumnarDataSchema schema = Schema as ColumnarDataSchema ?? throw new InvalidOperationException("Can only use this method with columnar data schema.");
-        int columnIndex = schema.Properties.Keys.ToList().IndexOf(columnName);
+        int columnIndex = schema.Properties.Select(x => x.Key).ToList().IndexOf(columnName);
         
         // Get everything from the column
         for (int i = 0; i < Data.GetLength(0); i++)

@@ -1,5 +1,6 @@
 using ExcelCompiler.Passes.Helpers;
 using ExcelCompiler.Representations.Data;
+using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.Structure;
 using Range = ExcelCompiler.Representations.Structure.Range;
 
@@ -25,7 +26,7 @@ public class ExtractRepositories
         return repositories.ToList();
     }
 
-    private Dictionary<string, Type> GetTableProperties(Workbook workbook, Table table)
+    private List<KeyValuePair<string, Type>> GetTableProperties(Workbook workbook, Table table)
     {
         Dictionary<string, Type> properties = new Dictionary<string, Type>();
         foreach (var (columnName, columnRange) in table.Columns)
@@ -34,10 +35,10 @@ public class ExtractRepositories
 
             if (cell is null or FormulaCell) continue;
             
-            properties[columnName] = cell.GetType();
+            properties[columnName] = cell.Type;
         }
         
-        return properties;
+        return properties.ToList();
     }
 
     private object[,] ExtractDataFromSheet(Workbook workbook, Table table, ColumnarDataSchema scheme)

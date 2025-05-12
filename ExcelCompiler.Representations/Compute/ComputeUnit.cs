@@ -14,6 +14,7 @@ namespace ExcelCompiler.Representations.Compute;
 /// </remarks>
 public abstract class ComputeUnit
 {
+    public Type Type { get; set; }
     public List<ComputeUnit> Dependencies { get; init; }
     public List<ComputeUnit> Dependents { get; init; }
     public Location Location { get; init; }

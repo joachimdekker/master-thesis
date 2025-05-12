@@ -32,6 +32,8 @@ public record TableColumn
         Computed
     }
     
+    public Type Type { get; init; }
+    
     public required string Name { get; init; }
     
     public ComputeUnit? Computation { get; init; }

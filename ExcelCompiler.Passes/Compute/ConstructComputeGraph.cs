@@ -34,57 +34,6 @@ public class ConstructComputeGraph
             Tables = tables,
         };
     }
-
-    // public ComputeUnit Transform(ComputeUnit old, Dictionary<Location, ComputeUnit> symbols,
-    //     Dictionary<Location, ComputeUnit> units, List<ComputeTable> tables)
-    // {
-    //     ComputeUnit @new;
-    //     switch(old)
-    //     {
-    //         case CellReference { Reference: { } reference }:
-    //             if (!symbols.TryGetValue(reference, out @new!))
-    //             {
-    //                 var dependency = Transform(units[reference], symbols, units, tables);
-    //                 symbols[reference] = @new;
-    //                 @new = new CellReference(old.Location, reference);
-    //                 
-    //                 // Add the dependency
-    //                 @new.AddDependency(dependency);
-    //             }
-    //             break;
-    //         
-    //         case RangeReference { Reference: { } reference }:
-    //             List<ComputeUnit> dependencies = [];
-    //             foreach (var location in reference.GetLocations())
-    //             {
-    //                 var dependency = symbols.TryGetValue(location, out var dep) ? dep : Transform(units[location], symbols, units, tables);
-    //                 dependencies.Add(dependency);
-    //             }
-    //             
-    //             @new = new RangeReference(old.Location, reference);
-    //             
-    //             // Add the dependencies
-    //             foreach (var computeUnit in dependencies)
-    //             {
-    //                 @new.AddDependency(computeUnit);
-    //             }
-    //
-    //             break;
-    //         
-    //         case TableReference { Reference: { } reference }:
-    //             var table = tables.Single(t => t.Name == reference.TableName);
-    //             
-    //             @new = new TableReference(old.Location, reference);
-    //
-    //             break;
-    //         
-    //         
-    //         
-    //         default: throw new InvalidOperationException("Unsupported cell type.");
-    //     };
-    //     
-    //     return @new;
-    // }
 }
 
 

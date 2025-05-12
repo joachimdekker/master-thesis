@@ -27,12 +27,17 @@ public class ExtractComputeTables
         foreach (var table in workbook.Tables)
         {
             var isGoodTable = true;
+            int skippedColumns = 0;
             foreach (var (_, columnRange) in table.Columns)
             {
                 Cell firstCell = workbook[columnRange.From];
              
                 // Skip columns that are not used
-                if (!units.TryGetValue(columnRange.From, out _)) continue;
+                if (!units.TryGetValue(columnRange.From, out _))
+                {
+                    skippedColumns++;
+                    continue;
+                }
                 
                 if (firstCell is FormulaCell formulaCell)
                 {
@@ -56,7 +61,7 @@ public class ExtractComputeTables
                 break;
             }
 
-            if (!isGoodTable) continue;
+            if (!isGoodTable || skippedColumns == table.Columns.Count) continue;
             
             ComputeTable comTable = ConvertToComputeTable(table, workbook, units);
             tables.Add(comTable);
@@ -117,6 +122,7 @@ public class ExtractComputeTables
             {
                 Name = name,
                 ColumnType = type,
+                Type = firstCell.Type,
                 Computation = computation
             };
             

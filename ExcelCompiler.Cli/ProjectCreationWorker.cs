@@ -1,5 +1,6 @@
 using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Generators;
+using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Data;
 using Microsoft.Extensions.Options;
@@ -9,17 +10,17 @@ namespace ExcelCompiler.Cli;
 public class ProjectCreationWorker
 {
     private readonly ProjectGenerator _projectGenerator;
-    private readonly IFileGenerator _programGenerator;
+    private readonly RoslynGenerator _programGenerator;
     private readonly OutputConfiguration _configuration;
 
-    public ProjectCreationWorker(ProjectGenerator projectGenerator, IOptions<OutputConfiguration> configuration, IFileGenerator fileGenerator)
+    public ProjectCreationWorker(ProjectGenerator projectGenerator, IOptions<OutputConfiguration> configuration, RoslynGenerator programGenerator)
     {
         _projectGenerator = projectGenerator;
-        _programGenerator = fileGenerator;
+        _programGenerator = programGenerator;
         _configuration = configuration.Value;
     }
     
-    public async Task ExecuteAsync(SupportGraph graph, List<IDataRepository> repositories, CancellationToken cancellationToken = default)
+    public async Task ExecuteAsync(Project project, CancellationToken cancellationToken = default)
     {
         if (cancellationToken.IsCancellationRequested)
         {
@@ -31,8 +32,6 @@ public class ProjectCreationWorker
         await _projectGenerator.Generate(directory);
         
         // Create the main file
-        string projectFilePath = Path.Combine(directory.FullName, "Main.cs");
-        Stream mainFile = File.Create(projectFilePath);
-        await _programGenerator.Generate(graph, repositories, mainFile, cancellationToken);
+        await _programGenerator.Generate(project, _configuration.Location);
     }
 }

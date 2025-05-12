@@ -34,7 +34,8 @@ public static class Services
         
         // Generation
         //builder.AddScoped<IFileGenerator, OneLinerStringExcelGenerator>();
-        services.AddScoped<IFileGenerator, RoslynSimpleGenerator>();
         services.AddScoped<ProjectGenerator>();
+        services.AddScoped<RoslynGenerator>();
+        services.AddScoped<FileWriter>();
     }
 }
