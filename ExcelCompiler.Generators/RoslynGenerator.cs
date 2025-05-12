@@ -61,7 +61,7 @@ public class RoslynGenerator
     
     private MemberDeclarationSyntax Generate(Property property)
     {
-        var propertyDeclaration = PropertyDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), property.Name)
+        var propertyDeclaration = PropertyDeclaration(IdentifierName(property.Type.Name), property.Name)
             .AddModifiers(Token(SyntaxKind.PublicKeyword));
 
         if (property is { Getter: not null, Setter: null, Initializer: null })
@@ -138,10 +138,11 @@ public class RoslynGenerator
         return statement switch
         {
             Return @return => ReturnStatement(Generate(@return.ReturnExpr)),
-            Assignment assignment => LocalDeclarationStatement(
-                VariableDeclaration(IdentifierName(assignment.Type.Name)).AddVariables(
-                    VariableDeclarator(assignment.Variable.Name)
-                        .WithInitializer(EqualsValueClause(Generate(assignment.DeclarationExpr))))
+            Assignment assignment => ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(assignment.Variable.Name), Generate(assignment.Expression))),
+            Declaration declaration => LocalDeclarationStatement(
+                VariableDeclaration(IdentifierName(declaration.Variable.Type.Name)).AddVariables(
+                    VariableDeclarator(declaration.Variable.Name)
+                        .WithInitializer(EqualsValueClause(Generate(declaration.DeclarationExpr))))
             ),
             ExpressionStatement expression => ExpressionStatement(Generate(expression.Expression)),
             _ => throw new InvalidOperationException("Something went horribly wrong."),
@@ -157,11 +158,11 @@ public class RoslynGenerator
             Constant { Type.Name: "String" or "string" } constant => LiteralExpression(SyntaxKind.StringLiteralExpression,
                 Literal((string)constant.Value)),
             Variable variable => IdentifierName(variable.Name),
-            ListExpression list when list.Members.Count != 0 => ArrayCreationExpression(
-                ArrayType(IdentifierName(list.Type.Name))
-                    .AddRankSpecifiers(
-                        ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())))
-            ).WithInitializer(InitializerExpression(SyntaxKind.ArrayInitializerExpression)
+            ListExpression list when list.Members.Count != 0 => ObjectCreationExpression(
+                    GenericName(Identifier("List"))
+                    .WithTypeArgumentList(
+                        TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName(list.Type.Name)))))
+                .WithInitializer(InitializerExpression(SyntaxKind.CollectionInitializerExpression)
                 .AddExpressions(list.Members.Select(Generate).ToArray())),
             PropertyAccess accessor => MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                 Generate(accessor.Self), IdentifierName(accessor.Name)),

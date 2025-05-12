@@ -69,7 +69,7 @@ public class ComputeToCodePass
         {
             string varName = VariableName(cell);
             Type type = cell.Type is null ? Type.Derived : new Type(cell.Type);
-            statements.Add(new Assignment(new Variable(varName.ToCamelCase(), type), type, Generate(cell)));
+            statements.Add(new Declaration(new Variable(varName.ToCamelCase(), type), Generate(cell)));
         }
         
         // Return all the roots
@@ -114,9 +114,9 @@ public class ComputeToCodePass
             Variable variable = new Variable(table.Name.ToCamelCase(), new ListOf(type));
 
             Expression expression = GenerateDataExpression(type, dataManager.Repositories.Single(r => r.Name == table.Name));
-            Assignment variableAssignment = new Assignment(variable, type, expression);
+            Declaration variableDeclaration = new Declaration(variable, expression);
             
-            statements.Add(variableAssignment);
+            statements.Add(variableDeclaration);
         }
 
         return statements;
