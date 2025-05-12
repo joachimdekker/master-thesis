@@ -31,6 +31,10 @@ public class RoslynGenerator
     {
         var compilationUnit = CompilationUnit()
             .AddUsings(UsingDirective(IdentifierName("System")))
+            .AddUsings(UsingDirective(IdentifierName("System.Collections.Generic")))
+            .AddUsings(UsingDirective(IdentifierName("System.Linq")))
+            .AddUsings(UsingDirective(IdentifierName("System.Text")))
+            .AddUsings(UsingDirective(IdentifierName("System.Threading.Tasks")))
             .AddMembers(GenerateClass(@class));
         
         return compilationUnit;
@@ -39,12 +43,18 @@ public class RoslynGenerator
     private MemberDeclarationSyntax[] GenerateClass(Class @class)
     {
         IEnumerable<MemberDeclarationSyntax> properties = @class.Members.Select(Generate);
-        IEnumerable<MemberDeclarationSyntax> methods = @class.Methods.Select(Generate);
+        IEnumerable<MemberDeclarationSyntax> methods = @class.Methods.Select(m => Generate(m));
         
         var classDeclaration = ClassDeclaration(@class.Name)
             .AddModifiers(Token(SyntaxKind.PublicKeyword))
             .AddMembers(properties.ToArray())
             .AddMembers(methods.ToArray());
+        
+        Method constructor = @class.GenerateConstructor();
+        if (constructor.Body.Length > 0)
+        {
+            classDeclaration = classDeclaration.AddMembers(Generate(constructor, isConstructor: true));
+        }
         
         return [classDeclaration];
     }
@@ -96,13 +106,18 @@ public class RoslynGenerator
         return propertyDeclaration;
     }
 
-    private MemberDeclarationSyntax Generate(Method method)
+    private MemberDeclarationSyntax Generate(Method method, bool isConstructor = false)
     {
-        var methodDeclaration = MethodDeclaration(IdentifierName(method.Type.Name), method.Name);
+        BaseMethodDeclarationSyntax methodDeclaration = isConstructor 
+            ? ConstructorDeclaration(Identifier(method.Name)) 
+            : MethodDeclaration(IdentifierName(method.Type.Name), method.Name);
+            
+        methodDeclaration = methodDeclaration.AddModifiers(Token(SyntaxKind.PublicKeyword));
         
         // Add Parameters
         // TODO: Support Array types
-        methodDeclaration = methodDeclaration.AddParameterListParameters(
+        methodDeclaration = methodDeclaration
+            .AddParameterListParameters(
             method.Parameters.Select(param => Parameter(Identifier(param.Name))
                 .WithType(IdentifierName(param.Type.Name))).ToArray()
             );
