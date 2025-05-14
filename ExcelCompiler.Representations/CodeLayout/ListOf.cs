@@ -1,4 +1,4 @@
-using Type = ExcelCompiler.Representations.CodeLayout.TopLevel.Type;
+using Type = ExcelCompiler.Representations.CodeLayout.Type;
 
 namespace ExcelCompiler.Representations.CodeLayout;
 

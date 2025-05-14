@@ -17,7 +17,7 @@ public record Method
 
         return lastStatement switch
         {
-            Return returnStatement when returnStatement.ReturnExpr.Type == TopLevel.Type.Derived => new("double"),
+            Return returnStatement when returnStatement.ReturnExpr.Type == Type.Derived => new("double"),
             Return returnStatement => returnStatement.ReturnExpr.Type,
             _ => Type.Void
         };

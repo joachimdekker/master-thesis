@@ -1,6 +1,6 @@
 using ExcelCompiler.Passes.Helpers;
 
-namespace ExcelCompiler.Representations.CodeLayout.TopLevel;
+namespace ExcelCompiler.Representations.CodeLayout;
 
 public record Type
 {

@@ -9,7 +9,7 @@ using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Structure;
 using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
-using Type = ExcelCompiler.Representations.CodeLayout.TopLevel.Type;
+using Type = ExcelCompiler.Representations.CodeLayout.Type;
 
 namespace ExcelCompiler.Passes;
 

@@ -1,6 +1,6 @@
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.Compute;
-using Type = ExcelCompiler.Representations.CodeLayout.TopLevel.Type;
+using Type = ExcelCompiler.Representations.CodeLayout.Type;
 
 namespace ExcelCompiler.Passes.Code;
 
