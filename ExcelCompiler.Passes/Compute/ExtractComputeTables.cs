@@ -110,11 +110,11 @@ public class ExtractComputeTables
             // Skip columns that are not used.
             if (!units.TryGetValue(range.From, out var unit)) continue;
             
-            TableColumn.TabelColumnType type = firstCell is FormulaCell
-                ? TableColumn.TabelColumnType.Computed
-                : TableColumn.TabelColumnType.Data;
+            TableColumn.TableColumnType type = firstCell is FormulaCell
+                ? TableColumn.TableColumnType.Computed
+                : TableColumn.TableColumnType.Data;
 
-            ComputeUnit? computation = type is TableColumn.TabelColumnType.Computed
+            ComputeUnit? computation = type is TableColumn.TableColumnType.Computed
                 ? ConvertToArm(table, unit)
                 : null;
 

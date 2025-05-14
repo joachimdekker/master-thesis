@@ -26,7 +26,7 @@ public record TableColumn
 
     public class ColumnReference(string TableName, string ColumnName, Location location) : ComputeUnit(location);
     
-    public enum TabelColumnType
+    public enum TableColumnType
     {
         Data,
         Computed
@@ -38,5 +38,5 @@ public record TableColumn
     
     public ComputeUnit? Computation { get; init; }
 
-    public required TabelColumnType ColumnType;
+    public required TableColumnType ColumnType;
 }

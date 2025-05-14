@@ -26,7 +26,7 @@ public class ExtractTypesPass
                 let @type = new Type(column.Type.Name)
                 select new Property(column.Name, @type)
                 {
-                    Getter = column.ColumnType is TableColumn.TabelColumnType.Computed ? _computeExpressionConverter.Transform(column.Computation!) : null,
+                    Getter = column.ColumnType is TableColumn.TableColumnType.Computed ? _computeExpressionConverter.Transform(column.Computation!) : null,
                 }
             ).ToList()
             select new Class($"{table.Name} Item", properties, [])
