@@ -1,10 +1,8 @@
 using System.Diagnostics;
-using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Structure;
 using ComputeTable = ExcelCompiler.Representations.Compute.Specialized.Table;
 using Range = ExcelCompiler.Representations.Structure.Range;
-using TableReference = ExcelCompiler.Representations.Compute.TableReference;
 
 namespace ExcelCompiler.Passes.Compute;
 

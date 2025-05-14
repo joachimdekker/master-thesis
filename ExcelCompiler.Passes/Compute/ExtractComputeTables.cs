@@ -1,4 +1,3 @@
-using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Compute.Specialized;
 using ExcelCompiler.Representations.Structure;

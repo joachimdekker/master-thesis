@@ -1,7 +1,5 @@
-using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.CodeLayout.TopLevel;
 using ExcelCompiler.Representations.Compute.Specialized;
-using ExcelCompiler.Representations.Data;
 using Type = ExcelCompiler.Representations.CodeLayout.TopLevel.Type;
 
 namespace ExcelCompiler.Passes.Code;

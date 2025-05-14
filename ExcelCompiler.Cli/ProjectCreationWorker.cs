@@ -1,8 +1,6 @@
 using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Generators;
 using ExcelCompiler.Representations.CodeLayout;
-using ExcelCompiler.Representations.Compute;
-using ExcelCompiler.Representations.Data;
 using Microsoft.Extensions.Options;
 
 namespace ExcelCompiler.Cli;

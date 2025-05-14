@@ -1,10 +1,8 @@
 using ExcelCompiler.Cli.Config;
-using ExcelCompiler.Domain.Structure;
 using ExcelCompiler.Passes;
 using ExcelCompiler.Passes.Compute;
 using ExcelCompiler.Passes.Data;
 using ExcelCompiler.Representations.CodeLayout;
-using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.DependencyInjection;
