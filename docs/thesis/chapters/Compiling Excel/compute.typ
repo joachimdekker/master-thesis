@@ -22,6 +22,25 @@ record ComputeUnit(Location Location, ComputeUnit[] Dependencies);
 record CircularDependency(ComputeUnit[] CircularDependencies)
 ```
 
+```fs
+type ComputeUnit = { location: Location, dependencies: ComputeUnit[], type: ComputeUnitType }
+
+type ComputeUnitType = 
+  | Nil
+  | ConstantValue of Value
+  | Reference of Reference
+  | DataReference
+  | Function Name
+  | Table Columns
+  | Chain Columns
+  | Choice Selector
+
+type Reference =
+  | TableReference
+  | CellReference
+  | RangeReference
+```
+
 == Compute Unit
 At the core of the compute model lies the compute unit. This unit represents a basic operation with input and output. Compute units can be connected to each other, forming a network or flow of computations. When compute unit _A_ uses the output of compute unit _B_ as input, then we say that unit _B_ is a _dependency_ of unit _A_. Conversely, unit _A_ is a _dependent_ of unit _B_.
 
@@ -44,7 +63,7 @@ A special constant value is the value that represents nothing: the _nil_ node Wh
 == Reference
 Within the compute representation, it is still possible to reference other values. While it is desirable to have no references in the support graph at the end of all the compiler steps, having references can heavily simplify compiler design. Just like in the structural representation, we distinguish between three different kinds of references: _cell_, _range_, and _table_.
 
-A different kind of reference is the data reference. As we will discuss in @sec:data-model, the data and compute model are closely collaborating within the compiler. For computations to work, the data in these repositories should be addressable. This is possible through the _data reference_, which is essentially a two tuple $"ref"_"data" = (N_"repo", L)$ where $N_"repo"$ is the unique name of the repository, and $L$ is the location within the repository to reference, which may be a range or a single cell.
+A different kind of reference is the data reference. As we will discuss in @sec:data-model, the data and compute model are closely collaborating within the compiler. For computations to work, the data in these repositories should be addressable. This is possible through the _data reference_, which is essentially a  tuple $"ref"_"data" = (N_"repo", L)$ where $N_"repo"$ is the unique name of the repository, and $L$ is the location within the repository to reference, which may be a range or a single cell.
 
 == Compute
 In order to actually compute data, Excel uses formulas. These formulae and compositions thereof are converted to a graph of _Functions_. In this representation, functions are only represented in their signature form, without their implementation. We leave this part to the code-layout representation and a single compiler step which converts the functions to their respective code representation.
@@ -76,12 +95,12 @@ For example, consider a savings account spreadsheet. Every year the savings acco
 We consider the savings account interest We can distinguish three columns. The amount. of money currently in the savings account. The amount of interest that year. and the potential money you add to the savings account during the year. Here we can see that the column for the interest and the. actual amount of money in the savings account is actually a computer column part of the chain. This chain calculates its value by taking the value of the interest the previous value of the money in the savings account And also the money. that you are putting into them savings account and then calculating the interest you had on this and updating the value in the current row.
 
 === Choice 
-Of course, Excel also has flow control functions such as sum if or choice. Functions can have simple constant values in them, or references to other functions, which means that they split the path of computation.
+Excel also has flow control functions such as sum if or choice. Functions can have simple constant values in them, or references to other functions, which means that they split the path of computation.
 
 We model this choice with its own choice node. This choice node has a. selector function which can select the path of computation to do next. within the actuarial computations, we see that there are a lot of different paths to take, and thus the choice operator is really important in these calculations.
 
 == Support Graph<subsec:support-graph>
-The support graph is a multi-directional cyclic graph that describes the underlying compute model of an excel sheet. The support graph used in this thesis is different than those found in Excel or in @sestoft_spreadsheet_2006. This is mainly due to the fact that this graph is multi-directional and can thus be traversed from both sides, which heavility simplifies compilation.
+The support graph is a multi-directional cyclic graph that describes the underlying compute model of an excel sheet. The support graph used in this thesis is different than those found in Excel or in @sestoft_spreadsheet_2006. This is mainly due to the fact that this graph is multi-directional and can thus be traversed from both sides, which heavily simplifies compilation.
 
 The support graph supports the operation for traversing the graph. This is done in topologically sorted way, which means that when we traverse node _a_, we have already traversed the dependencies of _a_. This ensures consistent traversal and updating of the graph.
 Traversing the graph and making updates to the graph is a common operation within a compiler step.
@@ -92,7 +111,6 @@ The circular dependency is an important construct. Within the support graph, it 
 The circular dependency thus creates a sub-graph of the support graph. When traversing the support graph, the dependencies of the circular dependency will first be presented, then the circular dependency itself, and then the dependents of the circular dependencies.
 
 == Types
-
 In Excel, different types exist, from booleans, numbers to dates and arrays. In order to fully model the computation, these types should be included. Types are very important, especially when trying to refactor existing code. Without types, you could end up with an operation that is not possible on a certain value because of a type mismatch. This would make it impossible to compile this model to the code layout model.
 
 Besides primitive types that also can be found in excel, it is important to consider the special structures we have just created. A lot of these special structures can be mapped to a complex type or a class, where we can use methods and properties to represent calculations. 
@@ -102,4 +120,4 @@ For example, the _Monthly Expenses_ table contains the data columns _Actual_ and
 === Precision
 Precision is key, especially in the actuarial calculations context. We don't want to lose a few decimal due to precision issues, which would propagate and mean that the pension fund would be paying more or---even worse---less than what you should have gotten. 
 
-Within Excel, most datatypes adhere to a 15 digit precision. This precision is derived from the IEEE 754 specification, which can only provide 15 digits of significant precision. Hence, we are safe to use the double precision floating data type. However, since we are talking about actuarial computations, it is actually better to have more precision. Hence, we model all fractional, floating numbers with quadrouple precision floating points.
+Within Excel, most datatypes adhere to a 15 digit precision. This precision is derived from the IEEE 754 specification, which can only provide 15 digits of significant precision. Hence, we are safe to use the double precision floating data type. However, since we are talking about actuarial computations, it is actually better to have more precision. Hence, we model all fractional, floating numbers with quadruple precision floating points.

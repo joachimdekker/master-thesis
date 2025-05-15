@@ -12,7 +12,7 @@ record Workbook(
     Reference[] NamedReferences, 
     Spreadsheet[] Spreadsheets);
 
-record Spreadsheet(string Name, Cell[,] Cells, Table[] Tables);
+record Spreadsheet(string Name, Set<Cell> Cells, Table[] Tables);
 
 record Cell(Location Location);
   -> record ValueCell<T>(T Value);
@@ -86,4 +86,19 @@ can be formatted to let it look like a currency $euro 4.00$. It is often used wi
 We do not consider formatting primarily because Excel stores the content of a cell apart from the formatted value. Hence, we can always take the 'normalized' value and use these in our calculations. This avoids the conversion of formatted values to normalized values.
 
 == References
-References are a way to refer to a cell, range or table. 
+References are a way to refer to a cell, range or table. They link computations together by representing the (computed) value in another computation.
+
+// One way to look at a reference is in a _singular_ form. This means that the reference B3 is essentially the same as B3:B3, which denotes a range from cell B3 to cell B3. Semantically, they are the same as they both point to the same cell. 
+
+We distinguish between references to cells like `B3`, references to ranges like `A1:B3`, and references to tables like `Table[ColumnName]`. The distinguish between these references since they contain information that we can use in further compilation. Take the cell B3 for instance. This cell reference is essentially the same as B3:B3 as they both point to the same cell. However, the B3 cell reference is conceptually different than B3:B3 in programming terms, as the cell reference is just a single value, and the B3:B3 is a singular array.
+
+Formally, we define references as the discriminated union $"Ref" = "Ref"_"cell" | "Ref"_"range" | "Ref"_"table"$ where:
+
+- $"Ref"_"cell" = (R, C, S)$ is a cell reference that references the cell in row $R$, column $C$ and spreadsheet $S$.
+- $"Ref"_"range" = ("Ref"_"from", "Ref"_"to")$ is a reference to an area of cells, where $"Ref"_"from"$ is the reference to the upper left cell, and $"Ref"_"to"$ is the reference to the lower right cell. These two cells form a continuous matrix of cells.
+- $"Ref"_"table" = (T, C)$ is a reference that references named column $C$ in table $T$. The table $T$ may be in any spreadsheet.
+
+=== Data References
+Cell and Range references are references that reference values and are addressing the structure of the spreadsheet. They cannot reference data that might not be in the spreadsheet yet. For instance, in the budget example, the list of expenses might be different from month to month. To support this, the excel compiler considers this data (especially in tables and chains at the moment) separately (which we talk about more in @sec:data-model). To reference this data, we use a data reference. 
+
+The data reference $"Ref"_"data" = (R, N)$ is a reference to address $N$ in a data repository $R$. The address can be a column in a table, or a single cell reference.
