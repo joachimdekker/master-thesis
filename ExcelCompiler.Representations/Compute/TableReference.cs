@@ -10,6 +10,4 @@ public class TableReference : ComputeUnit
     }
 
     public Structure.TableReference Reference { get; set; }
-    
-    public override bool IsConstant => false;
 }

@@ -9,6 +9,5 @@ public class Function : ComputeUnit
         Name = name;
     }
     
-    public string Name { get; }  // "-"
-    public override bool IsConstant => false;
+    public string Name { get; }
 }

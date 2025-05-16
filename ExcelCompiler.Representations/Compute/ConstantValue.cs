@@ -11,6 +11,4 @@ public class ConstantValue<TValue> : ComputeUnit
     }
 
     public TValue Value { get; }
-    
-    public override bool IsConstant => true;
 }

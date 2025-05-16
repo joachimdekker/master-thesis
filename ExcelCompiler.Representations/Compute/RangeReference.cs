@@ -11,6 +11,4 @@ public class RangeReference : ComputeUnit
     }
 
     public Range Reference { get; set; }
-    
-    public override bool IsConstant => false;
 }

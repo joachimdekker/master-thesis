@@ -10,5 +10,4 @@ public class CellReference : ComputeUnit
     }
 
     public Location Reference { get; set; }
-    public override bool IsConstant => false;
 }
