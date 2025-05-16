@@ -1,0 +1,139 @@
+using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Structure;
+using Range = ExcelCompiler.Representations.Structure.Range;
+using TableReference = ExcelCompiler.Representations.Compute.TableReference;
+
+namespace ExcelCompiler.Passes.Compute;
+
+[CompilerPass]
+public class TypeInference
+{
+    public static readonly Dictionary<string, Func<List<Type>, Type>> InferenceRules = new()
+    {
+        {
+            "SUM", types =>
+            {
+                if (types.All(t => t == types[0]))
+                {
+                    return types[0];
+                }
+
+                throw new InvalidOperationException("SUM is not supported for types other than double");
+            }
+        },
+        {
+            "IF", types =>
+            {
+                // There should be three types
+                if (types.Count != 3)
+                {
+                    throw new InvalidOperationException("IF is not supported for more than three types");
+                }
+
+                if (types[0] != typeof(bool))
+                    throw new InvalidOperationException("IF is not supported for types other than bool");
+                if (types[1] != types[2])
+                    throw new InvalidOperationException("IF is not supported for types other than the same type");
+
+                return types[1];
+            }
+        }
+    };
+    
+    
+    public SupportGraph Transform(SupportGraph graph)
+    {
+        return new TypeInferenceTransformer().Transform(graph);
+    }
+}
+
+public record TypeInferenceTransformer : UnitSupportGraphTransformer
+{
+    protected override ComputeUnit Constant(Location location, IEnumerable<ComputeUnit> dependencies, Type _, object value)
+    {
+        Type type = value.GetType();
+        return base.Constant(location, dependencies, type, value);
+    }
+
+    protected override ComputeUnit RangeReference(Location location, IEnumerable<ComputeUnit> dependencies, Range reference)
+    {
+        // Get the types of the dependencies
+        List<Type> types = dependencies.Select(d => d.Type).Distinct().ToList();
+        
+        // Get the type of the range based on the types
+        Type type = types.Count switch
+        {
+            1 => types[0],
+            _ => throw new InvalidOperationException("Range references with multiple types are not supported.")
+        };
+        
+        // Create the new range reference
+        RangeReference rangeReference = new RangeReference(location, reference)
+        {
+            Type = type,
+        };
+        
+        rangeReference.AddDependencies(dependencies);
+        
+        return rangeReference;
+    }
+
+    protected override ComputeUnit Function(Location location, IEnumerable<ComputeUnit> dependencies, string name)
+    {
+        // Get the types of the dependencies
+        List<Type> types = dependencies.Select(d => d.Type).ToList();
+        
+        // Get the type of the function based on the name and the dependencies
+        if (!TypeInference.InferenceRules.TryGetValue(name, out var inferenceRule)) throw new InvalidOperationException($"Unknown function {name}");
+        
+        Type type = inferenceRule(types);
+        
+        // Create the new function
+        Function function = new Function(location, name)
+        {
+            Type = type,
+        };
+        
+        function.AddDependencies(dependencies);
+
+        return function;
+    }
+
+    protected override ComputeUnit CellReference(Location location, IEnumerable<ComputeUnit> dependencies, Location reference)
+    {
+        // The cell reference should have one dependency, take that type.
+        if (dependencies.Count() != 1) throw new InvalidOperationException("Cell reference should have one dependency.");
+        
+        var dependency = dependencies.Single();
+        var type = dependency.Type;
+        
+        // Create the new cell reference
+        CellReference cellReference = new CellReference(location, reference)
+        {
+            Type = type
+        };
+        
+        cellReference.AddDependency(dependency);
+
+        return cellReference;
+    }
+
+    protected override ComputeUnit TableReference(Location location, IEnumerable<ComputeUnit> dependencies, Representations.Structure.TableReference reference)
+    {
+        // The table reference should have one dependency, take that type.
+        if (dependencies.Count() != 1) throw new InvalidOperationException("Table reference should have one dependency.");
+        
+        var dependency = dependencies.Single();
+        var type = dependency.Type;
+        
+        // Create the new table reference
+        TableReference tableReference = new TableReference(location, reference)
+        {
+            Type = type,
+        };
+        
+        tableReference.AddDependency(dependency);
+        
+        return base.TableReference(location, dependencies, reference);
+    }
+}
