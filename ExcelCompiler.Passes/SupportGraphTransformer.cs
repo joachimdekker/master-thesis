@@ -13,7 +13,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 
     protected abstract TVal TableReference(Location location, IEnumerable<TVal> dependencies, TableReference reference);
 
-    protected abstract TVal DataReference(Location location, IEnumerable<TVal> dependencies, string repository, string name); 
+    protected abstract TVal DataReference(Location location, IEnumerable<TVal> dependencies, string repository, string name);
 
     protected abstract TVal Function(Location location, IEnumerable<TVal> dependencies, string name);
 
@@ -21,11 +21,11 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 
     protected abstract TVal Constant(Location location, IEnumerable<TVal> dependencies, Type type, object value);
 
-    protected abstract TRes SupportGraph(IEnumerable<TVal> roots);
+    protected abstract TRes SupportGraph(IEnumerable<TVal> roots, );
 
     public virtual TRes Transform(SupportGraph graph)
     {
-        Dictionary<ComputeUnit, TVal> valueCache = new Dictionary<ComputeUnit, TVal>();
+        Dictionary<ComputeUnit, TVal> valueCache = new();
         IEnumerable<TVal> roots = graph.Roots.Select(r => Transform(r, valueCache));
         return SupportGraph(roots);
     }
@@ -36,14 +36,14 @@ public abstract record SupportGraphTransformer<TRes, TVal>
         {
             return cached;
         }
-        
+
         var location = unit.Location;
         var dependencies = unit.Dependencies.Select(d => Transform(d, valueCache));
         TVal value = unit switch
         {
             CellReference cellReference => CellReference(location, dependencies, cellReference.Reference),
             RangeReference rangeReference => RangeReference(location, dependencies, rangeReference.Reference),
-            Representations.Compute.TableReference tableReference => TableReference(location, dependencies, tableReference.Reference), 
+            Representations.Compute.TableReference tableReference => TableReference(location, dependencies, tableReference.Reference),
             DataReference dataReference => DataReference(location, dependencies, dataReference.RepositoryName, dataReference.DataName),
             Function function => Function(location, dependencies, function.Name),
             Nil _ => Nil(location, dependencies),
@@ -54,7 +54,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
             ConstantValue<DateTime> constant => Constant(location, dependencies, constant.Type, constant.Value),
             _ => throw new ArgumentException("Unsupported cell type.", nameof(unit))
         };
-        
+
         valueCache[unit] = value;
         return value;
     }
@@ -97,7 +97,7 @@ public abstract record UnitSupportGraphTransformer : SupportGraphTransformer<Sup
 
     protected override ComputeUnit DataReference(Location location, IEnumerable<ComputeUnit> dependencies, string repository, string name)
     {
-        var unit = new DataReference(location) 
+        var unit = new DataReference(location)
         {
             RepositoryName = repository,
             DataName = name,
