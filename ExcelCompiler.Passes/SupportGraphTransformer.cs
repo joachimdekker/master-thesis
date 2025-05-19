@@ -1,6 +1,7 @@
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Structure;
 using Range = ExcelCompiler.Representations.Structure.Range;
+using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Structure.TableReference;
 
 namespace ExcelCompiler.Passes;
@@ -21,13 +22,13 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 
     protected abstract TVal Constant(Location location, IEnumerable<TVal> dependencies, Type type, object value);
 
-    protected abstract TRes SupportGraph(IEnumerable<TVal> roots, );
+    protected abstract TRes SupportGraph(IEnumerable<TVal> roots, List<Table> tables);
 
     public virtual TRes Transform(SupportGraph graph)
     {
         Dictionary<ComputeUnit, TVal> valueCache = new();
         IEnumerable<TVal> roots = graph.Roots.Select(r => Transform(r, valueCache));
-        return SupportGraph(roots);
+        return SupportGraph(roots, graph.Tables);
     }
 
     protected TVal Transform(ComputeUnit unit, Dictionary<ComputeUnit, TVal> valueCache)
@@ -128,8 +129,11 @@ public abstract record UnitSupportGraphTransformer : SupportGraphTransformer<Sup
         return unit;
     }
 
-    protected override SupportGraph SupportGraph(IEnumerable<ComputeUnit> roots)
+    protected override SupportGraph SupportGraph(IEnumerable<ComputeUnit> roots, List<Table> tables)
     {
-        return new SupportGraph(roots.ToList());
+        return new SupportGraph(roots.ToList())
+        {
+            Tables = tables,
+        };
     }
 }
