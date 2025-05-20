@@ -1,11 +1,11 @@
 = Data Model<sec:data-model>
-The data model contains pure data that is either encoded within the excel sheet in large quantities, or can be swapped for a connection with an external database. The connection with the external database is outside the scope of this thesis.
+The data model contains pure data that is either encoded within the Excel sheet in large quantities, or can be swapped for a connection with an external database. The connection with the external database is outside the scope of this thesis.
 
 This IR models the inputs and static values used in computations and contains no logic of its own. Instead, it represents the contents of cells and tables, external inputs, constants, and mock or example data that may be used in testing. It exists to cleanly separate raw values from the formulas that act upon them.
 
 The data model closely collaborates with the compute model, since the compute model can refer to data in the data model using the `DataReference` reference. 
 
-The power of the data layer is in the way that it allows for more data than is originally in the excel sheet. It translates the dynamic of adding more data to the excel sheet in the static context of the compiler. Take the expenses for instance. One month, you might have the default 20 expenses. However, the next month you decide to throw a party, and need an extra trip to the supermarket, pay for a DJ, etc. The compiled spreadsheet should be able to handle this extra data, which is made possible by the repositories.
+The power of the data layer is in the way that it allows for more data than is originally in the Excel sheet. It translates the dynamic of adding more data to the Excel sheet in the static context of the compiler. Take the expenses for instance. One month, you might have the default 20 expenses. However, the next month you decide to throw a party, and need an extra trip to the supermarket, pay for a DJ, etc. The compiled spreadsheet should be able to handle this extra data, which is made possible by the repositories.
 
 ```cs
 record DataRepository(Range Location);
@@ -13,13 +13,13 @@ record ExternalDataRepository(Range Location);
 ```
 == Repository
 
-The data of the excel sheet is stored in several _data repositories_. Data repositories can be seen as virtual regions in the excel sheet, where they represent certain data. For instance, in the budget example, multiple data repositories can be found: the categories, the expenses, the income. 
+The data of the Excel sheet is stored in several _data repositories_. Data repositories can be seen as virtual regions in the Excel sheet, where they represent certain data. For instance, in the budget example, multiple data repositories can be found: the categories, the expenses, the income. 
 
 The expenses region is a table. A table is always mapped to a repository and will contain a _columnar schema_ (see next subsection). As discussed previously, the table may contain computed columns. These are not contained in the schema, since they are not data, but are computed _from_ the data. 
 
 Besides the already discussed advantages of handling extra or different data than originally in the compiled spreadsheet, a repository is able to source it's data from one of multiple data sources. These data sources can be internal or external.
 
-The repository always represents data from the structural layer and therefore by inference the excel sheet, which are both grid-like in nature. The data in the excel sheet and the structural layer is stored in a grid pattern. Hence, the repository will also store the data in a grid-like fashion. 
+The repository always represents data from the structural layer and therefore by inference the Excel sheet, which are both grid-like in nature. The data in the Excel sheet and the structural layer is stored in a grid pattern. Hence, the repository will also store the data in a grid-like fashion. 
 
 === Internal Data
 Internal data is data in the spreadsheet. In an extraction pass, the data in the spreadsheet is parsed into the repository. When parsing the data, the type is inferred or checked if it conforms to the already established schema. This internal data is then used in the computations. When using internal data, the result of the computation will match the result of Excel.

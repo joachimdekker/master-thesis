@@ -1,0 +1,12 @@
+== Compilation Flow
+Let's start with a short example of a very simple Excel sheet. The budget spreadsheet contains a section for defining the income of the family. See @sps:budget:income for a visual representation. Say that we want to calculate the lower-left cell, which is a total of all the differences.
+
+The first step is constructing the _Structural Model_, which is done by extracting the structure out of the Excel sheet. It is basically making a copy of the Excel sheet into a format that is easier to work with. In the structural model, we also have a few passes that enrich the current model. For instance, the spreadsheet in the income does not explicitly define a table, but we can clearly see that this is an implicit table. Hence, passes like this add the tables and so on to the structural model where it can be used by subsequent steps.
+
+From this structural model, we extract two things. First, we extract the computational flow of the Excel sheet. The computational flow is the underlying computational model that calculates the cell and is powered by Excel formulae. In reality, this model calculates every cell, but the compiler only gathers the relevant cells and formulae that calculate the final set of outputs. In the _Income_ example, the computational model that is gather is the summation of the differences, and the way the differences are calculated. Depending on the structure of the spreadsheet, the calculations may be simplified or de-duplicated.
+
+We also extract data into their own representation from the structural model. This data layer is primarily to separate the data and computation. This is important in spreadsheets, as the data is often variable. Take the budget example where the projected and actual income might change every month. To distinguish certain constant values from the variable data, we provide an intermediate representation that stores this variable data and provides methods to provide data from outside sources, such as caches or databases.
+
+The penultimate step is converting the previously mentioned computational model and data model to the code layout model. In this step, we leave behind the structural compilation, and fully focus on the code. In this last step, we implement a few compiler passes that simplify the code or increase the readability by splitting expressions.
+
+Finally, the code is converted to the data model of the Roslyn Compiler Platform. This platform allows for programmatically emitting C\# source code.
