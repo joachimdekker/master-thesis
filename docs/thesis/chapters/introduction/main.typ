@@ -2,11 +2,13 @@
 
 #chapter("Introduction")
 
-#import "introduction.typ"
+#include "introduction.typ"
 
 // Also say something about editing the scenarios in Excel, and that they thus need to do something about it.
-#import "problem-description.typ"
+#include "problem-description.typ"
 
-#import "research-questions.typ"
+#include "research-questions.typ"
 
 #include "literature-research.typ"
+
+#include "excel-overview.typ"

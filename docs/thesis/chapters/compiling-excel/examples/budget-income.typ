@@ -1,6 +1,8 @@
+#import "../../../utils/spreadsheet.typ": spreadsheet 
+
 #figure(
-  table(
-    columns: 4,
+  spreadsheet(
+    4,
     [], [Projected], [Actual], [Difference],
     [Income 1], [\$ 6.000], [\$ 5.800], [-\$ 200],
     [Income 2], [\$ 1.000], [\$ 2.300], [\$ 1.300],
@@ -11,3 +13,17 @@
   supplement: "Spreadsheet",
   placement: auto,
 )<sps:budget:income>
+
+#figure(
+  spreadsheet(
+    4,
+    [], [Projected], [Actual], [Difference],
+    [Income 1], [6.000], [5.800], [=C2-B2],
+    [Income 2], [1.000], [2.300], [=C3-B3],
+    [Extra Income], [2.500], [1.500], [=C4-B4],
+    [TOTAL], [], [], [=SUM(D2:D4)]
+  ),
+  caption: [The formulae behind @sps:budget:income. It is clear that there is a relationship between the Projected and Actual column of this table. ],
+  supplement: "Spreadsheet",
+  placement: top,
+)<sps:budget:income:formulae>

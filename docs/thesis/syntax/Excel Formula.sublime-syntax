@@ -1,0 +1,286 @@
+%YAML 1.2
+---
+name: Excel Formula
+scope: source.sheet.excel
+version: 2
+extends: Packages/Spreadsheet Formula/Spreadsheet Formula (Basic).sublime-syntax
+file_extensions:
+  - xls.txt
+
+contexts:
+  expressions:
+    - meta_append: true
+    - match: \t
+      scope: invalid.illegal.sheet.excel
+
+  function-builtins-extra:
+    - meta_append: true
+    - match: \b({{function_builtins_excel}})(\()
+      captures:
+        1: meta.function-call.excel support.function.excel
+        2: meta.function-call.arguments.excel punctuation.section.arguments.begin.excel
+      push: function-call-body
+
+  sheet-reference:
+    - match: (?={{sheet}}!)
+    # - match: (?={{sheet}}[!|])
+      push: sheet-reference-body
+
+  sheet-reference-body:
+    - meta_scope: meta.reference.sheet
+    - match: \!
+      scope: punctuation.separator.sequence.sheet
+      pop: 1
+    # - match: \|
+    #   scope: punctuation.separator.sequence.sheet
+    #   push: sheet-reference-body
+    - match: \'
+      scope: punctuation.definition.annotation.begin.sheet
+      push:
+        - meta_content_scope: entity.name.struct.sheet
+        - match: \'\'
+          scope: constant.character.escape.sheet
+        # - match: \'(?=\|)
+        #   scope: punctuation.definition.annotation.end.sheet
+          # push: sheet-reference-body
+        - match: \'(?=!)
+          scope: punctuation.definition.annotation.end.sheet
+          pop: 1
+    - match: '{{sheet}}'
+      scope: entity.name.struct.sheet
+    - include: immediately-pop
+
+  cell-or-range-reference:
+    - meta_append: true
+
+    # Push to dynamic context to isolate forced anonymity to just dynamic refs
+    - match: |-
+        (?x:(?=  # next find a...
+          (?:@?(?:{{cell}}|{{rc}}))  # cell followed by...
+          (?:
+            [#]?:(?:{{cell}}|{{rc}})[#]  # maybe a # and second cell with #, OR
+          | [#]:(?:{{cell}}|{{rc}})[#]?  # definitely a # and second cell maybe with #
+          )
+        ))
+      push: dynamic-reference
+
+    # Cell range without dynamics (R1C1)
+    # See semi-shared references section in excel ref tests
+    # for full list of matches.
+    # (@?)R([1]?)C([1]?):R([1]?)C([1]?)
+    - match: ({{rc}})(:)({{rc}})(?!#)
+      scope: meta.reference.range.cell.sheet
+      captures:
+        1: storage.type.sheet
+        2: punctuation.separator.sequence.sheet
+        3: storage.type.sheet
+      push: after-reference
+
+    # Cell range without dynamics
+    # @A1:B2
+    - match: (@)(?:({{cell}})(:)({{cell}})|({{rc}})(:)({{rc}}))
+      scope: meta.reference.range.cell.excel
+      captures:
+        1: keyword.operator.reference.excel
+        2: storage.type.excel
+        3: punctuation.separator.sequence.excel
+        4: storage.type.excel
+        5: storage.type.excel
+        6: punctuation.separator.sequence.excel
+        7: storage.type.excel
+      push: after-reference
+
+    # Naked cell reference
+    # A1#
+    # @A1
+    # @A1#
+    - match: (@?)({{cell}}|{{rc}})(#?)(?![:#])
+      scope: meta.reference.cell.excel
+      captures:
+        1: keyword.operator.reference.excel
+        2: storage.type.excel
+        3: keyword.operator.reference.excel
+      push: after-reference
+
+    # Column to column
+    # @A:B
+    - match: (@?)(?:({{column}})(:)({{column}})|({{c_}})(:)({{c_}}))(?![0-9])
+      scope: meta.reference.range.column.excel
+      captures:
+        1: keyword.operator.reference.excel
+        2: storage.type.excel
+        3: punctuation.separator.sequence.excel
+        4: storage.type.excel
+        5: storage.type.excel
+        6: punctuation.separator.sequence.excel
+        7: storage.type.excel
+      push: after-reference
+
+    # Row to row
+    # @1:2
+    - match: (@)(?:({{row}})(:)({{row}})|({{r_}})(:)({{r_}}))
+      scope: meta.reference.range.row.excel
+      captures:
+        1: keyword.operator.reference.excel
+        2: storage.type.excel
+        3: punctuation.separator.sequence.excel
+        4: storage.type.excel
+        5: storage.type.excel
+        6: punctuation.separator.sequence.excel
+        7: storage.type.excel
+      push: after-reference
+
+  dynamic-reference:
+    - meta_prepend: true
+    # Zero-dimensional cell range w/ dynamics
+    # @A1#:A1#
+    # @A1:A1#
+    - match: (@?)({{cell}}|{{rc}})(#?)(:)(\2)(#)
+      scope: meta.reference.cell.excel
+      captures:
+        1: keyword.operator.reference.excel
+        2: storage.type.excel
+        3: keyword.operator.reference.excel
+        4: punctuation.separator.sequence.excel
+        5: storage.type.excel
+        6: keyword.operator.reference.excel
+      push: after-reference
+
+    # Cell range with dynamics
+    # @A1#:B2
+    # @A1#:B2#
+    - match: (@?)(?:({{cell}})(#)(:)({{cell}})|({{rc}})(#)(:)({{rc}}))(#?)
+      scope: meta.reference.range.cell.excel
+      captures:
+        1: keyword.operator.reference.excel
+        2: storage.type.excel
+        3: keyword.operator.reference.excel
+        4: punctuation.separator.sequence.excel
+        5: storage.type.excel
+        6: storage.type.excel
+        7: keyword.operator.reference.excel
+        8: punctuation.separator.sequence.excel
+        9: storage.type.excel
+        10: keyword.operator.reference.excel
+      push: after-reference
+
+    # Bail if nothing matches
+    - include: immediately-pop
+
+  after-reference:
+    - meta_prepend: true
+
+    # Match Excel's "space" intersection operator
+    - match: '[ ]{{before_reference}}'
+      scope: keyword.operator.set.excel
+    - match: '[ ]{{before_name}}'
+      scope: keyword.operator.set.excel
+
+  table-name-body:
+    - meta_prepend: true
+    - match: '[#@]'
+      scope: keyword.operator.reference.excel
+
+  constants:
+    - meta_prepend: true
+
+    - match: '(?:#GETTING_DATA|#SPILL!|#CONNECT!|#BLOCKED!|#UNKNOWN!|#FIELD!|#CALC!|#PYTHON!|#TIMEOUT!)'
+      scope: constant.language.excel
+
+###############################################################################
+
+variables:
+  # https://support.microsoft.com/en-us/office/excel-functions-alphabetical-b3944572-255d-4efb-bb96-c6d90033e188
+  function_builtins_excel: |-
+    \b(?xi:
+      AGGREGATE | AMORDEGRC | AREAS | ARRAYTOTEXT |
+      BAHTTEXT | BESSELI | BESSELJ | BESSELK | BESSELY | BINOM\.DIST\.RANGE |
+      CALL | CUBEKPIMEMBER | CUBEMEMBER | CUBEMEMBERPROPERTY | CUBERANKEDMEMBER | CUBESET | CUBESETCOUNT | CUBEVALUE |
+      DBCS | DROP |
+      EUROCONVERT | EXPAND |
+      FILTERXML | FORECAST\.ETS | FORECAST\.ETS\.CONFINT | FORECAST\.ETS\.SEASONALITY | FORECAST\.ETS\.STAT |
+      INFO | ISOMITTED |
+      JIS |
+      NUMBERVALUE |
+      ODDFPRICE | ODDFYIELD | ODDLPRICE | ODDLYIELD |
+      PHONETIC |
+      REGISTER\.ID | RTD |
+      SHEET | SHEETS | SORTBY | STOCKHISTORY |
+      TAKE | TEXTAFTER | TEXTBEFORE | TEXTSPLIT | TOCOL | TODAY | TOROW |
+      VALUETOTEXT |
+      WEBSERVICE |
+      XMATCH
+    )\b
+  name: |-
+    (?x:
+      (?# my gut tells me this first class should be '[\w\\&&[^0-9]]+',
+          but that breaks R1C1 edge cases, and it's currently redundant.
+          It's supposed to prevent e.g. `4hello` from matching as a valid name,
+          but `4hello` doesn't match as a name regardless.)
+      [\w\\]+
+      [\w?\\]*
+    )
+  function: |-
+    (?x:
+      [\w\\&&[^0-9]]
+      [\w?.\\]*
+    )
+  table: |-
+    (?x:
+      [\w\\&&[^0-9]]
+      [\w.?\\]*
+    )
+
+  # TODO: Is there a cleaner more compact (and probably more efficient) way to
+  #       do this? `'` are only legal in excel sheet names when padded on
+  #       either end with a legal character matched by [^:*/?\[\]\\] and said
+  #       `'` must come in pairs.
+  sheet_delimited: |-
+                    (?x:
+                      (?:'[^:*/?\[\]\\]+('')*[^:*/?\[\]\\]+')|
+                      (?:'[^:*/?\[\]\\]+')
+                    )
+  sheet_normal: '[\w&&[^0-9]]\w*'
+  sheet: (?:{{sheet_delimited}}|{{sheet_normal}})
+
+  # Dummy patterns for that sweet YAML syntax highlighting
+  # # Not exhaustive. The fact that I'm not testing combinations of spec chars complicates this...
+  Pattern that Excel will auto escape/delimit with `'`: '^\d+{{sheet_normal}}?'
+
+  # RC row/column offset format
+  r_: |-
+    (?xi:
+      R
+      (?:
+        \[[-\+]?[1-9][0-9]{0,6}\] |
+                [1-9][0-9]{0,6}
+      )
+      (?:
+          (?={{c_}})
+        | (?=C?(?!{{name}}))
+      )
+    )
+  c_: (?i:C(?:\[[-\+]?[1-9][0-9]{0,4}\]|[1-9][0-9]{0,4})(?!{{name}}))
+  rc: |-
+    (?xi:
+      {{r_}}{{c_}}|
+      {{r_}}C|
+      {{r_}}|
+      R{{c_}}|
+      {{c_}}
+    )
+
+  # Intersection Operator Variables
+  before_name: (?={{name}})
+  before_reference: |-
+    (?x:(?=
+      @?  # Reference operator
+      (?:
+           {{cell}}
+      | (?:{{column}}|{{row}}):
+        (?:{{column}}|{{row}}|{{cell}})
+      |    {{rc}}:
+           {{rc}}
+      |    {{rc}}
+      )
+    ))

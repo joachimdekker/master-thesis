@@ -1,6 +1,6 @@
 #import "../../utils/cite-tools.typ": citeauthor
 
-= Related Work <sec:related-work>
+= Related Work
 Existing work already helps in answering the questions we set out to answer. 
 
 == Function Extraction

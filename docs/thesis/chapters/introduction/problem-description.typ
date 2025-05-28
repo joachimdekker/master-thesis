@@ -1,4 +1,4 @@
-= Problem Description <subsec:problem-description>
+= Problem Description<sec:problem-description>
 This problem is not straightforward to solve. First of all, excel calculations can become quite complex when using large compositions of formulae---which in turn can have complex semantics---and using large amounts of cells. Furthermore, pension fund employees also make use of more advanced Excel features such as the fixed step iteration tool, which will activate when there are circular references in the file. Consequently, the compiled code should also support fixed step iteration. Besides, the tool has to support over 300 different scenarios under three or more forecasting scenarios (good, bad, or normal economy), which means there are a lot of different execution paths the code needs to consider and the tool needs to support.
 
 Additionally, the compiled code needs to be semantically the same as the excel calculations. The code needs to be verified in a way to ensure the employee the compiled code is exactly the same as his excel worksheet.

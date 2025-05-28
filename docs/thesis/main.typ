@@ -30,6 +30,7 @@
 
 // Make lvl 2 headings bigger since they should be lvl 1
 #show heading.where(level: 2): set text(size:1.5em)
+
 #show heading.where(level: 3): set text(size:1.3em)
 
 // Chapter page
