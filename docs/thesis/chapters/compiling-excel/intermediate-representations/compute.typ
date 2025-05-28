@@ -2,7 +2,7 @@
 #show: zebraw.with(numbering: false, inset: (left: 2em), )
 
 = Compute Model
-The compute IR models the underlying computational model of excel, powered by Excels Formula engine. This layer considers the whole excel workbook and represents the computation beyond cells and worksheets. 
+The compute IR models the underlying computational model of Excel, powered by Excel's Formula engine. This layer considers the whole Excel workbook and represents the computation beyond cells and worksheets. 
 
 We consider the compute unit as one big control flow graph which encodes references, and computations. 
 
@@ -58,7 +58,7 @@ In the next couple of sections, we will elaborate on the different _kinds_ of co
 == Constant Values
 Since every computation and compute unit needs inputs, there need to be nodes that do not contain any dependencies. These nodes are the _constant values_ in the support graph. Constant value nodes only contain a value and an accompanying type.
 
-A special constant value is the value that represents nothing: the _nil_ node While this node will not be emitted to any subsequent intermediary representations, it provides a way to represent an empty cell within a calculations. In subsequent compiler passes, these empty cells will often be removed.
+A special constant value is the value that represents nothing: the _nil_ node While this node will not be emitted to any subsequent intermediate representations, it provides a way to represent an empty cell within a calculations. In subsequent compiler passes, these empty cells will often be removed.
 
 == Reference
 Within the compute representation, it is still possible to reference other values. While it is desirable to have no references in the support graph at the end of all the compiler steps, having references can heavily simplify compiler design. Just like in the structural representation, we distinguish between three different kinds of references: _cell_, _range_, and _table_.
@@ -69,13 +69,13 @@ A different kind of reference is the data reference. As we will discuss in @sec:
 In order to actually compute data, Excel uses formulas. These formulae and compositions thereof are converted to a graph of _Functions_. In this representation, functions are only represented in their signature form, without their implementation. We leave this part to the code-layout representation and a single compiler step which converts the functions to their respective code representation.
 
 == Special Constructs
-Besides from the _primitive_ constructs in the compute model, we also distinguish special, excel specific constructs. These constructs are common patterns found in many excel sheets. Most of these patterns can be mapped to patterns in code in order to make code more readable. In the next subsections, we discuss these patterns.
+Besides from the _primitive_ constructs in the compute model, we also distinguish special, Excel-specific constructs. These constructs are common patterns found in many Excel sheets. Most of these patterns can be mapped to patterns in code in order to make code more readable. In the next subsections, we discuss these patterns.
 
 === Table
 
-Like discussed in the previous section, a common structure found in excel sheets is the table. This construct is continous region of cells, commonly with column- or row-headers. 
+Like discussed in the previous section, a common structure found in Excel sheets is the table. This construct is continuous region of cells, commonly with column- or row-headers. 
 
-In sense of the computation, a table will always have some sort of computed column. This column depends on values in the same row from other columns. For instance, when computing the difference between the projected and actual costs in the Montly Expenses table, the column 'difference' depends on the 'projected' and 'actual' column. In mathematical terms: $ forall t in "Tables", c in "Cells"(t). "Formula"(c) => forall d in "dep"(c). "Row"(t, c) = "Row"(t, d) $
+In sense of the computation, a table will always have some sort of computed column. This column depends on values in the same row from other columns. For instance, when computing the difference between the projected and actual costs in the Monthly Expenses table, the column 'difference' depends on the 'projected' and 'actual' column. In mathematical terms: $ forall t in "Tables", c in "Cells"(t). "Formula"(c) => forall d in "dep"(c). "Row"(t, c) = "Row"(t, d) $
 
 #let colDeps = $"dep"_"cols"$
 
@@ -91,8 +91,7 @@ The chain is similar to the table. However, the chain has some of the requiremen
 
 Because the chain depends on the previous row(s), we distinguish certain initial values, which can be constant values, references to data or different formulae not depending on values in other rows.
 
-For example, consider a savings account spreadsheet. Every year the savings account will get more interest, and the amount of interest will grow. We can have one column with the 
-We consider the savings account interest We can distinguish three columns. The amount. of money currently in the savings account. The amount of interest that year. and the potential money you add to the savings account during the year. Here we can see that the column for the interest and the. actual amount of money in the savings account is actually a computer column part of the chain. This chain calculates its value by taking the value of the interest the previous value of the money in the savings account And also the money. that you are putting into them savings account and then calculating the interest you had on this and updating the value in the current row.
+For example, consider a savings account spreadsheet. Every year the savings account will get more interest, and the amount of interest will grow. The columns contain the amount of money currently in the savings account, the amount of interest that year, and the potential money you add to the savings account during the year. Here we can see that the column for interest and the actual amount of money in the savings account is the computed column part of the chain. This chain calculates its value by taking the value of the interest the previous value of the money in the savings account And also the money. that you are putting into them savings account and then calculating the interest you had on this and updating the value in the current row.
 
 === Choice 
 Excel also has flow control functions such as sum if or choice. Functions can have simple constant values in them, or references to other functions, which means that they split the path of computation.
@@ -100,7 +99,7 @@ Excel also has flow control functions such as sum if or choice. Functions can ha
 We model this choice with its own choice node. This choice node has a. selector function which can select the path of computation to do next. within the actuarial computations, we see that there are a lot of different paths to take, and thus the choice operator is really important in these calculations.
 
 == Support Graph<subsec:support-graph>
-The support graph is a multi-directional cyclic graph that describes the underlying compute model of an excel sheet. The support graph used in this thesis is different than those found in Excel or in @sestoft_spreadsheet_2006. This is mainly due to the fact that this graph is multi-directional and can thus be traversed from both sides, which heavily simplifies compilation.
+The support graph is a multi-directional cyclic graph that describes the underlying compute model of an Excel sheet. The support graph used in this thesis is different than those found in Excel or in @sestoft_spreadsheet_2006. This is mainly due to the fact that this graph is multi-directional and can thus be traversed from both sides, which heavily simplifies compilation.
 
 The support graph supports the operation for traversing the graph. This is done in topologically sorted way, which means that when we traverse node _a_, we have already traversed the dependencies of _a_. This ensures consistent traversal and updating of the graph.
 Traversing the graph and making updates to the graph is a common operation within a compiler step.
@@ -113,7 +112,7 @@ The circular dependency thus creates a sub-graph of the support graph. When trav
 == Types
 In Excel, different types exist, from booleans, numbers to dates and arrays. In order to fully model the computation, these types should be included. Types are very important, especially when trying to refactor existing code. Without types, you could end up with an operation that is not possible on a certain value because of a type mismatch. This would make it impossible to compile this model to the code layout model.
 
-Besides primitive types that also can be found in excel, it is important to consider the special structures we have just created. A lot of these special structures can be mapped to a complex type or a class, where we can use methods and properties to represent calculations. 
+Besides primitive types that also can be found in Excel, it is important to consider the special structures we have just created. A lot of these special structures can be mapped to a complex type or a class, where we can use methods and properties to represent calculations. 
 
 For example, the _Monthly Expenses_ table contains the data columns _Actual_ and _Projected_, but also a computed column called _Difference_. This can be mapped to a datatype, where _Actual_ and _Projected_ are simple fields, and _Difference_ is a property that uses the _Actual_ and _Projected_ fields.
 

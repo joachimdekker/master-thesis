@@ -26,8 +26,9 @@ record Reference();
   -> record TableReference(string Table, string[] Columns)
 ```
 
+
 == Workbook
-The workbook is the grand model of the excel file, representing all the data. A workbook contains references to the spreadsheets that fill up the workbook.
+The workbook is the grand model of the Excel file, representing all the data. A workbook contains references to the spreadsheets that fill up the workbook.
 
 In more mathematical terms, a Workbook $W$ can be seen as a three tuple $(N, S, R)$ where
 
@@ -37,14 +38,14 @@ In more mathematical terms, a Workbook $W$ can be seen as a three tuple $(N, S, 
 
 
 == Spreadsheet
-The excel spreadsheet $S$ can be represented as a four-tuple $(N, R_"named", C, T)$ where
+The Excel spreadsheet $S$ can be represented as a four-tuple $(N, R_"named", C, T)$ where
 
 - $N$ is the name of the spreadsheet, which can be referenced in the same or other spreadsheets.
 - $R_"named"$ represents the set of named references that are specific to this spreadsheet.
 - $C subset.eq CC$ represents the filled cells in the spreadsheet, where $CC$ represents the set of all possible cells.
 - $T$ represents the set of tables in the spreadsheet.
 
-The spreadsheet can be seen as a two-by-two grid of cells. This notation considers spreadsheets to be infinitely large. In practice, Excel does not allow spreadsheets to have more than 1,048,576 rows and 16,384 columns #footnote[#link("https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3", [By Excel Specification])]. 
+The spreadsheet can be seen as a two-by-two grid of cells. This notation considers spreadsheets to be infinitely large. In practice, Excel does not allow spreadsheets to have more than 1,048,576 rows and 16,384 columns #footnote([By Excel Specification: #link("https://support.microsoft.com/en-us/office/Excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3")]). 
 
 === Tables
 Excel supports a built-in special structure of continuous neighboring cells called a Table. Tables are special in a way that they are ranges of cells that automatically have a name, and they can be indexed by the columns of the table. 
@@ -90,7 +91,7 @@ References are a way to refer to a cell, range or table. They link computations 
 
 // One way to look at a reference is in a _singular_ form. This means that the reference B3 is essentially the same as B3:B3, which denotes a range from cell B3 to cell B3. Semantically, they are the same as they both point to the same cell. 
 
-We distinguish between references to cells like `B3`, references to ranges like `A1:B3`, and references to tables like `Table[ColumnName]`. The distinguish between these references since they contain information that we can use in further compilation. Take the cell B3 for instance. This cell reference is essentially the same as B3:B3 as they both point to the same cell. However, the B3 cell reference is conceptually different than B3:B3 in programming terms, as the cell reference is just a single value, and the B3:B3 is a singular array.
+We distinguish between references to cells like `B3`, references to ranges like `A1:B3`, and references to tables like `Table[ColumnName]`. We distinguish between these references since they contain information that we can use in further compilation. Take the cell B3 for instance. This cell reference is essentially the same as B3:B3 as they both point to the same cell. However, the B3 cell reference is conceptually different than B3:B3 in programming terms, as the cell reference is just a single value, and the B3:B3 is a singleton array.
 
 Formally, we define references as the discriminated union $"Ref" = "Ref"_"cell" | "Ref"_"range" | "Ref"_"table"$ where:
 
@@ -99,6 +100,6 @@ Formally, we define references as the discriminated union $"Ref" = "Ref"_"cell" 
 - $"Ref"_"table" = (T, C)$ is a reference that references named column $C$ in table $T$. The table $T$ may be in any spreadsheet.
 
 === Data References
-Cell and Range references are references that reference values and are addressing the structure of the spreadsheet. They cannot reference data that might not be in the spreadsheet yet. For instance, in the budget example, the list of expenses might be different from month to month. To support this, the excel compiler considers this data (especially in tables and chains at the moment) separately (which we talk about more in @sec:data-model). To reference this data, we use a data reference. 
+Cell and Range references are references that reference values and are addressing the structure of the spreadsheet. They cannot reference data that might not be in the spreadsheet yet. For instance, in the budget example, the list of expenses might be different from month to month. To support this, the Excel compiler considers this data (especially in tables and chains at the moment) separately (which we talk about more in @sec:data-model). To reference this data, we use a data reference. 
 
 The data reference $"Ref"_"data" = (R, N)$ is a reference to address $N$ in a data repository $R$. The address can be a column in a table, or a single cell reference.

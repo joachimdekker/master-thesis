@@ -24,7 +24,6 @@ This versatility of the Roslyn Compiler Model can therefore be seen as a downsid
 
 In the upcoming subsections, we discuss the most important elements. Since most of the elements are well-known elements of programming languages, we will not elaborate too much.
 
-
 == Declarations
 The Code Layout model must contain a top level aggregate that houses all the logic of the Excel program. The `Project` entity is this aggregate. Formally, the Project is the complete collection of generated code. It contains the generated types of the repositories and other generated types.
 

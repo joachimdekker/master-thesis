@@ -74,9 +74,15 @@
   topLevelOutline
 }
 
+// ========================================================== //
+
 #include "chapters/introduction/main.typ"
 
-#include "chapters/Compiling Excel/main.typ"
+#include "chapters/compiling-excel/main.typ"
+
+#include "chapters/evaluation/main.typ"
+
+#include "chapters/conclusion/main.typ"
 
 #pagebreak()
 #bibliography("zotero.bib", title: [Bibliography])
