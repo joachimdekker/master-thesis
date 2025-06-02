@@ -1,3 +1,19 @@
-﻿namespace ExcelCompiler.Representations.Structure;
+﻿using ExcelCompiler.Representations.Structure.Formulas;
 
-public record FormulaCell(Location Location, Type Type, string Formula) : Cell(Location, Type);
+namespace ExcelCompiler.Representations.Structure;
+
+public record FormulaCell : Cell
+{
+    public FormulaCell(Location Location, Type Type, string Raw) : base(Location, Type)
+    {
+        this.Raw = Raw;
+        Formula = FormulaExpression.Parse(Raw, new FormulaContext()
+        {
+            Spreadsheet = Location.Spreadsheet!,
+        });
+        
+    }
+
+    public FormulaExpression Formula { get; init; }
+    public string Raw { get; init; }
+}

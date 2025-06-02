@@ -22,7 +22,7 @@ public class StructureToComputePass
 
             ComputeUnit computeUnit = cell switch
             {
-                FormulaCell formulaCell => Parse(formulaCell.Formula, location),
+                FormulaCell formulaCell => Parse(formulaCell.Raw, location),
                 ValueCell<string> stringValue => new ConstantValue<string>(stringValue.Value, location),
                 ValueCell<double> doubleValue => new ConstantValue<double>(doubleValue.Value, location),
                 ValueCell<decimal> decimalValue => new ConstantValue<decimal>(decimalValue.Value, location),
