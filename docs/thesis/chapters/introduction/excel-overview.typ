@@ -22,7 +22,7 @@ Excel also has other _special structures_. These structures live inside the grid
 
 A good example is the _Family Budget_ workbook, which mimics a budgeting application. In this workbook, we can see three are three _worksheets_, namely the _Monthly budget report_ (which is selected and is visible in @fig:family-budget:overview), _Monthly expenses_, and _Savings_. @fig:family-budget:overview also shows the styling that is possible in the Excel sheet. This styling is also saved in the workbook.
 
-=== Tables#footnote[https://support.microsoft.com/en-us/office/overview-of-excel-tables-7ab0bb7d-3a9e-4b56-a3c9-6c94334e492c]
+=== Tables#footnote[https://support.microsoft.com/en-us/office/overview-of-excel-tables-7ab0bb7d-3a9e-4b56-a3c9-6c94334e492c]<subsec:excel-overview:tables>
 
 _Excel Tables_ elevate normal tables by introducing functionality unique to Excel Tables. The table structure is arguably the most common structure in Excel, where a table is created with columns of a certain type, and rows filled with information. With Excel tables, it is possible to formalize these notions, and explicitly define columns and the size of the table.
 

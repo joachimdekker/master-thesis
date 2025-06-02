@@ -2,7 +2,7 @@
 
 #figure(
   spreadsheet(
-    4,
+    columns: 4,
     [], [Projected], [Actual], [Difference],
     [Income 1], [\$ 6.000], [\$ 5.800], [-\$ 200],
     [Income 2], [\$ 1.000], [\$ 2.300], [\$ 1.300],
@@ -16,7 +16,7 @@
 
 #figure(
   spreadsheet(
-    4,
+    columns: 4,
     [], [Projected], [Actual], [Difference],
     [Income 1], [6.000], [5.800], [=C2-B2],
     [Income 2], [1.000], [2.300], [=C3-B3],

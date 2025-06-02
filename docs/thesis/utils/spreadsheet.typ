@@ -1,5 +1,5 @@
 #let spreadsheet(
-  columns,
+  columns: 3,
   ..content
 ) = {
   let border(t) = table.cell(text(t, fill: luma(80%), weight: "bold", size: 0.7em), fill: black, inset: 0.5em)
@@ -15,7 +15,7 @@
   let rowCount = calc.div-euclid(count, columns);
   
   let ri = 1
-  for i in range(0, count + columns + 1,  step: rowCount) {
+  for i in range(0, count + rowCount,  step: columns + 1) {
     sheetArray.insert(i, border([#ri]))
     ri += 1
   }
