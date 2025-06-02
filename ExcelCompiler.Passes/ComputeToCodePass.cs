@@ -16,11 +16,11 @@ namespace ExcelCompiler.Passes;
 [CompilerPass]
 public class ComputeToCodePass
 {
-    private readonly ExtractTypesPass _extractTypesPass;
+    private readonly ExtractDataClasses _extractDataClasses;
     
-    public ComputeToCodePass(ExtractTypesPass extractTypesPass)
+    public ComputeToCodePass(ExtractDataClasses extractDataClasses)
     {
-        _extractTypesPass = extractTypesPass;
+        _extractDataClasses = extractDataClasses;
     }
     
     /// <summary>
@@ -33,7 +33,7 @@ public class ComputeToCodePass
     {
         List<Class> output = [];
         
-        List<Class> types = _extractTypesPass.ExtractTypes(supportGraph.Tables);
+        List<Class> types = _extractDataClasses.ExtractTypes(supportGraph.Tables);
         output.AddRange(types);
         
         List<Statement> tableVariables = GenerateTableVars(supportGraph, dataManager, types);
@@ -90,8 +90,8 @@ public class ComputeToCodePass
             Function {Name: "SUM", Dependencies: [RangeReference or TableReference]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
             
             Function func => new FunctionCall(func.Name, func.Dependencies.Select(Generate).ToList()),
-            CellReference cellRef => new Variable(VariableName(cell.Dependencies[0]), Type.Derived),
-            RangeReference range => new ListExpression(range.Reference.GetLocations().Select(l => new Variable(VariableName(l))).ToList<Expression>(), new Type("double")),
+            CellReference cellRef => new Variable(VariableName(cellRef.Reference), new Type(cellRef.Type)),
+            RangeReference range => new ListExpression(range.Dependencies.Select(l => new Variable(VariableName(l.Location))).ToList<Expression>(), new Type("double")),
             TableReference tableRef => new FunctionCall(
                 new Variable(tableRef.Reference.TableName.ToCamelCase()), 
                 "Select", 

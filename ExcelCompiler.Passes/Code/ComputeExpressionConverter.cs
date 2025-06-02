@@ -1,5 +1,7 @@
+using ExcelCompiler.Passes.Helpers;
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Compute.Specialized;
 using Type = ExcelCompiler.Representations.CodeLayout.Type;
 
 namespace ExcelCompiler.Passes.Code;
@@ -18,6 +20,8 @@ public class ComputeExpressionConverter
             Function func => new FunctionCall(func.Name, func.Dependencies.Select(Transform).ToList()),
             CellReference cell => Transform(cell.Dependencies[0]),
             RangeReference range => new ListExpression(range.Dependencies.Select(Transform).ToList()),
+            
+            TableColumn.CellReference tableCellReference => new Variable(tableCellReference.ColumnName.ToPascalCase(), type),
 
             _ => throw new InvalidOperationException($"Unsupported compute unit {computeUnit.GetType().Name}")
         };

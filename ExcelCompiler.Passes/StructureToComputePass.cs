@@ -79,6 +79,9 @@ public class StructureToComputePass
         {
             GrammarNames.FunctionCall => ParseFunctionCall(node, location),
             GrammarNames.Reference => ParseReference(node, location),
+            GrammarNames.Constant => Parse(node.ChildNodes[0], location),
+            GrammarNames.Text => new ConstantValue<string>(node.ChildNodes[0].Token.ValueString, location),
+            GrammarNames.Number => new ConstantValue<double>(double.Parse(node.ChildNodes[0].Token.ValueString), location),
             _ => throw new InvalidOperationException("Node type is not supported.")
         };
     }

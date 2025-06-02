@@ -1,6 +1,21 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Diagnostics;
+
 ExcelCompiler.Generated.Program program = new();
 
-Console.WriteLine(program.Main());
+Stopwatch sw = new();
 
+double total = 0;
+int count = 1_000_000;
+
+sw.Start();
+for (int i = 0; i < count; i++)
+{
+    total += program.Main();
+}
+sw.Stop();
+
+Console.WriteLine(total);
+Console.WriteLine(total/count);
+Console.WriteLine(sw.Elapsed.TotalSeconds);

@@ -7,6 +7,8 @@ public class PruneEmptyCells
 {
     public SupportGraph Transform(SupportGraph graph)
     {
+        HashSet<ComputeUnit> visited = new();
+        
         // Traverse the support graph and remove empty cells
         foreach (var root in graph.Roots.ToList())
         {
@@ -18,14 +20,19 @@ public class PruneEmptyCells
                 continue;
             }
             
-            TraverseAndPrune(root);
+            TraverseAndPrune(root, visited);
         }
         
         return graph;
     }
 
-    private void TraverseAndPrune(ComputeUnit node)
+    private void TraverseAndPrune(ComputeUnit node, HashSet<ComputeUnit> visited)
     {
+        if (!visited.Add(node))
+        {
+            return;
+        }
+        
         if (node is Nil)
         {
             PruneNode(node);
@@ -34,7 +41,7 @@ public class PruneEmptyCells
 
         foreach (var dependency in node.Dependencies.ToList())
         {
-            TraverseAndPrune(dependency);
+            TraverseAndPrune(dependency, visited);
         }
     }
 

@@ -67,7 +67,7 @@ public class RoslynGenerator
 
         if (property is { Getter: not null, Setter: null, Initializer: null })
         {
-            return propertyDeclaration.WithExpressionBody(ArrowExpressionClause(Generate(property.Getter)));
+            return propertyDeclaration.WithExpressionBody(ArrowExpressionClause(Generate(property.Getter))).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
         AccessorDeclarationSyntax getter = AccessorDeclaration(SyntaxKind.GetAccessorDeclaration);
@@ -75,7 +75,7 @@ public class RoslynGenerator
 
         if (property.Getter is not null)
         {
-            getter = getter.WithExpressionBody(ArrowExpressionClause(Generate(property.Getter)));
+            getter = getter.WithExpressionBody(ArrowExpressionClause(Generate(property.Getter))).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
         else
         {
@@ -85,7 +85,7 @@ public class RoslynGenerator
 
         if (property.Setter is not null)
         {
-            setter = setter.WithExpressionBody(ArrowExpressionClause(Generate(property.Setter)));
+            setter = setter.WithExpressionBody(ArrowExpressionClause(Generate(property.Setter))).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
         else
         {
@@ -143,7 +143,7 @@ public class RoslynGenerator
             Declaration declaration => LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName(declaration.Variable.Type.Name)).AddVariables(
                     VariableDeclarator(declaration.Variable.Name)
-                        .WithInitializer(EqualsValueClause(Generate(declaration.DeclarationExpr))))
+                        .WithInitializer(EqualsValueClause(Generate(declaration.Expression))))
             ),
             ExpressionStatement expression => ExpressionStatement(Generate(expression.Expression)),
             _ => throw new InvalidOperationException("Something went horribly wrong."),
@@ -201,7 +201,7 @@ public class RoslynGenerator
 
     private ExpressionSyntax GenerateFunction(FunctionCall functionCall)
     {
-        if (functionCall.Name.Length == 1 && functionCall.Args.Count == 2)
+        if (functionCall.Name.Length == 1 && functionCall.Arguments.Count == 2)
         {
             SyntaxKind kind = functionCall.Name switch
             {
@@ -212,8 +212,8 @@ public class RoslynGenerator
                 _ => throw new InvalidOperationException($"Binary operation of kind {functionCall.Name} is not supported"),
             };
 
-            ExpressionSyntax left = Generate(functionCall.Args[0]);
-            ExpressionSyntax right = Generate(functionCall.Args[1]);
+            ExpressionSyntax left = Generate(functionCall.Arguments[0]);
+            ExpressionSyntax right = Generate(functionCall.Arguments[1]);
 
             return BinaryExpression(kind, left, right);
         }
@@ -222,9 +222,9 @@ public class RoslynGenerator
         ExpressionSyntax invocation = functionCall.Object is null ? IdentifierName(functionCall.Name) : MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,Generate(functionCall.Object),IdentifierName(functionCall.Name));
         var invocationExpression = InvocationExpression(invocation);
 
-        if (functionCall.Args.Count == 0) return invocationExpression;
+        if (functionCall.Arguments.Count == 0) return invocationExpression;
         
-        ArgumentSyntax[] arguments = functionCall.Args.Select(a => Argument(Generate(a))).ToArray();
+        ArgumentSyntax[] arguments = functionCall.Arguments.Select(a => Argument(Generate(a))).ToArray();
         invocationExpression = invocationExpression.AddArgumentListArguments(arguments);
 
         return invocationExpression;

@@ -5,11 +5,11 @@ using Type = ExcelCompiler.Representations.CodeLayout.Type;
 namespace ExcelCompiler.Passes.Code;
 
 [CompilerPass]
-public class ExtractTypesPass
+public class ExtractDataClasses
 {
     private readonly ComputeExpressionConverter _computeExpressionConverter;
     
-    public ExtractTypesPass(ComputeExpressionConverter computeExpressionConverter)
+    public ExtractDataClasses(ComputeExpressionConverter computeExpressionConverter)
     {
         _computeExpressionConverter = computeExpressionConverter;
     }

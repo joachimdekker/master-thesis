@@ -14,12 +14,10 @@ public class TypeInference
         {
             "SUM", types =>
             {
-                if (types.All(t => t == types[0]))
-                {
-                    return types[0];
-                }
-
-                throw new InvalidOperationException("SUM is not supported for types other than double");
+                if (!types.All(t => t == types[0]))
+                    throw new InvalidOperationException("SUM is not supported for types other than double");
+                
+                return types[0];
             }
         },
         {
@@ -95,6 +93,25 @@ public class TypeInference
 
                 return types[0];
             }
+        },
+        {
+            "/", types =>
+            {
+                // There should be two types
+                if (types.Count != 2)
+                {
+                    throw new InvalidOperationException("MINUS is not supported for more than two types");
+                }
+
+                if (types[0] != types[1])
+                    throw new InvalidOperationException("MINUS is not supported for types other than the same type");
+
+                // Should be a numerical type
+                if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long))
+                    throw new InvalidOperationException("MINUS is not supported for types other than double, int, or long");
+
+                return types[0];
+            }
         }
     };
 
@@ -149,8 +166,9 @@ public record TypeInferenceTransformer : UnitSupportGraphTransformer
         List<Type> types = dependencies.Select(d => d.Type).ToList();
 
         // Get the type of the function based on the name and the dependencies
-        if (!TypeInference.InferenceRules.TryGetValue(name, out var inferenceRule)) throw new InvalidOperationException($"Unknown function {name}");
-
+        if (!TypeInference.InferenceRules.TryGetValue(name, out var inferenceRule)) 
+            throw new InvalidOperationException($"Unknown function {name}");
+    
         Type type = inferenceRule(types);
 
         // Create the new function
@@ -194,5 +212,13 @@ public record TypeInferenceTransformer : UnitSupportGraphTransformer
         };
 
         return tableReference;
+    }
+
+    protected override ComputeUnit Nil(Location location, IEnumerable<ComputeUnit> dependencies)
+    {
+        return new Nil(location)
+        {
+            Type = typeof(double), // Set the type to double for now.
+        };
     }
 }

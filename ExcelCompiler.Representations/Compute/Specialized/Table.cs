@@ -22,10 +22,18 @@ public class Table
 
 public record TableColumn
 {
-    public class CellReference(string TableName, string ColumnName, Location location) : ComputeUnit(location);
+    public class CellReference(string tableName, string columnName, Location location) : ComputeUnit(location)
+    {
+        public string TableName { get; init; } = tableName;
+        public string ColumnName { get; init; } = columnName;
+    }
 
-    public class ColumnReference(string TableName, string ColumnName, Location location) : ComputeUnit(location);
-    
+    public class ColumnReference(string tableName, string columnName, Location location) : ComputeUnit(location)
+    {
+        public string TableName { get; init; } = tableName;
+        public string ColumnName { get; init; } = columnName;
+    }
+
     public enum TableColumnType
     {
         Data,

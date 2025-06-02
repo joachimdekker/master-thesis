@@ -27,8 +27,8 @@ public abstract record Reference
 
         return parsedReference.ReferenceType switch
         {
-            ReferenceType.Cell => Representations.Structure.Location.FromA1(parsedReference.MaxLocation, spreadsheet ?? parsedReference.Worksheet),
-            ReferenceType.CellRange => Range.FromString(parsedReference.LocationString, spreadsheet ?? parsedReference.Worksheet),
+            ReferenceType.Cell => Representations.Structure.Location.FromA1(parsedReference.MaxLocation, parsedReference.Worksheet ?? spreadsheet),
+            ReferenceType.CellRange => Range.FromString(parsedReference.LocationString, parsedReference.Worksheet ?? spreadsheet),
             ReferenceType.Table => new TableReference()
             {
                 TableName = parsedReference.Name,

@@ -82,7 +82,7 @@ public class ExtractComputeTables
             newUnit.Dependencies.Remove(dependency);
             
             // Convert
-            var newDep = ConvertToArm(table, newUnit);
+            var newDep = ConvertToArm(table, dependency);
             newUnit.Dependencies.Add(newDep);
         }
         

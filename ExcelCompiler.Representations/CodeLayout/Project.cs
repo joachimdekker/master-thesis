@@ -2,7 +2,7 @@ using ExcelCompiler.Representations.CodeLayout.TopLevel;
 
 namespace ExcelCompiler.Representations.CodeLayout;
 
-public class Project
+public record Project
 {
     public string Name { get; init; }
     
