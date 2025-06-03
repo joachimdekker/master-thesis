@@ -15,8 +15,4 @@
       <PackageReference Include="XLParser" Version="1.7.5" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Structure\" />
-    </ItemGroup>
-
 </Project>

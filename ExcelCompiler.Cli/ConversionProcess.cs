@@ -2,6 +2,7 @@ using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Passes;
 using ExcelCompiler.Passes.Compute;
 using ExcelCompiler.Passes.Data;
+using ExcelCompiler.Passes.Structure;
 using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Structure;
@@ -31,7 +32,8 @@ public class ConversionWorker
 
         // Structure
         ExcellToStructurePass excelToStructurePass = _serviceProvider.GetRequiredService<ExcellToStructurePass>();
-
+        DetectAreas detectAreasPass = _serviceProvider.GetRequiredService<DetectAreas>();
+        
         // Compute
         StructureToComputePass structureToComputePass = _serviceProvider.GetRequiredService<StructureToComputePass>();
         ConstructComputeGraph constructComputeGraphPass = _serviceProvider.GetRequiredService<ConstructComputeGraph>();
@@ -53,7 +55,8 @@ public class ConversionWorker
         // Extract the Excel Workbook
         _logger.LogInformation("Executing Excel to Structure pass");
         Workbook workbook = excelToStructurePass.Transform(excelFile);
-
+        List<Area> areas = detectAreasPass.Detect(workbook).Where(a => !a.Range.IsSingleReference).ToList();
+        
         // Extract data
         _logger.LogInformation("Executing Extract Repositories pass");
         var repositories = extractRepositoriesPass.Transform(workbook);

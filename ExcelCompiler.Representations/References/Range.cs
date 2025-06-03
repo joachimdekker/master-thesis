@@ -7,7 +7,9 @@ public record Range : Reference
     public string? Spreadsheet => From.Spreadsheet;
     public Location From { get; init;  }
     public Location To { get; init; }
-    
+
+    public override bool IsSingleReference => From == To;
+
     public Range(Location from, Location to)
     {
         if (from.Spreadsheet != to.Spreadsheet) 

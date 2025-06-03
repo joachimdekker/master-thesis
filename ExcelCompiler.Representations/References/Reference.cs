@@ -8,7 +8,7 @@ using XLParser;
 
 public abstract record Reference
 {
-    public bool IsSingleReference => this is Representations.Structure.Location;
+    public virtual bool IsSingleReference => this is Representations.Structure.Location;
 
     public static Reference Parse(string reference, Workbook? workbook = null, string? spreadsheet = null)
     {
