@@ -1,8 +1,9 @@
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Range = ExcelCompiler.Representations.References.Range;
 using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
-using TableReference = ExcelCompiler.Representations.Structure.TableReference;
+using TableReference = ExcelCompiler.Representations.References.TableReference;
 
 namespace ExcelCompiler.Passes;
 

@@ -1,6 +1,6 @@
 namespace ExcelCompiler.Representations.Structure;
 
-public record ValueCell(Location Location, Type Type, object Value) : Cell(Location, Type);
+public record ValueCell(References.Location Location, Type Type, object Value) : Cell(Location, Type);
 
 public record ValueCell<T> : ValueCell
 {
@@ -10,11 +10,11 @@ public record ValueCell<T> : ValueCell
         init => base.Value = value!;
     }
     
-    public ValueCell(T value, Location location) : base(location, typeof(T), value!)
+    public ValueCell(T value, References.Location location) : base(location, typeof(T), value!)
     {
     }
 
-    public void Deconstruct(out Location location, out T value)
+    public void Deconstruct(out References.Location location, out T value)
     {
         location = Location;
         value = Value;

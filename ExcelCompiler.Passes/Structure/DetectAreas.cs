@@ -1,6 +1,7 @@
 using ExcelCompiler.Representations.Helpers;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Passes.Structure;
 
@@ -23,11 +24,17 @@ public class DetectAreas
 
     private List<Area> Detect(Spreadsheet spreadsheet)
     {
-        List<Area> areas = new();
         
         var graph = ConvertSpreadsheetToGraph(spreadsheet);
         var connectedComponents = FindConnectedComponents(graph);
+        var areas = CreateAreasFromComponents(spreadsheet, connectedComponents);
 
+        return areas;
+    }
+
+    private static List<Area> CreateAreasFromComponents(Spreadsheet spreadsheet, List<HashSet<Node>> connectedComponents)
+    {
+        List<Area> areas = new();
         foreach (var component in connectedComponents)
         {
             // Find the right and left most position and create a range for the area

@@ -1,14 +1,16 @@
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using Irony.Parsing;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Location = ExcelCompiler.Representations.References.Location;
+using Range = ExcelCompiler.Representations.References.Range;
 
-namespace ExcelCompiler.Domain.Structure;
+namespace ExcelCompiler.Representations.References;
 
 using XLParser;
 
 public abstract record Reference
 {
-    public virtual bool IsSingleReference => this is Representations.Structure.Location;
+    public virtual bool IsSingleReference => this is Location;
 
     public static Reference Parse(string reference, Workbook? workbook = null, string? spreadsheet = null)
     {
@@ -27,12 +29,12 @@ public abstract record Reference
 
         return parsedReference.ReferenceType switch
         {
-            ReferenceType.Cell => Representations.Structure.Location.FromA1(parsedReference.MaxLocation, parsedReference.Worksheet ?? spreadsheet),
+            ReferenceType.Cell => Location.FromA1(parsedReference.MaxLocation, parsedReference.Worksheet ?? spreadsheet),
             ReferenceType.CellRange => Range.FromString(parsedReference.LocationString, parsedReference.Worksheet ?? spreadsheet),
             ReferenceType.Table => new TableReference()
             {
                 TableName = parsedReference.Name,
-                ColumnName = parsedReference.TableColumns.Single()
+                ColumnNames = [parsedReference.TableColumns.Single()]
             },
             _ => throw new Exception("Unknown reference type.")
         };

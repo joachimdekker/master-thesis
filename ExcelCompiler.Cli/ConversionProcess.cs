@@ -5,6 +5,7 @@ using ExcelCompiler.Passes.Data;
 using ExcelCompiler.Passes.Structure;
 using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.Data;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

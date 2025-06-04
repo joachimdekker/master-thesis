@@ -1,5 +1,6 @@
 using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Location = ExcelCompiler.Representations.References.Location;
+using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Representations.Compute.Specialized;
 

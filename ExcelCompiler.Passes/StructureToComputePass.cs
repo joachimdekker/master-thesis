@@ -1,10 +1,10 @@
-﻿using ExcelCompiler.Domain.Structure;
-using ExcelCompiler.Representations.Compute;
+﻿using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using Irony.Parsing;
 using XLParser;
-using Range = ExcelCompiler.Representations.Structure.Range;
-using TableReference = ExcelCompiler.Representations.Structure.TableReference;
+using Range = ExcelCompiler.Representations.References.Range;
+using TableReference = ExcelCompiler.Representations.References.TableReference;
 
 namespace ExcelCompiler.Passes;
 
@@ -56,7 +56,7 @@ public class StructureToComputePass
             RangeReference rangeReference => rangeReference.Reference.GetLocations(),
             Representations.Compute.TableReference tableReference => workbook.Tables
                 .Single(t => t.Name == tableReference.Reference.TableName)
-                .Columns[tableReference.Reference.ColumnName]
+                .Columns[tableReference.Reference.ColumnNames[0]]
                 .GetLocations(),
             Function function => function.Dependencies
                 .SelectMany(f => GetReferences(f, workbook)),

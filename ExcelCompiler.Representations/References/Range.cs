@@ -1,6 +1,4 @@
-using ExcelCompiler.Domain.Structure;
-
-namespace ExcelCompiler.Representations.Structure;
+namespace ExcelCompiler.Representations.References;
 
 public record Range : Reference
 {
@@ -8,8 +6,11 @@ public record Range : Reference
     public Location From { get; init;  }
     public Location To { get; init; }
 
-    public override bool IsSingleReference => From == To;
+    public int Width => To.Column - From.Column;
+    public int Height => To.Row - From.Row;
 
+    public override bool IsSingleReference => From == To;
+    
     public Range(Location from, Location to)
     {
         if (from.Spreadsheet != to.Spreadsheet) 
@@ -17,6 +18,80 @@ public record Range : Reference
         
         From = from;
         To = to;
+    }
+
+    public Location[,] ToArray()
+    {
+        Location[,] result = new Location[Height, Width];
+        for (int row = From.Row; row <= To.Row; row++)
+        {
+            for (int col = From.Column; col <= To.Column; col++)
+            {
+                result[row, col] = new Location(
+                    spreadsheet: Spreadsheet, 
+                    column: col, 
+                    row: row);
+            }
+        }
+
+        return result;
+    }
+
+    public Location At(int dx, int dy)
+    {
+        if (dx <= 0 ||  dx > To.Column - From.Column)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dx));
+        }
+
+        if (dy <= 0 || dy > To.Row - From.Row)
+        {
+            throw new ArgumentOutOfRangeException(nameof(dy));
+        }
+        
+        return new Location
+        {
+            Column = From.Column + dx,
+            Row = From.Row + dy,
+            Spreadsheet = From.Spreadsheet,
+        };
+    }
+
+    public bool Contains(Reference reference)
+    {
+        return reference switch
+        {
+            Range range => Contains(range),
+            Location location => Contains(location),
+            _ => false
+        };
+    }
+
+    public bool Contains(Range range)
+    {
+        if (range.Spreadsheet != Spreadsheet)
+        {
+            return false;
+        }
+        
+        return From.Column <= range.From.Column 
+            && From.Row <= range.From.Row
+            && To.Column >= range.To.Column
+            && To.Row >= range.To.Row;
+    }
+
+    private bool Overlaps(Range range)
+    {
+        if (range.Spreadsheet != Spreadsheet)
+        {
+            return false;
+        }
+        
+        // Adapted from: https://www.geeksforgeeks.org/find-two-rectangles-overlap/
+        return !(From.Column > range.To.Column 
+                 || range.From.Column > To.Column 
+                 || To.Row > range.From.Row
+                 || range.To.Row > From.Row);
     }
 
     public bool Contains(Location location)
@@ -36,8 +111,8 @@ public record Range : Reference
             {
                 yield return new Location
                 {
-                    Column = col,
-                    Row = row,
+                    Column = new AxisPosition(col),
+                    Row = new AxisPosition(row),
                     Spreadsheet = From.Spreadsheet,
                 };
             }

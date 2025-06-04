@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
-using Location = ExcelCompiler.Representations.Structure.Location;
+using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 

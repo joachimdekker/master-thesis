@@ -1,3 +1,5 @@
+using ExcelCompiler.Representations.Helpers;
+
 namespace ExcelCompiler.Representations.Structure;
 
 public class Spreadsheet
@@ -14,7 +16,7 @@ public class Spreadsheet
         set => _cells[(row, column)] = value;
     }
 
-    public Cell this[Location location]
+    public Cell this[References.Location location]
     {
         get
         {
@@ -35,6 +37,8 @@ public class Spreadsheet
             _cells[(location.Row, location.Column)] = value;
         }
     }
+
+    public Cell[,] this[References.Range range] => range.ToArray().Map(i => this[i]);
 
     public Spreadsheet(string name)
     {

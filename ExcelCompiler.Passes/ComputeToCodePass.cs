@@ -6,6 +6,7 @@ using ExcelCompiler.Representations.CodeLayout.Statements;
 using ExcelCompiler.Representations.CodeLayout.TopLevel;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Data;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
@@ -96,7 +97,7 @@ public class ComputeToCodePass
                 new Variable(tableRef.Reference.TableName.ToCamelCase()), 
                 "Select", 
                 [new Lambda([new Variable("t")], 
-                    new PropertyAccess(Type.Derived, new Variable("t"), tableRef.Reference.ColumnName.ToPascalCase()))]),
+                    new PropertyAccess(Type.Derived, new Variable("t"), tableRef.Reference.ColumnNames[0].ToPascalCase()))]),
             _ => throw new InvalidOperationException($"Unsupported compute unit {cell.GetType().Name}"),
         };
     }

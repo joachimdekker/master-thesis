@@ -1,7 +1,7 @@
 using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Passes.Data;
 
@@ -70,14 +70,7 @@ public class ExtractRepositories
         }
         
         // Transpose the columns
-        object[,] data = new object[columns[0].Count, columns.Count];
-        for (int i = 0; i < columns.Count; i++)
-        {
-            for (int j = 0; j < columns[0].Count; j++)
-            {
-                data[j, i] = columns[i][j];
-            }
-        }
+        object[,] data = columns.Transpose();
         
         return data;
     }

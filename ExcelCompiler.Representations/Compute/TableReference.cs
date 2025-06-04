@@ -1,13 +1,13 @@
-using Location = ExcelCompiler.Representations.Structure.Location;
+using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 
 public class TableReference : ComputeUnit
 {
-    public TableReference(Location location, Structure.TableReference reference) : base(location)
+    public TableReference(Location location, References.TableReference reference) : base(location)
     {
         Reference = reference;
     }
 
-    public Structure.TableReference Reference { get; set; }
+    public References.TableReference Reference { get; set; }
 }

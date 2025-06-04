@@ -1,6 +1,7 @@
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Range = ExcelCompiler.Representations.References.Range;
 using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
 
@@ -115,7 +116,6 @@ public class TypeInference
         }
     };
 
-
     public SupportGraph Transform(SupportGraph graph)
     {
         return new TypeInferenceTransformer(graph.Tables).Transform(graph);
@@ -201,9 +201,9 @@ public record TypeInferenceTransformer : UnitSupportGraphTransformer
         return cellReference;
     }
 
-    protected override ComputeUnit TableReference(Location location, IEnumerable<ComputeUnit> dependencies, Representations.Structure.TableReference reference)
+    protected override ComputeUnit TableReference(Location location, IEnumerable<ComputeUnit> dependencies, Representations.References.TableReference reference)
     {
-        var type = _tables.Single(t => t.Name == reference.TableName).Columns.Single(c => c.Name == reference.ColumnName).Type;
+        var type = _tables.Single(t => t.Name == reference.TableName).Columns.Single(c => c.Name == reference.ColumnNames[0]).Type;
 
         // Create the new table reference
         TableReference tableReference = new(location, reference)

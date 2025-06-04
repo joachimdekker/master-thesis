@@ -1,5 +1,6 @@
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Compute.Specialized;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using ComputeTable = ExcelCompiler.Representations.Compute.Specialized.Table;
 using Table = ExcelCompiler.Representations.Structure.Table;

@@ -1,8 +1,8 @@
-﻿using ExcelCompiler.Domain.Structure;
+﻿using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using OfficeOpenXml;
 using OfficeOpenXml.Table;
-using Range = ExcelCompiler.Representations.Structure.Range;
+using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Passes;
 
@@ -59,23 +59,13 @@ public class ExcellToStructurePass
                     int endRow = excelTable.ShowTotal ? tableRange.To.Row - 1 : tableRange.To.Row;
                     
                     return new Range(
-                        from: new Location()
-                        {
-                            Spreadsheet = tableRange.From.Spreadsheet,
-                            Row = startRow,
-                            Column = column,
-                        },
-                        to: new Location()
-                        {
-                            Spreadsheet = tableRange.To.Spreadsheet,
-                            Row = endRow,
-                            Column = column,
-                        }
-                    );
+                        from: new Location(spreadsheet: tableRange.From.Spreadsheet, row: startRow, column: column),
+                        to: new Location(spreadsheet: tableRange.To.Spreadsheet, row: endRow, column: column));
                 });
                 
-                Table table = new Table(excelTable.Name)
+                Table table = new Table
                 {
+                    Name = excelTable.Name,
                     Columns = columns,
                     Location = tableRange,
                 };

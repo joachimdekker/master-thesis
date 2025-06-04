@@ -1,14 +1,16 @@
+using Range = ExcelCompiler.Representations.References.Range;
+
 namespace ExcelCompiler.Representations.Structure.Formulas;
 
 public record Reference : FormulaExpression
 {
-    public static Reference Parse(Domain.Structure.Reference reference)
+    public static Reference Parse(References.Reference reference)
     {
         return reference switch
         {
-            Location locationRef => new CellReference(locationRef),
+            References.Location locationRef => new CellReference(locationRef),
             Range range => new RangeReference(range),
-            Structure.TableReference tableRef => new TableReference(tableRef),
+            References.TableReference tableRef => new TableReference(tableRef),
             _ => throw new InvalidOperationException($"Reference type {reference.GetType()} is not supported."),
         };
     }
@@ -16,6 +18,6 @@ public record Reference : FormulaExpression
 
 public record RangeReference(Range Reference) : Reference;
 
-public record CellReference(Location Reference) : Reference;
+public record CellReference(References.Location Reference) : Reference;
 
-public record TableReference(Representations.Structure.TableReference Reference) : Reference;
+public record TableReference(References.TableReference Reference) : Reference;

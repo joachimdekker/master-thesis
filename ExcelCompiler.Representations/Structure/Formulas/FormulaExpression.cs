@@ -3,8 +3,22 @@ using XLParser;
 
 namespace ExcelCompiler.Representations.Structure.Formulas;
 
-public record FormulaExpression()
+public record FormulaExpression
 {
+    #region Properties
+
+    public List<References.Reference> GetReferences()
+    {
+        // Use the FormulaTraverser to get all the locations
+        var traverser = new LocationTraverser();
+        var locations = traverser.Traverse(this);
+        
+        return locations;
+    }
+    
+    #endregion
+    
+    #region Parsing
     public static FormulaExpression Parse(string formula, FormulaContext context)
     {
         ParseTreeNode root = ExcelFormulaParser.Parse(formula);
@@ -28,7 +42,7 @@ public record FormulaExpression()
 
         Reference ParseReference(ParseTreeNode node)
         {
-            Domain.Structure.Reference reference = Domain.Structure.Reference.Parse(node.Print(), spreadsheet: context.Spreadsheet);
+            References.Reference reference = References.Reference.Parse(node.Print(), spreadsheet: context.Spreadsheet);
             
             return Reference.Parse(reference);
         }
@@ -72,4 +86,21 @@ public record FormulaExpression()
             throw new ArgumentException("Unsupported parse tree node.", nameof(node));
         }
     }
+    
+    #endregion
+
+    #region Equality
+
+    
+
+    #endregion
 };
+
+file record LocationTraverser : CollectionFormulaTraverser<References.Reference>
+{
+    protected override List<References.Reference> CellReference(CellReference reference) => [reference.Reference];
+
+    protected override List<References.Reference> RangeReference(RangeReference reference) => [reference.Reference];
+    
+    protected override List<References.Reference> TableReference(TableReference reference) => [reference.Reference];
+}

@@ -1,5 +1,5 @@
 using ExcelCompiler.Representations.Compute.Specialized;
-using Location = ExcelCompiler.Representations.Structure.Location;
+using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 

@@ -1,4 +1,5 @@
 ﻿using ExcelCompiler.Cli;
+using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

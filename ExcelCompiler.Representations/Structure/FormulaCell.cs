@@ -4,7 +4,7 @@ namespace ExcelCompiler.Representations.Structure;
 
 public record FormulaCell : Cell
 {
-    public FormulaCell(Location Location, Type Type, string Raw) : base(Location, Type)
+    public FormulaCell(References.Location Location, Type Type, string Raw) : base(Location, Type)
     {
         this.Raw = Raw;
         Formula = FormulaExpression.Parse(Raw, new FormulaContext()
