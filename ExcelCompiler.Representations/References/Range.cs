@@ -6,8 +6,8 @@ public record Range : Reference
     public Location From { get; init;  }
     public Location To { get; init; }
 
-    public int Width => To.Column - From.Column;
-    public int Height => To.Row - From.Row;
+    public int Width => To.Column - From.Column + 1;
+    public int Height => To.Row - From.Row + 1;
 
     public override bool IsSingleReference => From == To;
     
@@ -23,14 +23,16 @@ public record Range : Reference
     public Location[,] ToArray()
     {
         Location[,] result = new Location[Height, Width];
-        for (int row = From.Row; row <= To.Row; row++)
+
+        for (int i = 0; i < Height; i++)
         {
-            for (int col = From.Column; col <= To.Column; col++)
+            for (int j = 0; j < Width; j++)
             {
-                result[row, col] = new Location(
+                result[i, j] = new Location(
                     spreadsheet: Spreadsheet, 
-                    column: col, 
-                    row: row);
+                    column: From.Column + j, 
+                    row: From.Row + i
+                );
             }
         }
 
