@@ -39,7 +39,7 @@ public class DetectTables
         });
 
         return new Table()
-        {
+        {  
             Name = area.Range.ToString(),
             Location = area.Range,
             Columns = columns.Zip(columnRanges, (name, range) => (name, range)).ToDictionary()
@@ -50,7 +50,7 @@ public class DetectTables
     {
         if (header.All(c => c is ValueCell<string> or EmptyCell))
         {
-            return header.Cast<ValueCell<string>>().Select(h => h.Value ).ToList();
+            return header.Select((h, i) => h is not ValueCell<string> v ? $"Column {i}" : v.Value ).ToList();
         }
 
         // If there is no header, we need to generate a column name.
@@ -64,8 +64,9 @@ public class DetectTables
         var dataPart = ExtractTableData(spreadsheet, area, out _);
 
         // Columns are the same
-        for (int i = 0; i <= dataPart.GetLength(0); i++)
-        {
+        int noColumns = dataPart.GetLength(1);
+        for (int i = 0; i < noColumns; i++)
+        { 
             Cell[] column = dataPart.GetColumn(i);
             
             // Only check if the type is not computed
@@ -73,14 +74,15 @@ public class DetectTables
             {
                 if (!IsComputedColumn(column, area)) return false;
                 continue;
-            };
+            }
             
             // Get the type of the cell
             // Replace with logic that extracts the type from the first available one.
             Type type = column[0].Type;
+            Type cellType = column[0].GetType();
             
             // Check if columns are the same.
-            if (column.Any(c => c.Type != type)) return false;
+            if (column.Where(c => c is not EmptyCell).Any(c => c.GetType() != cellType || c.Type != type)) return false;
         }
 
         return true;
@@ -92,11 +94,10 @@ public class DetectTables
         
         // Check the types of the first cells
         header = tableCells.GetRow(0);
-        bool hasHeader = header.All(c => c is ValueCell<string>);
+        bool hasHeader = header.All(c => c is ValueCell<string> or EmptyCell);
 
         if (!hasHeader) header = null;
         
-        // Now the difficult part, we need to check if the rows are all the same 'type'.
         var dataPart = tableCells.Copy(selectedRows: (hasHeader ? 1 : 0, tableCells.GetLength(0)));
         return dataPart;
     }
@@ -116,9 +117,25 @@ public class DetectTables
         FormulaExpression[] transformedCells = formulaCells.Select(c => TransformFormula(c, area.Range)).ToArray();
         
         // Check if the transformed cells are all the same
-        if (transformedCells.Any(c => c != transformedCells[0])) return false;
+        if (transformedCells.Any(c => !TransformEqual(c ,transformedCells[0]))) return false;
         
         return true;
+    }
+
+    protected bool TransformEqual(FormulaExpression left, FormulaExpression right)
+    {
+        return (left, right) switch
+        {
+            (Constant cl, Constant cr) => cl.Value == cr.Value,
+            (Function fl, Function fr) => fl.Name == fr.Name &&
+                                          fl.Arguments.Zip(fr.Arguments, TransformEqual).All(t => t),
+            (RangeReference rrl, RangeReference rrr) => rrl.Reference.Equals(rrr.Reference),
+            (TableReference trl, TableReference trr) => trl.Reference.TableName == trr.Reference.TableName &&
+                                                        trl.Reference.ColumnNames.SequenceEqual(trr.Reference
+                                                            .ColumnNames),
+            (CellReference crl, CellReference crr) => crl.Reference.Equals(crr.Reference),
+            _ => false
+        };
     }
 
     protected bool IsFormulaNonDependent(FormulaCell cell, Range range)
