@@ -44,34 +44,34 @@ public class ExcellToStructurePass
             }
             
             
-            // Get all the tables in the excel file
-            foreach (ExcelTable excelTable in sheet.Tables)
-            {
-                Range tableRange = (Reference.Parse(excelTable.Range.Address) as Range)!;
-                // Temp to fix the spreadsheet linkage problem.
-                tableRange.From.Spreadsheet = spreadsheet.Name;
-                tableRange.To.Spreadsheet = spreadsheet.Name;
-                
-                Dictionary<string, Range> columns = excelTable.Columns.ToDictionary(col => col.Name, col =>
-                {
-                    int column = tableRange.From.Column + col.Position;
-                    int startRow = excelTable.ShowHeader ? tableRange.From.Row + 1 : tableRange.From.Row;
-                    int endRow = excelTable.ShowTotal ? tableRange.To.Row - 1 : tableRange.To.Row;
-                    
-                    return new Range(
-                        from: new Location(spreadsheet: tableRange.From.Spreadsheet, row: startRow, column: column),
-                        to: new Location(spreadsheet: tableRange.To.Spreadsheet, row: endRow, column: column));
-                });
-                
-                Table table = new Table
-                {
-                    Name = excelTable.Name,
-                    Columns = columns,
-                    Location = tableRange,
-                };
-                
-                spreadsheet.Tables.Add(table);
-            }
+            // // Get all the tables in the excel file
+            // foreach (ExcelTable excelTable in sheet.Tables)
+            // {
+            //     Range tableRange = (Reference.Parse(excelTable.Range.Address) as Range)!;
+            //     // Temp to fix the spreadsheet linkage problem.
+            //     tableRange.From.Spreadsheet = spreadsheet.Name;
+            //     tableRange.To.Spreadsheet = spreadsheet.Name;
+            //     
+            //     Dictionary<string, Range> columns = excelTable.Columns.ToDictionary(col => col.Name, col =>
+            //     {
+            //         int column = tableRange.From.Column + col.Position;
+            //         int startRow = excelTable.ShowHeader ? tableRange.From.Row + 1 : tableRange.From.Row;
+            //         int endRow = excelTable.ShowTotal ? tableRange.To.Row - 1 : tableRange.To.Row;
+            //         
+            //         return new Range(
+            //             from: new Location(spreadsheet: tableRange.From.Spreadsheet, row: startRow, column: column),
+            //             to: new Location(spreadsheet: tableRange.To.Spreadsheet, row: endRow, column: column));
+            //     });
+            //     
+            //     Table table = new Table
+            //     {
+            //         Name = excelTable.Name,
+            //         Columns = columns,
+            //         Location = tableRange,
+            //     };
+            //     
+            //     spreadsheet.Tables.Add(table);
+            // }
             
             workbook.Spreadsheets.Add(spreadsheet);
         }
