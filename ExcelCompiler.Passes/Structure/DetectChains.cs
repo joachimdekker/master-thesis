@@ -2,46 +2,81 @@ using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using ExcelCompiler.Representations.Structure.Formulas;
+using Microsoft.Extensions.Logging;
 using Range = ExcelCompiler.Representations.References.Range;
+using Reference = ExcelCompiler.Representations.References.Reference;
+using TableReference = ExcelCompiler.Representations.Structure.Formulas.TableReference;
 
 namespace ExcelCompiler.Passes.Structure;
 
 [CompilerPass]
-public class DetectChains : DetectTables
+public class DetectChains(ILogger<DetectChains> logger) : DetectTables
 {
+    private readonly ILogger<DetectChains> _logger = logger;
+
     public new Chain Convert(Spreadsheet spreadsheet, Area area)
     {
-        var dataPart = ExtractTableData(spreadsheet, area, out Cell[]? header);
-        
-        var headerData = header ?? dataPart.GetRow(0);
-        
-        int rowCount = dataPart.GetLength(0);
-        var columns = ExtractColumnHeaders(headerData);
-        var columnRanges = headerData.Select((c) =>
+        var dataPart = ExtractChainData(spreadsheet, area, out string? title, out List<Cell>? header);
+
+        var columns = ExtractColumnHeaders(header, dataPart.Data.ColumnCount);
+        var columnRanges = dataPart.Data.Columns.Select((c) =>
         {
-            Location start = header is not null ? c.Location : c.Location with { Row = c.Location.Row + 1 };
-            Location end = c.Location with { Row = c.Location.Row + rowCount };
+            Location start = c[0].Location;
+            Location end = c[^1].Location;
             return new Range(start, end);
         });
         
-        return new Chain()
+        return new Chain
         {
-            Name = area.Range.ToString(),
+            Name = title ?? area.Range.ToString(),
             Location = area.Range,
             Columns = columns.Zip(columnRanges, (name, range) => (name, range)).ToDictionary()
         };
+    }
+
+    public (Selection Initialisation, Selection Data) ExtractChainData(Spreadsheet spreadsheet, Area area,
+        out string? title, out List<Cell>? header)
+    {
+        var dataPart = ExtractTableData(spreadsheet, area, out title, out header);
+        
+        // Split the data part into the initialisation and the data part
+        var rows = dataPart.Rows.Select(CalcHeuristic).ToList();
+        
+        // Get the index when the data is changing, starting from the back of the array
+        for (int i = rows.Count - 1; i > 0; i--)
+        {
+            if (rows[i] != rows[i - 1])
+            {
+                return (
+                    dataPart.GetRows(new System.Range(0, i)), 
+                    dataPart.GetRows(System.Range.StartAt(i))
+                    );
+            }
+        }
+        
+        // If we reach this point, and the data is not changing then it is not a chain and something went wrong.
+        return (Selection.Empty, dataPart);
+            
+        int CalcHeuristic(List<Cell> row) =>
+            row
+                .OfType<FormulaCell>()
+                .SelectMany(c => c.Formula.GetReferences())
+                .Count(r => area.Range.Contains(r));
     }
     
     public bool IsChain(Spreadsheet spreadsheet, Area area)
     {
         // Now the difficult part, we need to check if the rows are all the same 'type'.
-        var dataPart = ExtractTableData(spreadsheet, area, out _);
+        var dataPart = ExtractChainData(spreadsheet, area, out _, out _);
+        
+        // A chain MUST have an initialisation
+        if (dataPart.Initialisation.RowCount == 0) return false;
+        
+        // In order to beat false positives, the data needs to be longer than 1 row.
+        if (dataPart.Initialisation.RowCount == 1 && dataPart.Data.RowCount == 1) return false;
         
         // Columns are the same
-        for (int i = 0; i <= dataPart.GetLength(0); i++)
-        {
-            Cell[] column = dataPart.GetColumn(i);
-            
+        foreach(List<Cell> column in dataPart.Data.Columns) {
             // Only check if the type is not computed
             if (column[0] is FormulaCell)
             {
@@ -51,7 +86,7 @@ public class DetectChains : DetectTables
             
             // Get the type of the cell
             // Replace with logic that extracts the type from the first available one.
-            Type type = column[0].Type;
+            Type type = GetFirstType(column);
             
             // Check if columns are the same.
             if (column.Any(c => c.Type != type)) return false;
@@ -59,8 +94,18 @@ public class DetectChains : DetectTables
 
         return true;
     }
-    
-    protected new bool IsComputedColumn(Cell[] column, Area area)
+
+    private Type GetFirstType(IEnumerable<Cell> column)
+    {
+        foreach (Cell cell in column)
+        {
+            if (cell is not EmptyCell) return cell.Type;
+        }
+        
+        throw new Exception("No type was found; Empty column");
+    }
+
+    protected new bool IsComputedColumn(List<Cell> column, Area area)
     {
         // First check if all cells are formula cells
         if (column.Any(c => c is not FormulaCell)) return false;
@@ -71,7 +116,27 @@ public class DetectChains : DetectTables
         FormulaExpression[] transformedCells = formulaCells.Select(c => NormalizeFormula(c.Formula, c.Location, area.Range)).ToArray();
 
         // Check if the transformed cells are all the same
-        return transformedCells.All(c => c == transformedCells[0]);
+        return transformedCells.All(c => TransformEqual(c ,transformedCells[0]));
+    }
+    
+    protected new bool TransformEqual(FormulaExpression left, FormulaExpression right)
+    {
+        return (left, right) switch
+        {
+            (Constant cl, Constant cr) => cl.Value == cr.Value,
+            (Function fl, Function fr) => fl.Name == fr.Name &&
+                                          fl.Arguments.Zip(fr.Arguments, TransformEqual).All(t => t),
+            (RangeReference rrl, RangeReference rrr) => rrl.Reference.Equals(rrr.Reference),
+            (TableReference trl, TableReference trr) => trl.Reference.TableName == trr.Reference.TableName &&
+                                                        trl.Reference.ColumnNames.SequenceEqual(trr.Reference
+                                                            .ColumnNames),
+            (RelativeFormulaTransformer.RelativeRange rlrl, RelativeFormulaTransformer.RelativeRange rlrr) 
+                => rlrl.Members.Zip(rlrr.Members, TransformEqual).All(t => t),
+            (RelativeFormulaTransformer.RelativeReference rlr, RelativeFormulaTransformer.RelativeReference rll)
+                => rlr.ColumnOffset == rll.ColumnOffset && rlr.RowOffset == rll.RowOffset,
+            (CellReference crl, CellReference crr) => crl.Reference.Equals(crr.Reference),
+            _ => false
+        };
     }
 
     private FormulaExpression NormalizeFormula(FormulaExpression expression, Location location, Range range)
@@ -84,8 +149,8 @@ public class DetectChains : DetectTables
 file record RelativeFormulaTransformer(Location Location, Range Range) : FormulaTransformer
 {
     // ReSharper disable NotAccessedPositionalProperty.Local
-    record RelativeReference(int ColumnOffset, int RowOffset) : FormulaExpression;
-    record RelativeRange(List<RelativeReference> Members) : FormulaExpression;
+    public record RelativeReference(int ColumnOffset, int RowOffset) : FormulaExpression;
+    public record RelativeRange(List<RelativeReference> Members) : FormulaExpression;
     // ReSharper restore NotAccessedPositionalProperty.Local
     
     protected override FormulaExpression CellReference(CellReference reference)

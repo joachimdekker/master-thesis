@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
@@ -23,51 +24,45 @@ public class DetectTables
     /// <returns></returns>
     public Table Convert(Spreadsheet spreadsheet, Area area)
     {
-        // Get the column names
-        var tableCells = spreadsheet[area.Range];
-        var header = tableCells.GetRow(0);
+        var tableData = ExtractTableData(spreadsheet, area, out string? title, out List<Cell>? header);
         
         // Get the columns
         bool hasHeader = header.All(c => c is ValueCell<string>);
-        int rowCount = hasHeader ? tableCells.GetLength(0) - 1 : tableCells.GetLength(0);
-        var columns = ExtractColumnHeaders(header);
-        var columnRanges = header.Select((c) =>
-        {
-            Location start = !hasHeader ? c.Location : c.Location with { Row = c.Location.Row + 1 };
-            Location end = c.Location with { Row = c.Location.Row + rowCount };
-            return new Range(start, end);
-        });
+        var columns = ExtractColumnHeaders(header, tableData.ColumnCount);
+        var columnRanges = tableData.Columns;
 
         return new Table()
         {  
             Name = area.Range.ToString(),
             Location = area.Range,
-            Columns = columns.Zip(columnRanges, (name, range) => (name, range)).ToDictionary()
+            Header = hasHeader ? (Selection)header : null,
+            Data = tableData,
+            Columns = columns.Zip(columnRanges, (name, range) => (name, (Selection)range)).ToDictionary()
         };
     }
 
-    protected static List<string> ExtractColumnHeaders(Cell[] header)
+    protected static List<string> ExtractColumnHeaders(List<Cell>? header, int numHeaders)
     {
-        if (header.All(c => c is ValueCell<string> or EmptyCell))
+        if (header is not null && header.All(c => c is ValueCell<string> or EmptyCell))
         {
             return header.Select((h, i) => h is not ValueCell<string> v ? $"Column {i}" : v.Value ).ToList();
         }
 
         // If there is no header, we need to generate a column name.
-        return Enumerable.Range(0, header.Length).Select(i => $"Column {i}").ToList();
+        return Enumerable.Range(0, header?.Count ?? numHeaders).Select(i => $"Column {i}").ToList();
     }
 
     public bool IsTable(Spreadsheet spreadsheet, Area area)
     {
         // Check if the table has an header
         // A header is classified if the first row of the area contains all text.
-        var dataPart = ExtractTableData(spreadsheet, area, out _);
+        var dataPart = ExtractTableData(spreadsheet, area, out _, out _);
 
         // Columns are the same
-        int noColumns = dataPart.GetLength(1);
+        int noColumns = dataPart.ColumnCount;
         for (int i = 0; i < noColumns; i++)
         { 
-            Cell[] column = dataPart.GetColumn(i);
+            List<Cell> column = dataPart.GetColumn(i);
             
             // Only check if the type is not computed
             if (column[0] is FormulaCell)
@@ -88,21 +83,56 @@ public class DetectTables
         return true;
     }
 
-    protected static Cell[,] ExtractTableData(Spreadsheet spreadsheet, Area area, out Cell[]? header)
+    protected static Selection ExtractTableData(Spreadsheet spreadsheet, Area area, out string? title, out List<Cell>? header)
     {
+        // The table may have a header
         var tableCells = spreadsheet[area.Range];
         
-        // Check the types of the first cells
-        header = tableCells.GetRow(0);
-        bool hasHeader = header.All(c => c is ValueCell<string> or EmptyCell);
+        // The table may have a title.
+        bool hasTitle = TryGetTitle(tableCells, out title);
+        bool hasHeader = TryGetHeader(tableCells, hasTitle, out header);
 
-        if (!hasHeader) header = null;
+        int startData = (hasTitle ? 1 : 0) + (hasHeader ? 1 : 0);
         
-        var dataPart = tableCells.Copy(selectedRows: (hasHeader ? 1 : 0, tableCells.GetLength(0)));
+        var dataPart = tableCells.GetRows(System.Range.StartAt(hasHeader ? 1 : 0));
         return dataPart;
     }
 
-    protected bool IsComputedColumn(Cell[] column, Area area)
+    protected static bool TryGetHeader(Selection tableCells, bool hasTitle, [NotNullWhen(true)] out List<Cell>? header)
+    {
+        // Check which row we need to check
+        int rowToCheck = hasTitle ? 1 : 0;
+        
+        // Check if the first row is a header
+        header = tableCells.GetRow(rowToCheck);
+        
+        // Check if the first row has exactly one value string cell and the rest are empty cells
+        if (header.All(c => c is ValueCell<string> or EmptyCell))
+        {
+            return true;
+        }
+
+        header = null!;
+        return false;
+    }
+
+    protected static bool TryGetTitle(Selection selection, [NotNullWhen(true)] out string? title)
+    {
+        // Check if the first row is a title
+        List<Cell> firstRow = selection.GetRow(0);
+        
+        // Check if the first row has exactly one value string cell and the rest are empty cells
+        if (firstRow.Count(c => c is ValueCell<string>) != 1 || firstRow.Count(c => c is EmptyCell) != firstRow.Count - 1)
+        {
+            title = null;
+            return false;
+        }
+        
+        title = (firstRow.Single(c => c is ValueCell<string>) as ValueCell<string>)!.Value;
+        return true;
+    }
+
+    protected bool IsComputedColumn(List<Cell> column, Area area)
     {
         // First check if all cells are formula cells
         if (column.Any(c => c is not FormulaCell)) return false;

@@ -20,6 +20,7 @@ public class DetectStructures(DetectTables tableDetector, DetectChains chainDete
         Spreadsheet spreadsheet = workbook.Spreadsheets.First(s => s.Name == area.Range.Spreadsheet);
         
         // Test if the area is a table
+        // TODO: Add support for table footers
         if (tableDetector.IsTable(spreadsheet, area))
         {
             return tableDetector.Convert(spreadsheet, area);
@@ -32,10 +33,10 @@ public class DetectStructures(DetectTables tableDetector, DetectChains chainDete
         }
 
         // Test if the area is a data pond
-        if (dataPondDetector.IsDataPond(spreadsheet, area))
-        {
-            return dataPondDetector.Convert(spreadsheet, area);
-        }
+        // if (dataPondDetector.IsDataPond(spreadsheet, area))
+        // {
+        //     return dataPondDetector.Convert(spreadsheet, area);
+        // }
         
         return null!;
     }
