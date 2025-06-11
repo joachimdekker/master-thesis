@@ -4,14 +4,13 @@ namespace ExcelCompiler.Representations.Structure;
 
 public record FormulaCell : Cell
 {
-    public FormulaCell(References.Location Location, Type Type, string Raw) : base(Location, Type)
+    public FormulaCell(References.Location location, Type type, string raw) : base(location, type)
     {
-        this.Raw = Raw;
-        Formula = FormulaExpression.Parse(Raw, new FormulaContext()
+        Raw = raw;
+        Formula = FormulaExpression.Parse(raw, new FormulaContext()
         {
-            Spreadsheet = Location.Spreadsheet!,
+            Spreadsheet = location.Spreadsheet!,
         });
-        
     }
 
     public FormulaExpression Formula { get; init; }
