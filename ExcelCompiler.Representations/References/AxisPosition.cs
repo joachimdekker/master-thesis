@@ -1,6 +1,6 @@
 namespace ExcelCompiler.Representations.References;
 
-public record AxisPosition(int Index, bool IsAbsolute = false)
+public record AxisPosition(int Index, bool IsAbsolute = false) : IComparable<AxisPosition>
 {
     public static implicit operator int(AxisPosition position) => position.Index;
 
@@ -21,4 +21,11 @@ public record AxisPosition(int Index, bool IsAbsolute = false)
 
     // public static AxisPosition operator -(int value, AxisPosition position) => 
     //     position with { Index = value - position.Index };
+    
+    public int CompareTo(AxisPosition? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (other is null) return 1;
+        return Index.CompareTo(other.Index);
+    }
 }
