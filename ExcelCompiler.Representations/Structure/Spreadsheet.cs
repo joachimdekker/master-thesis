@@ -1,4 +1,5 @@
 using ExcelCompiler.Representations.Helpers;
+using ExcelCompiler.Representations.References;
 
 namespace ExcelCompiler.Representations.Structure;
 
@@ -38,7 +39,15 @@ public class Spreadsheet
         }
     }
 
-    public Cell[,] this[References.Range range] => range.ToArray().Map(i => this[i]);
+    public Selection this[References.Range range]
+    {
+        get
+        {
+            List<List<Cell>> cells = range.ToList().Select(ls => ls.Select(l => this[l]).ToList()).ToList();
+
+            return new Selection(cells, range);
+        }
+    }
 
     public Spreadsheet(string name)
     {

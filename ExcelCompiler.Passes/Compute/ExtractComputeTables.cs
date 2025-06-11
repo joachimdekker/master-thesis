@@ -28,8 +28,9 @@ public class ExtractComputeTables
         {
             var isGoodTable = true;
             int skippedColumns = 0;
-            foreach (var (_, columnRange) in table.Columns)
+            foreach (var (_, column) in table.Columns)
             {
+                var columnRange = column.Range;
                 Cell firstCell = workbook[columnRange.From];
              
                 // Skip columns that are not used
@@ -92,7 +93,7 @@ public class ExtractComputeTables
         TableColumn.CellReference CreateColumnReference(Location reference)
         {
             // Get the column
-            string columnName = table.Columns.Single(kv => kv.Value.Contains(reference)).Key;
+            string columnName = table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
             
             // Create the reference
             return new(table.Name, columnName, unit.Location);
@@ -103,8 +104,9 @@ public class ExtractComputeTables
     {
         List<TableColumn> columns = new();
 
-        foreach (var (name, range) in table.Columns)
+        foreach (var (name, col) in table.Columns)
         {
+            var range = col.Range;
             Cell firstCell = workbook[range.From];
 
             // Skip columns that are not used.

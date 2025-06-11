@@ -15,7 +15,7 @@ public partial record Location : Reference
         : this(spreadsheet, new AxisPosition(column), new AxisPosition(row))
     { }
 
-    public Location(string spreadsheet, AxisPosition column, AxisPosition row)
+    public Location(string? spreadsheet, AxisPosition column, AxisPosition row)
     {
         Spreadsheet = spreadsheet;
         Column = column;

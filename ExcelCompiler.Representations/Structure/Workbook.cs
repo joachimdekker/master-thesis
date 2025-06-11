@@ -9,6 +9,8 @@ public class Workbook
         Name = name;
     }
     
+    public List<Construct> Constructs { get; } = [];
+    
     public Cell this[References.Location location] => GetCell(location);
     
     public List<Spreadsheet> Spreadsheets { get; } = [];

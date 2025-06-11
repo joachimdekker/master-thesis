@@ -30,7 +30,7 @@ public class ExtractRepositories
         Dictionary<string, Type> properties = new Dictionary<string, Type>();
         foreach (var (columnName, columnRange) in table.Columns)
         {
-            var cell = GetFirstNonEmptyCell(workbook, columnRange);
+            var cell = GetFirstNonEmptyCell(workbook, columnRange.Range);
 
             if (cell is null or FormulaCell) continue;
             
@@ -48,11 +48,11 @@ public class ExtractRepositories
         List<List<object>> columns = [];
         foreach (var (columnName, columnType) in scheme.Properties)
         {
-            Range columnRange = table.Columns[columnName];
+            Selection columnRange = table.Columns[columnName];
             
             // For every location, get the value
             List<object> columnValues = [];
-            foreach (var location in columnRange.GetLocations())
+            foreach (var location in columnRange.Range.GetLocations())
             {
                 var cell = workbook[location];
                 
@@ -70,7 +70,7 @@ public class ExtractRepositories
         }
         
         // Transpose the columns
-        object[,] data = columns.Transpose();
+        object[,] data = (columns as IEnumerable<IEnumerable<object>>).Transpose();
         
         return data;
     }

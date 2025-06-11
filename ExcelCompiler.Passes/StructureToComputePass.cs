@@ -56,7 +56,7 @@ public class StructureToComputePass
             RangeReference rangeReference => rangeReference.Reference.GetLocations(),
             Representations.Compute.TableReference tableReference => workbook.Tables
                 .Single(t => t.Name == tableReference.Reference.TableName)
-                .Columns[tableReference.Reference.ColumnNames[0]]
+                .Columns[tableReference.Reference.ColumnNames[0]].Range
                 .GetLocations(),
             Function function => function.Dependencies
                 .SelectMany(f => GetReferences(f, workbook)),
