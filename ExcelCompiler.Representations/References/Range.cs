@@ -1,3 +1,5 @@
+using ExcelCompiler.Representations.Structure;
+
 namespace ExcelCompiler.Representations.References;
 
 public record Range : Reference
@@ -36,6 +38,26 @@ public record Range : Reference
             }
         }
 
+        return result;
+    }
+
+    public List<List<Location>> ToList()
+    {
+        List<List<Location>> result = new List<List<Location>>(Height);
+        
+        for (int i = 0; i < Height; i++)
+        {
+            result.Add(new List<Location>(Width));
+            for (int j = 0; j < Width; j++)
+            {
+                result[i].Add(new Location(
+                    spreadsheet: Spreadsheet, 
+                    column: From.Column + j, 
+                    row: From.Row + i
+                ));
+            }
+        }
+        
         return result;
     }
 
