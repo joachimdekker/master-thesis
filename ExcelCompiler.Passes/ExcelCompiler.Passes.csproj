@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <PackageReference Include="EPPlus" Version="7.6.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.2" />
       <PackageReference Include="XLParser" Version="1.7.5" />
     </ItemGroup>
 
