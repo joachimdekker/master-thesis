@@ -31,9 +31,11 @@ public class DetectTables
         var columns = ExtractColumnHeaders(header, tableData.ColumnCount);
         var columnRanges = tableData.Columns;
 
-        return new Table()
+        var excelTable = spreadsheet.Tables.SingleOrDefault(t => area.Range.Contains(t.Location));
+        
+        return new Table
         {  
-            Name = area.Range.ToString(),
+            Name = excelTable?.Name ?? (title ?? area.Range.ToString().Replace("!","").Replace(":","")),
             Location = area.Range,
             Header = hasHeader ? (Selection)header : null,
             Data = tableData,
@@ -57,7 +59,7 @@ public class DetectTables
         // Check if the table has an header
         // A header is classified if the first row of the area contains all text.
         var dataPart = ExtractTableData(spreadsheet, area, out _, out _);
-
+        
         // Columns are the same
         int noColumns = dataPart.ColumnCount;
         for (int i = 0; i < noColumns; i++)
@@ -138,6 +140,9 @@ public class DetectTables
         if (column.Any(c => c is not FormulaCell)) return false;
         
         FormulaCell[] formulaCells = column.Cast<FormulaCell>().ToArray();
+        
+        // Check if the formula has a formula that refers to the table
+        if (!formulaCells.Any(c => c.Formula.GetReferences().Any(r => area.Range.Contains(r)))) return false;
         
         // Then, check if any references inside the FormulaCell are inside the area
         // If they are, check if they fall in the same row.

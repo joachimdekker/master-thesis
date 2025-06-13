@@ -32,8 +32,9 @@ public class ConversionWorker
         // Get the Compiler Passes from the service provider
 
         // Structure
-        ExcellToStructurePass excelToStructurePass = _serviceProvider.GetRequiredService<ExcellToStructurePass>();
+        ExcelToStructurePass excelToStructurePass = _serviceProvider.GetRequiredService<ExcelToStructurePass>();
         DetectAreas detectAreasPass = _serviceProvider.GetRequiredService<DetectAreas>();
+        DetectStructures detectStructuresPass = _serviceProvider.GetRequiredService<DetectStructures>();
         
         // Compute
         StructureToComputePass structureToComputePass = _serviceProvider.GetRequiredService<StructureToComputePass>();
@@ -57,6 +58,8 @@ public class ConversionWorker
         _logger.LogInformation("Executing Excel to Structure pass");
         Workbook workbook = excelToStructurePass.Transform(excelFile);
         List<Area> areas = detectAreasPass.Detect(workbook).Where(a => !a.Range.IsSingleReference).ToList();
+        List<Construct> constructs = detectStructuresPass.Detect(workbook, areas);
+        workbook.Constructs.AddRange(constructs);
         
         // Extract data
         _logger.LogInformation("Executing Extract Repositories pass");

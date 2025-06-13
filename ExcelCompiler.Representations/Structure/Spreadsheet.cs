@@ -9,7 +9,7 @@ public class Spreadsheet
 
     private Dictionary<(int Row, int Column), Cell> _cells { get; } = [];
     
-    public List<Table> Tables { get; } = [];
+    public List<ExcelTable> Tables { get; } = [];
     
     public Cell this[int row, int column]
     {
@@ -17,7 +17,7 @@ public class Spreadsheet
         set => _cells[(row, column)] = value;
     }
 
-    public Cell this[References.Location location]
+    public Cell this[Location location]
     {
         get
         {

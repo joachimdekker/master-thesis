@@ -31,7 +31,7 @@ public static class ArrayExtensions
         {
             for (var j = 0; j < cols; j++)
             {
-                transposed[j, i] = list[j][i];
+                transposed[j, i] = list[i][j];
             }
         }
 

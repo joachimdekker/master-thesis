@@ -72,7 +72,13 @@ public abstract class ComputeUnit
 
         return false;
     }
-    
+
+    // public override int GetHashCode()
+    // {
+    //     Dependencies.Aggregate((curr, next) => {HashCode.Combine()})
+    //     return HashCode.Combine(Location, );
+    // }
+
     public bool ComputationalEquivalent(ComputeUnit other)
     {
         if (other.GetType() != GetType()) return false;

@@ -9,7 +9,6 @@ public class TBLMonthlyExpensesItem
 {
     public double ProjectedCost { get; set; }
     public double ActualCost { get; set; }
-    public double Difference => ProjectedCost - ActualCost;
 
     public TBLMonthlyExpensesItem(double projectedCost, double actualCost)
     {

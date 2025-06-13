@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Compute.Specialized;
 using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using ComputeTable = ExcelCompiler.Representations.Compute.Specialized.Table;
@@ -16,15 +17,20 @@ public class ConstructComputeGraph
         
         // Create the support graph from the units
         // Let's try a new approach and use immutable data structures
-        List<ComputeUnit> roots = [];
-        
-        foreach (var outputLocation in outputs)
-        {
-            var unlinkedUnit = units[outputLocation];
+        List<ComputeUnit> roots = outputs
+            .Select(outputLocation => units[outputLocation])
+            .Select(unlinkedUnit => transformer.Transform(unlinkedUnit))
+            .ToList();
 
-            var linkedUnit = transformer.Transform(unlinkedUnit);
-            
-            roots.Add(linkedUnit);
+        // Transform tables
+        foreach (var table in tables)
+        {
+            foreach (var column in table.Columns.Where(c => c.ColumnType is TableColumn.TableColumnType.Computed))
+            {
+                var computation = column.Computation;
+                var unit = transformer.Transform(computation!);
+                column.Computation = unit;
+            }
         }
 
         return new SupportGraph
@@ -51,7 +57,10 @@ public record LinkTransformer : UnitSupportGraphTransformer
     public override SupportGraph Transform(SupportGraph graph)
     {
         _cache = [];
-        return base.Transform(graph);
+        
+        var supportGraph = base.Transform(graph);
+        
+        return supportGraph;
     }
 
     public override ComputeUnit Transform(ComputeUnit unit)

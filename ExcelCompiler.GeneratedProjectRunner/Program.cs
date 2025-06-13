@@ -7,7 +7,7 @@ ExcelCompiler.Generated.Program program = new();
 Stopwatch sw = new();
 
 double total = 0;
-int count = 1_000_000;
+int count = 1;
 
 sw.Start();
 for (int i = 0; i < count; i++)

@@ -17,7 +17,7 @@ public class Workbook
     
     public Dictionary<string, References.Reference> NamedRanges { get; init; } = [];
 
-    public IEnumerable<Table> Tables => Spreadsheets.SelectMany(sp => sp.Tables);
+    public IEnumerable<ExcelTable> Tables => Spreadsheets.SelectMany(sp => sp.Tables);
 
     public Cell GetCell(References.Location location)
     {

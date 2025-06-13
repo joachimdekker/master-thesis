@@ -54,7 +54,7 @@ public class StructureToComputePass
         {
             CellReference cellReference => [cellReference.Reference],
             RangeReference rangeReference => rangeReference.Reference.GetLocations(),
-            Representations.Compute.TableReference tableReference => workbook.Tables
+            Representations.Compute.TableReference tableReference => workbook.Constructs.OfType<Table>()
                 .Single(t => t.Name == tableReference.Reference.TableName)
                 .Columns[tableReference.Reference.ColumnNames[0]].Range
                 .GetLocations(),

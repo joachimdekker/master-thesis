@@ -34,14 +34,14 @@ public class ComputeToCodePass
     {
         List<Class> output = [];
         
-        List<Class> types = _extractDataClasses.ExtractTypes(supportGraph.Tables);
+        var types = _extractDataClasses.ExtractTypes(supportGraph.Tables);
         output.AddRange(types);
         
-        List<Statement> tableVariables = GenerateTableVars(supportGraph, dataManager, types);
+        var tableVariables = GenerateTableVars(supportGraph, dataManager, types);
         
-        Statement[] body = tableVariables.Concat(GenerateStatements(supportGraph)).ToArray();
-        Method main = new Method("Main", [], body);
-        Class program = new Class("Program", [], [main]);
+        var body = tableVariables.Concat(GenerateStatements(supportGraph)).ToArray();
+        var main = new Method("Main", [], body);
+        var program = new Class("Program", [], [main]);
         
         output.Add(program);
 

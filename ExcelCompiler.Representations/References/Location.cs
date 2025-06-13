@@ -42,7 +42,7 @@ public partial record Location : Reference
             column /= 26;
         }
 
-        return $"{columnLetters}{Row}";
+        return $"{columnLetters}{(int)Row}";
     }
     
     public static Location FromA1(string a1Format, string? spreadsheet = null)

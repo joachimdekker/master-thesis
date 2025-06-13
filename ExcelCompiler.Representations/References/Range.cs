@@ -155,4 +155,9 @@ public record Range : Reference
         
         return new Range(from, to);
     }
+
+    public override string ToString()
+    {
+        return $"{Spreadsheet}!{From.ToA1()}:{To.ToA1()}";
+    }
 }

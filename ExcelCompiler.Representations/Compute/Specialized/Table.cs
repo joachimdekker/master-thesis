@@ -45,7 +45,7 @@ public record TableColumn
     
     public required string Name { get; init; }
     
-    public ComputeUnit? Computation { get; init; }
+    public ComputeUnit? Computation { get; set; }
 
     public required TableColumnType ColumnType;
 }

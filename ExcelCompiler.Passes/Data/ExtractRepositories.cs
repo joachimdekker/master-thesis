@@ -1,3 +1,4 @@
+using System.Data;
 using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.Structure;
@@ -12,7 +13,7 @@ public class ExtractRepositories
     {
         // Convert all tables to data repositories
         IEnumerable<IDataRepository> repositories =
-            from table in workbook.Tables
+            from table in workbook.Constructs.OfType<Table>()
             let properties = GetTableProperties(workbook, table)
             let scheme = new ColumnarDataSchema
             {
