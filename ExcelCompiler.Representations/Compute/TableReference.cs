@@ -2,7 +2,7 @@ using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 
-public class TableReference : ComputeUnit
+public record TableReference : ComputeUnit
 {
     public TableReference(Location location, References.TableReference reference) : base(location)
     {

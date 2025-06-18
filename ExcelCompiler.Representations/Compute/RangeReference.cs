@@ -4,7 +4,7 @@ using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Representations.Compute;
 
-public class RangeReference : ComputeUnit
+public record RangeReference : ComputeUnit
 {
     public RangeReference(Location location, Range reference) : base(location)
     {

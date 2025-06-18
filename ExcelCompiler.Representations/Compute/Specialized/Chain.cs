@@ -3,15 +3,15 @@ using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Representations.Compute.Specialized;
 
-public class Chain(Range range) : Construct(range)
+public record Chain(Range range) : Construct(range)
 {
-    public class ColumnReference(string chainName, string columnName, Location location) : ComputeUnit(location)
+    public record ColumnReference(string chainName, string columnName, Location location) : ComputeUnit(location)
     {
         public string ChainName { get; init; } = chainName;
         public string ColumnName { get; init; } = columnName;
     }
     
-    public class CellReference(string chainName, string columnName, Location location) : ComputeUnit(location)
+    public record CellReference(string chainName, string columnName, Location location) : ComputeUnit(location)
     {
         public string ChainName { get; init; } = chainName;
     }
@@ -41,7 +41,7 @@ public record ComputedChainColumn : ChainColumn
 
 public record RecursiveChainColumn : ChainColumn
 {
-    public class RecursiveCellReference(string ColumnName, int Recursion, Location location) : ComputeUnit(location);
+    public record RecursiveCellReference(string ColumnName, int Recursion, Location location) : ComputeUnit(location);
     
     public ComputeUnit? Initialization { get; set; }
     

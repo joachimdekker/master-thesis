@@ -2,7 +2,7 @@ using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 
-public class Function : ComputeUnit
+public record Function : ComputeUnit
 {
     public Function(Location location, string name) : base(location)
     {

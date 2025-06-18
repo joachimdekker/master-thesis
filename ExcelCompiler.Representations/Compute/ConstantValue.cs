@@ -2,7 +2,7 @@ using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 
-public class ConstantValue<TValue> : ComputeUnit
+public record ConstantValue<TValue> : ComputeUnit
 {
     public ConstantValue(TValue value, Location location) : base(location)
     {

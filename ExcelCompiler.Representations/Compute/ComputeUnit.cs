@@ -12,7 +12,7 @@ namespace ExcelCompiler.Representations.Compute;
 /// It can be a single function or a group of functions. As small or big as one desires.
 /// It is used as an abstraction in multiple stages in the compilation.
 /// </remarks>
-public abstract class ComputeUnit
+public abstract record ComputeUnit
 {
     public Type Type { get; set; }
     public List<ComputeUnit> Dependencies { get; init; }

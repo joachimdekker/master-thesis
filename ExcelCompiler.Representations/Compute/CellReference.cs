@@ -3,7 +3,7 @@ using Location = ExcelCompiler.Representations.References.Location;
 
 namespace ExcelCompiler.Representations.Compute;
 
-public class CellReference : ComputeUnit
+public record CellReference : ComputeUnit
 {
     public CellReference(Location location, Location reference) : base(location)
     {

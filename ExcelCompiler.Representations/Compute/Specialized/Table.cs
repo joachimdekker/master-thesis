@@ -4,15 +4,15 @@ using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Representations.Compute.Specialized;
 
-public class Table : Construct
+public record Table : Construct
 { 
-    public class ColumnReference(string tableName, string columnName, Location location) : ComputeUnit(location)
+    public record ColumnReference(string tableName, string columnName, Location location) : ComputeUnit(location)
     {
         public string TableName { get; init; } = tableName;
         public string ColumnName { get; init; } = columnName;
     }
 
-    public class CellReference(string tableName, string columnName, Location location) : ComputeUnit(location)
+    public record CellReference(string tableName, string columnName, Location location) : ComputeUnit(location)
     {
         public string TableName { get; init; } = tableName;
     }
@@ -35,13 +35,13 @@ public class Table : Construct
 
 public record TableColumn
 {
-    public class CellReference(string tableName, string columnName, Location location) : ComputeUnit(location)
+    public record CellReference(string tableName, string columnName, Location location) : ComputeUnit(location)
     {
         public string TableName { get; init; } = tableName;
         public string ColumnName { get; init; } = columnName;
     }
 
-    public class ColumnReference(string tableName, string columnName, Location location) : ComputeUnit(location)
+    public record ColumnReference(string tableName, string columnName, Location location) : ComputeUnit(location)
     {
         public string TableName { get; init; } = tableName;
         public string ColumnName { get; init; } = columnName;
