@@ -92,7 +92,7 @@ public record LinkTransformer : UnitSupportGraphTransformer
         var rangeReference = new RangeReference(location, reference);
         
         // Lookup the reference and transform it
-        var deps = reference.GetLocations()
+        var deps = reference
             .Select(l => _units[l])
             .Select(Transform);
         rangeReference.AddDependencies(deps);

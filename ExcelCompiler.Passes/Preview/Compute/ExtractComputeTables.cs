@@ -5,7 +5,7 @@ using ExcelCompiler.Representations.Structure;
 using ComputeTable = ExcelCompiler.Representations.Compute.Specialized.Table;
 using Table = ExcelCompiler.Representations.Structure.Table;
 
-namespace ExcelCompiler.Passes.Compute;
+namespace ExcelCompiler.Passes.Preview.Compute;
 
 /// <summary>
 /// Compilation pass for extracting 'compute tables'.

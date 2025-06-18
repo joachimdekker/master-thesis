@@ -19,18 +19,13 @@ public class DetectChains(ILogger<DetectChains> logger) : DetectTables
         var dataPart = ExtractChainData(spreadsheet, area, out string? title, out List<Cell>? header);
 
         var columns = ExtractColumnHeaders(header, dataPart.Data.ColumnCount);
-        var columnRanges = dataPart.Data.Columns.Select((c) =>
-        {
-            Location start = c[0].Location;
-            Location end = c[^1].Location;
-            return new Range(start, end);
-        });
+        var columnRanges = dataPart.Data.Columns;
         
         return new Chain
         {
             Name = title ?? area.Range.ToString(),
             Location = area.Range,
-            Columns = columns.Zip(columnRanges, (name, range) => (name, range)).ToDictionary()
+            Columns = columns.Zip(columnRanges, (name, range) => (name, (LineSelection)range)).ToDictionary()
         };
     }
 
@@ -176,7 +171,7 @@ file record RelativeFormulaTransformer(Location Location, Range Range) : Formula
         // We should just only accept ranges that are only in the area.
         
         // Get all the locations in the range, and transform it to a multiple column operation.
-        List<RelativeReference> references = range.Reference.GetLocations()
+        List<RelativeReference> references = range.Reference
             .Select(l => (RowOffset: Location.Row - l.Row, ColumnOffset: Location.Column - l.Column))
             .Select(i => new RelativeReference(i.ColumnOffset, i.RowOffset))
             .ToList();

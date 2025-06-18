@@ -1,57 +1,55 @@
 ﻿using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using ExcelCompiler.Representations.Structure.Formulas;
-using Irony.Parsing;
-using XLParser;
 using CellReference = ExcelCompiler.Representations.Compute.CellReference;
 using Function = ExcelCompiler.Representations.Compute.Function;
-using Range = ExcelCompiler.Representations.References.Range;
 using RangeReference = ExcelCompiler.Representations.Compute.RangeReference;
-using Reference = ExcelCompiler.Representations.References.Reference;
-using TableReference = ExcelCompiler.Representations.References.TableReference;
 
-namespace ExcelCompiler.Passes;
+namespace ExcelCompiler.Passes.Preview;
 
 [CompilerPass]
 public class StructureToComputePass
 {
-    public Dictionary<Location, ComputeUnit> Transform(Workbook workbook, IEnumerable<Location> results)
+    public ComputeGrid Transform(Workbook workbook, IEnumerable<Location> results)
     {
-        Dictionary<Location, ComputeUnit> resultsDictionary = new Dictionary<Location, ComputeUnit>();
+        ComputeGrid computeGrid = new ComputeGrid();
         
         Stack<Location> stack = new Stack<Location>(results);
         while(stack.Count != 0) {
             Location location = stack.Pop();
             Cell cell = workbook.GetCell(location);
         
-            FormulaConverter formulaConverter = new(location);
-            ComputeUnit computeUnit = cell switch
-            {
-                FormulaCell formulaCell => formulaConverter.Traverse(formulaCell.Formula),
-                ValueCell<string> stringValue => new ConstantValue<string>(stringValue.Value, location),
-                ValueCell<double> doubleValue => new ConstantValue<double>(doubleValue.Value, location),
-                ValueCell<decimal> decimalValue => new ConstantValue<decimal>(decimalValue.Value, location),
-                ValueCell<bool> boolValue => new ConstantValue<bool>(boolValue.Value, location),
-                ValueCell<DateTime> dateTimeValue => new ConstantValue<DateTime>(dateTimeValue.Value, location),
-                EmptyCell => new Nil(location),
-                _ => throw new ArgumentException("Unsupported cell type.", nameof(cell))
-            };
-            
-            resultsDictionary[location] = computeUnit;
+            var computeUnit = CreateComputeUnitFromCell(location, cell);
 
-            foreach (Location reference in GetReferences(computeUnit, workbook))
-            {
-                if (resultsDictionary.ContainsKey(reference))
-                {
-                    continue;
-                }
-                
-                stack.Push(reference);
-            }
+            computeGrid[location] = computeUnit;
+
+            var references = GetReferences(computeUnit, workbook)
+                .Where(r => !computeGrid.ContainsLocation(r))
+                .Distinct();
+            
+            stack.PushRange(references);
         }
         
-        return resultsDictionary;
+        return computeGrid;
+    }
+
+    private static ComputeUnit CreateComputeUnitFromCell(Location location, Cell cell)
+    {
+        FormulaConverter formulaConverter = new(location);
+        ComputeUnit computeUnit = cell switch
+        {
+            FormulaCell formulaCell => formulaConverter.Traverse(formulaCell.Formula),
+            ValueCell<string> stringValue => new ConstantValue<string>(stringValue.Value, location),
+            ValueCell<double> doubleValue => new ConstantValue<double>(doubleValue.Value, location),
+            ValueCell<decimal> decimalValue => new ConstantValue<decimal>(decimalValue.Value, location),
+            ValueCell<bool> boolValue => new ConstantValue<bool>(boolValue.Value, location),
+            ValueCell<DateTime> dateTimeValue => new ConstantValue<DateTime>(dateTimeValue.Value, location),
+            EmptyCell => new Nil(location),
+            _ => throw new ArgumentException("Unsupported cell type.", nameof(cell))
+        };
+        return computeUnit;
     }
 
     private IEnumerable<Location> GetReferences(ComputeUnit formula, Workbook workbook)

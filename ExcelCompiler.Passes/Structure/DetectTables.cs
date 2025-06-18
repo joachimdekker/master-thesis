@@ -39,7 +39,7 @@ public class DetectTables
             Location = area.Range,
             Header = hasHeader ? (Selection)header : null,
             Data = tableData,
-            Columns = columns.Zip(columnRanges, (name, range) => (name, (Selection)range)).ToDictionary()
+            Columns = columns.Zip(columnRanges, (name, range) => (name, (LineSelection)range)).ToDictionary()
         };
     }
 
@@ -218,7 +218,7 @@ file record FormulaReferenceTransformer(Range Range) : FormulaTransformer
         // We should just only accept ranges that are only in the area.
         
         // Get all the locations in the range, and transform it to a multiple column operation.
-        List<string> columnNames = range.Reference.GetLocations()
+        List<string> columnNames = range.Reference
             .Select(l => Range.From.Column - l.Column)
             .Select(i => $"Column {i}")
             .ToList();

@@ -22,8 +22,28 @@ public class ExtractRepositories
             }
             let data = ExtractDataFromSheet(workbook, table, scheme)
             select new InMemoryDataRepository(table.Name, scheme, data);
-
+        
         return repositories.ToList();
+    }
+
+    private object[,] ExtractDataFromSheet(Workbook workbook, Chain chain, ColumnarDataSchema scheme)
+    {
+        throw new NotImplementedException();
+    }
+
+    private List<KeyValuePair<string, Type>> GetChainProperties(Workbook workbook, Chain chain)
+    {
+        Dictionary<string, Type> properties = new Dictionary<string, Type>();
+        foreach (var (columnName, columnRange) in chain.Columns)
+        {
+            var cell = GetFirstNonEmptyCell(workbook, columnRange.Range);
+
+            if (cell is null or FormulaCell) continue;
+            
+            properties[columnName] = cell.Type;
+        }
+        
+        return properties.ToList();
     }
 
     private List<KeyValuePair<string, Type>> GetTableProperties(Workbook workbook, Table table)
@@ -49,11 +69,11 @@ public class ExtractRepositories
         List<List<object>> columns = [];
         foreach (var (columnName, columnType) in scheme.Properties)
         {
-            Selection columnRange = table.Columns[columnName];
+            LineSelection columnRange = table.Columns[columnName];
             
             // For every location, get the value
             List<object> columnValues = [];
-            foreach (var location in columnRange.Range.GetLocations())
+            foreach (var location in columnRange.Range)
             {
                 var cell = workbook[location];
                 
@@ -78,7 +98,7 @@ public class ExtractRepositories
 
     private Cell? GetFirstNonEmptyCell(Workbook workbook, Range range)
     {
-        foreach (var cell in range.GetLocations())
+        foreach (var cell in range)
         {
             if (workbook[cell] is EmptyCell) continue;
             

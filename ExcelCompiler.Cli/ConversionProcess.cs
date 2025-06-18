@@ -10,6 +10,7 @@ using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ExtractRepositories = ExcelCompiler.Passes.Preview.Data.ExtractRepositories;
 
 namespace ExcelCompiler.Cli;
 
@@ -63,12 +64,7 @@ public class ConversionWorker
         
         // Extract data
         _logger.LogInformation("Executing Extract Repositories pass");
-        var repositories = extractRepositoriesPass.Transform(workbook);
-
-        var dataManager = new DataManager()
-        {
-            Repositories = repositories
-        };
+        var dataManager = extractRepositoriesPass.Transform(workbook);
 
         // Process the graph
         _logger.LogInformation("Executing Structure to Compute pass");

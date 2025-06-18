@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.References;
 using Range = ExcelCompiler.Representations.References.Range;
@@ -79,5 +81,59 @@ public class Selection
         
         // Get the range
         return new Selection([cells], new Range(start, end));
+    }
+}
+
+public class LineSelection : IList<Cell>
+{
+    private IList<Cell> _line;
+
+    public LineSelection(IList<Cell> line)
+    {
+        _line = line;
+    }
+    
+    public static implicit operator LineSelection(List<Cell> cells)
+    {
+        // Get the range
+        return new LineSelection(cells);
+    }
+
+    public Range Range => new(this[0].Location, this[^1].Location);
+
+    public bool TryGetFirstNonEmptyCell([NotNullWhen(true)] out Cell? cell)
+    {
+        cell = _line.FirstOrDefault(c => c is not EmptyCell);
+        return cell is not null;
+    }
+    
+    public IEnumerator<Cell> GetEnumerator() => _line.GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_line).GetEnumerator();
+
+    public void Add(Cell item) => _line.Add(item);
+
+    public void Clear() => _line.Clear();
+
+    public bool Contains(Cell item) => _line.Contains(item);
+
+    public void CopyTo(Cell[] array, int arrayIndex) => _line.CopyTo(array, arrayIndex);
+
+    public bool Remove(Cell item) => _line.Remove(item);
+
+    public int Count => _line.Count;
+
+    public bool IsReadOnly => _line.IsReadOnly;
+
+    public int IndexOf(Cell item) => _line.IndexOf(item);
+
+    public void Insert(int index, Cell item) => _line.Insert(index, item);
+
+    public void RemoveAt(int index) => _line.RemoveAt(index);
+
+    public Cell this[int index]
+    {
+        get => _line[index];
+        set => _line[index] = value;
     }
 }

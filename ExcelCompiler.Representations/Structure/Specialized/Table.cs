@@ -10,5 +10,5 @@ public class Table : Construct
     
     public Selection? Footer { get; init; }
     
-    public Dictionary<string, Selection> Columns { get; init; } = [];
+    public Dictionary<string, LineSelection> Columns { get; init; } = [];
 }

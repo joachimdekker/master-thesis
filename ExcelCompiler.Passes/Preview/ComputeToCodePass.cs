@@ -12,7 +12,7 @@ using Type = ExcelCompiler.Representations.CodeLayout.Type;
 using DataManager = ExcelCompiler.Representations.Data.Preview.DataManager;
 using IDataRepository = ExcelCompiler.Representations.Data.Preview.IDataRepository;
 
-namespace ExcelCompiler.Passes;
+namespace ExcelCompiler.Passes.Preview;
 
 [CompilerPass]
 public class ComputeToCodePass

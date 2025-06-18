@@ -8,6 +8,11 @@ public class Function : ComputeUnit
     {
         Name = name;
     }
+
+    public Function(Location location, string name, params IEnumerable<ComputeUnit> parameters) : this(location, name)
+    {
+        AddDependencies(parameters);
+    }
     
     public string Name { get; }
 }
