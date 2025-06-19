@@ -36,6 +36,8 @@ public record DataChainColumn : ChainColumn
 
 public record ComputedChainColumn : ChainColumn
 {
+    public record CellReference(string ColumnName, Location location) : ComputeUnit(location);
+    
     public ComputeUnit? Computation { get; set; }
 }
 

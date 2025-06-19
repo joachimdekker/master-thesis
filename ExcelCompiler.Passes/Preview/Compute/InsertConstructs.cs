@@ -56,13 +56,34 @@ public class InsertConstructs
 
     private void EmbedChain(ComputeGrid grid, Chain chain, Representations.Compute.Specialized.Chain computeChain)
     {
-        throw new NotImplementedException();
+        foreach (var column in computeChain.Columns)
+        {
+            (string name, LineSelection selection) = chain.Columns.Single(c => c.Key == column.Name);
+
+            foreach (var cellLocation in selection.Range)
+            {
+                ComputeUnit cell = grid[cellLocation];
+                
+                grid[cellLocation] = column switch
+                {
+                    DataChainColumn => cell switch
+                    {
+                        Function f => f,
+                        _ => new DataReference(cellLocation),
+                    },
+                    ComputedChainColumn cc => cc.Computation!,
+                    RecursiveChainColumn rc => rc.Computation!,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+            }
+        }
     }
 
     private Representations.Compute.Specialized.Chain ConvertChain(ComputeGrid grid, Chain chain)
     {
         List<ChainColumn> columns = new();
 
+        var chainComputationConverter = new ChainComputationConverter(chain);
         foreach (var (name, column) in chain.Columns)
         {
             // Skip columns that are not used.
@@ -81,11 +102,33 @@ public class InsertConstructs
                 columns.Add(dataColumn);
                 continue;
             }
+            
+            // Compute the computed column
+            var unit = grid[firstCell.Location];
+            var computation = chainComputationConverter.Transform(unit);
 
-            if (IsRecursiveColumn(column, chain))
+            if (computation.HasType<RecursiveChainColumn.RecursiveCellReference>())
             {
-                
+                // Recursive
+                var initialization = ;
+                var recursiveColumn = new RecursiveChainColumn()
+                {
+                    Name = name,
+                    Type = firstCell.Type,
+                    Computation = computation,
+                    Initialization = initialization,
+                };
+                columns.Add(recursiveColumn);
+                continue;
             }
+            
+            var computedColumn = new ComputedChainColumn()
+            {
+                Name = name,
+                Type = firstCell.Type,
+                Computation = computation
+            };
+            columns.Add(computedColumn);
         }
 
         return new(chain.Location)
@@ -166,31 +209,49 @@ public class InsertConstructs
 
 file record TableComputationConverter(Table Table) : UnitSupportGraphTransformer
 {
-    protected override ComputeUnit CellReference(Location location, IEnumerable<ComputeUnit> dependencies, Location reference)
+    protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
+        var location = cellReference.Location;
+        var reference = cellReference.Reference;
+        
         if (Table.Columns.All(kv => !kv.Value.Range.Contains(reference))) return new CellReference(location, reference);
         
         // Get the column
         string columnName = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
                 
         // Create the reference
-        var cellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
+        var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
         
-        cellReference.AddDependencies(dependencies);
-        return cellReference;
+        tableCellReference.AddDependencies(dependencies);
+        return tableCellReference;
     }
 }
 
 file record ChainComputationConverter(Chain Chain) : UnitSupportGraphTransformer
 {
-    protected override ComputeUnit CellReference(Location location, IEnumerable<ComputeUnit> dependencies, Location reference)
+    protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
-        if (Chain.Columns.All(kv => !kv.Value.Range.Contains(reference))) return new CellReference(location, reference);
+        if (Chain.Columns.All(kv => !kv.Value.Range.Contains(cellReference.Reference))) return cellReference with { Dependencies = dependencies.ToList() };
         
         // Get the column
-        string columnName = Chain.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
+        string columnName = Chain.Columns.Single(kv => kv.Value.Range.Contains(cellReference.Reference)).Key;
                 
-        // Based on the current location, and the 
+        var location = cellReference.Location;
+        var reference = cellReference.Reference;
         
+        // If the reference is in a different row, then it is 
+        if (location.Row != reference.Row)
+        {
+            return new RecursiveChainColumn.RecursiveCellReference(columnName, Math.Abs(location.Row - reference.Row), location)
+            {
+                Dependencies = dependencies.ToList()
+            };
+        }
+        
+        // Create the reference
+        return new ComputedChainColumn.CellReference(columnName, location)
+        {
+            Dependencies = dependencies.ToList()
+        }; 
     }
 }

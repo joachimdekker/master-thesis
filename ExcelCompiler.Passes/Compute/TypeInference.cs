@@ -131,92 +131,75 @@ public record TypeInferenceTransformer : UnitSupportGraphTransformer
         _tables = tables;
     }
 
-    protected override ComputeUnit Constant(Location location, IEnumerable<ComputeUnit> dependencies, Type _, object value)
-    {
-        Type type = value.GetType();
-        return base.Constant(location, dependencies, type, value);
-    }
-
-    protected override ComputeUnit RangeReference(Location location, IEnumerable<ComputeUnit> dependencies, Range reference)
+    protected override ComputeUnit RangeReference(RangeReference rangeReference, IEnumerable<ComputeUnit> dependencies)
     {
         // Get the types of the dependencies
         List<Type> types = dependencies.Select(d => d.Type).Distinct().ToList();
 
         // Get the type of the range based on the types
-        Type type = types.Count switch
-        {
-            1 => types[0],
-            _ => throw new InvalidOperationException("Range references with multiple types are not supported.")
-        };
-
-        // Create the new range reference
-        RangeReference rangeReference = new RangeReference(location, reference)
-        {
-            Type = type,
-        };
+        Type type = dependencies.Select(d => d.Type).Distinct().SingleOrDefault() 
+                    ?? throw new InvalidOperationException("Range references with multiple types are not supported.");
 
         rangeReference.AddDependencies(dependencies);
 
-        return rangeReference;
+        return rangeReference with
+        {
+            Type = type,
+            Dependencies = dependencies.ToList()
+        };
     }
 
-    protected override ComputeUnit Function(Location location, IEnumerable<ComputeUnit> dependencies, string name)
+    protected override ComputeUnit Function(Function function, IEnumerable<ComputeUnit> dependencies)
     {
         // Get the types of the dependencies
         List<Type> types = dependencies.Select(d => d.Type).ToList();
 
         // Get the type of the function based on the name and the dependencies
-        if (!TypeInference.InferenceRules.TryGetValue(name, out var inferenceRule)) 
-            throw new InvalidOperationException($"Unknown function {name}");
+        if (!TypeInference.InferenceRules.TryGetValue(function.Name, out var inferenceRule)) 
+            throw new InvalidOperationException($"Unknown function {function.Name}");
     
         Type type = inferenceRule(types);
 
         // Create the new function
-        Function function = new Function(location, name)
+        return function with
         {
             Type = type,
+            Dependencies = dependencies.ToList()
         };
-
-        function.AddDependencies(dependencies);
-
-        return function;
     }
 
-    protected override ComputeUnit CellReference(Location location, IEnumerable<ComputeUnit> dependencies, Location reference)
+    protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
         // The cell reference should have one dependency, take that type.
-        if (dependencies.Count() != 1) throw new InvalidOperationException("Cell reference should have one dependency.");
-
-        var dependency = dependencies.Single();
+        var dependency = dependencies.SingleOrDefault() ?? throw new InvalidOperationException("Cell reference should have one dependency.");
         var type = dependency.Type;
 
         // Create the new cell reference
-        CellReference cellReference = new CellReference(location, reference)
+        return cellReference with
         {
+            Dependencies = dependencies.ToList(),
             Type = type
         };
-
-        cellReference.AddDependency(dependency);
-
-        return cellReference;
     }
 
-    protected override ComputeUnit TableReference(Location location, IEnumerable<ComputeUnit> dependencies, Representations.References.TableReference reference)
+    protected override ComputeUnit TableReference(TableReference tableReference, IEnumerable<ComputeUnit> _)
     {
-        var type = _tables.Single(t => t.Name == reference.TableName).Columns.Single(c => c.Name == reference.ColumnNames[0]).Type;
+        var type = _tables
+            .Single(t => t.Name == tableReference.Reference.TableName)
+            .Columns
+            .Single(c => c.Name == tableReference.Reference.ColumnNames[0])
+            .Type;
 
         // Create the new table reference
-        TableReference tableReference = new(location, reference)
+        return tableReference with
         {
             Type = type,
         };
-
-        return tableReference;
     }
 
-    protected override ComputeUnit Nil(Location location, IEnumerable<ComputeUnit> dependencies)
+    protected override ComputeUnit Nil(Nil nil, IEnumerable<ComputeUnit> _)
     {
-        return new Nil(location)
+        return nil with
         {
             Type = typeof(double), // Set the type to double for now.
         };

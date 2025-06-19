@@ -86,4 +86,16 @@ public abstract record ComputeUnit
 
         return !Dependencies.Where((t, i) => !t.ComputationalEquivalent(other.Dependencies[i])).Any();
     }
+
+    public int CountByType<T>()
+    where T : ComputeUnit
+    {
+        return (this is T) ? 1 : 0 + Dependencies.Sum(dependency => dependency.CountByType<T>());
+    }
+    
+    public bool HasType<T>()
+    where T : ComputeUnit
+    {
+        return (this is T) || Dependencies.Any(dependency => dependency.HasType<T>());
+    }
 }

@@ -10,7 +10,7 @@ namespace ExcelCompiler.Representations.Compute;
 /// We use this structure for efficient evaluation of the dependencies.
 /// This class is used to calculate dependencies and interesting structures.
 /// </remarks>
-public class SupportGraph
+public record SupportGraph
 {
     /// <summary>
     /// Gets or sets the roots of the support graph.

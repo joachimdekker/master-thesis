@@ -75,18 +75,21 @@ public class ExtractComputeTables
 
 file record TableComputationConverter(Table Table) : UnitSupportGraphTransformer
 {
-    protected override ComputeUnit CellReference(Location location, IEnumerable<ComputeUnit> dependencies, Location reference)
+    protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
+        var location = cellReference.Location;
+        var reference = cellReference.Reference;
+        
         if (Table.Columns.All(kv => !kv.Value.Range.Contains(reference))) return new CellReference(location, reference);
         
         // Get the column
         string columnName = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
                 
         // Create the reference
-        var cellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
+        var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
         
-        cellReference.AddDependencies(dependencies);
-        return cellReference;
+        tableCellReference.AddDependencies(dependencies);
+        return tableCellReference;
     }
     
 }

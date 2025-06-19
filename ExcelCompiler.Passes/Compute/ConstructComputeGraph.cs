@@ -68,36 +68,33 @@ public record LinkTransformer : UnitSupportGraphTransformer
         return Transform(unit, _cache);
     }
 
-    protected override ComputeUnit CellReference(Location location, IEnumerable<ComputeUnit> dependencies,
-        Location reference)
+    protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
         Debug.WriteLineIf(!dependencies.Any(), "Cell should not have any dependencies yet.");
         
-        var cellReference = new CellReference(location, reference);
-        
         // Lookup the reference and transform it
-        var unit = _units[reference];
+        var unit = _units[cellReference.Reference];
         var linkedUnit = Transform(unit);
         
-        // Add the dependency
-        cellReference.AddDependency(linkedUnit);
-        
-        return cellReference;
+        return cellReference with
+        {
+            Dependencies = [linkedUnit],
+        };
     }
 
-    protected override ComputeUnit RangeReference(Location location, IEnumerable<ComputeUnit> dependencies, Range reference)
+    protected override ComputeUnit RangeReference(RangeReference rangeReference, IEnumerable<ComputeUnit> dependencies)
     {
         Debug.WriteLineIf(!dependencies.Any(), "Range should not have any dependencies yet.");
         
-        var rangeReference = new RangeReference(location, reference);
-        
         // Lookup the reference and transform it
-        var deps = reference
+        var deps = rangeReference.Reference
             .Select(l => _units[l])
-            .Select(Transform);
-        rangeReference.AddDependencies(deps);
+            .Select(Transform)
+            .ToList();
         
-        
-        return rangeReference;
+        return rangeReference with
+        {
+            Dependencies = deps,
+        };
     }
 }
