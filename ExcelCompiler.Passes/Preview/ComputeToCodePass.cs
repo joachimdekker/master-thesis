@@ -18,12 +18,12 @@ namespace ExcelCompiler.Passes.Preview;
 public class ComputeToCodePass
 {
     private readonly ExtractDataClasses _extractDataClasses;
-    
+
     public ComputeToCodePass(ExtractDataClasses extractDataClasses)
     {
         _extractDataClasses = extractDataClasses;
     }
-    
+
     /// <summary>
     /// Transform the Compute Support Graph into a Code Layout, consolidating the Compute and Data layer.
     /// </summary>
@@ -33,16 +33,16 @@ public class ComputeToCodePass
     public Project Transform(SupportGraph supportGraph, DataManager dataManager)
     {
         List<Class> output = [];
-        
-        var types = _extractDataClasses.ExtractTypes(supportGraph.Tables);
+
+        var types = _extractDataClasses.ExtractTypes(supportGraph.Constructs);
         output.AddRange(types);
-        
+
         var tableVariables = GenerateTableVars(supportGraph, dataManager, types);
-        
+
         var body = tableVariables.Concat(GenerateStatements(supportGraph)).ToArray();
         var main = new Method("Main", [], body);
         var program = new Class("Program", [], [main]);
-        
+
         output.Add(program);
 
         Project project = new()
@@ -50,21 +50,21 @@ public class ComputeToCodePass
             Name = "Program",
             Classes = output,
         };
-        
+
         return project;
     }
 
-    
-    private string VariableName(ComputeUnit cell) 
+
+    private string VariableName(ComputeUnit cell)
         => VariableName(cell.Location);
-    
+
     private string VariableName(Location location)
         => (location.Spreadsheet + location.ToA1()).ToCamelCase();
-    
+
     private Statement[] GenerateStatements(SupportGraph graph)
     {
-        List<Statement> statements = new List<Statement>();
-        
+        List<Statement> statements = [];
+
         // Create a variable per cell and start at the roots
         foreach (var cell in graph.EntryPointsOfCells().Reverse())
         {
@@ -72,13 +72,13 @@ public class ComputeToCodePass
             Type type = cell.Type is null ? Type.Derived : new Type(cell.Type);
             statements.Add(new Declaration(new Variable(varName.ToCamelCase(), type), Generate(cell)));
         }
-        
+
         // Return all the roots
         // Right now, we only support a single root
         var root = graph.Roots.Single();
         Type rootType = new Type("double");
         statements.Add(new Return(new Variable(VariableName(root), rootType)));
-        
+
         return statements.ToArray();
     }
 
@@ -87,16 +87,16 @@ public class ComputeToCodePass
         return cell switch
         {
             ConstantValue<double> @double => new Constant(new Type("double"), @double.Value),
-            
+
             Function {Name: "SUM", Dependencies: [RangeReference or TableReference]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
-            
+
             Function func => new FunctionCall(func.Name, func.Dependencies.Select(Generate).ToList()),
             CellReference cellRef => new Variable(VariableName(cellRef.Reference), new Type(cellRef.Type)),
             RangeReference range => new ListExpression(range.Dependencies.Select(l => new Variable(VariableName(l.Location))).ToList<Expression>(), new Type("double")),
             TableReference tableRef => new FunctionCall(
-                new Variable(tableRef.Reference.TableName.ToCamelCase()), 
-                "Select", 
-                [new Lambda([new Variable("t")], 
+                new Variable(tableRef.Reference.TableName.ToCamelCase()),
+                "Select",
+                [new Lambda([new Variable("t")],
                     new PropertyAccess(Type.Derived, new Variable("t"), tableRef.Reference.ColumnNames[0].ToPascalCase()))]),
             _ => throw new InvalidOperationException($"Unsupported compute unit {cell.GetType().Name}"),
         };
@@ -106,17 +106,17 @@ public class ComputeToCodePass
     {
         List<Statement> statements = new List<Statement>();
 
-        foreach (Table table in supportGraph.Tables)
+        foreach (Table table in supportGraph.Constructs)
         {
             Class? type = classes.FirstOrDefault(c => c.Name == (table.Name + " Item").ToPascalCase());
-            
+
             if (type is null) throw new InvalidOperationException($"Could not find class for table {table.Name}");
 
             Variable variable = new Variable(table.Name.ToCamelCase(), new ListOf(type));
 
             Expression expression = GenerateDataExpression(type, dataManager[table.Name]);
             Declaration variableDeclaration = new Declaration(variable, expression);
-            
+
             statements.Add(variableDeclaration);
         }
 
@@ -127,7 +127,7 @@ public class ComputeToCodePass
     {
         Representations.Data.Preview.InMemoryDataRepository repo =  (single as Representations.Data.Preview.InMemoryDataRepository )!;
         Representations.Data.Preview.DataSchema schema = (repo.Schema as Representations.Data.Preview.DataSchema)!;
-        
+
         // Get columns needed for creating the type
         List<Expression> expressions = new List<Expression>();
         Method constructor = type.GenerateConstructor();
@@ -141,7 +141,7 @@ public class ComputeToCodePass
 
             return (p.Name, index);
         }).ToDictionary();
-        
+
         foreach (var row in repo.GetRows())
         {
             List<Expression> arguments = constructor.Parameters.Select(p =>
@@ -149,22 +149,22 @@ public class ComputeToCodePass
                 // Get the type
                 Type valueType = new Type(p.Type.Name);
                 object value = row[argumentMap[p.Name]];
-                
+
                 // Get the value
                 return new Constant(valueType, value);
             }).Cast<Expression>().ToList();
-            
-            
+
+
             // List<Expression> arguments = schema.Properties.Values.Zip(row)
             //     .Select((unit) =>
             //     {
             //         Type valueType = new Type(unit.First);
             //         return new Constant(valueType, unit.Second);
             //     }).Cast<Expression>().ToList();
-            
+
             // Create new constructors
             ObjectCreation objectCreation = new ObjectCreation(type, arguments);
-            
+
             expressions.Add(objectCreation);
         }
 

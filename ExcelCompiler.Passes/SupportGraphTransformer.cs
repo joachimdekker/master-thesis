@@ -38,7 +38,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
         {
             return cached;
         }
-        
+
         var dependencies = unit.Dependencies.Select(d => Transform(d, valueCache));
         TVal value = unit switch
         {
@@ -62,7 +62,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 
     public virtual TVal Transform(ComputeUnit unit)
     {
-        Dictionary<ComputeUnit, TVal> valueCache = new Dictionary<ComputeUnit, TVal>();
+        Dictionary<ComputeUnit, TVal> valueCache = new();
         return Transform(unit, valueCache);
     }
 }

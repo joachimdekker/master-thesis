@@ -20,11 +20,11 @@ public record SupportGraph
     /// There can be multiple roots, since we support multiple outcomes in the program.
     /// </remarks>
     public List<ComputeUnit> Roots { get; init; } = [];
-    
-    public List<Table> Tables { get; init; } = [];
-    
+
+    public List<Construct> Constructs { get; init; } = [];
+
     public SupportGraph() { }
-    
+
     public SupportGraph(List<ComputeUnit> roots)
     {
         Roots = roots;
@@ -39,19 +39,19 @@ public record SupportGraph
             yield return cell;
         }
     }
-    
+
     private static IEnumerable<ComputeUnit> TopologicalSorted(ComputeUnit cell, HashSet<ComputeUnit> visited)
     {
         if (!visited.Add(cell))
         {
             yield break;
         }
-        
+
         foreach (var dep in cell.Dependencies.SelectMany(dependency => TopologicalSorted(dependency, visited)))
         {
             yield return dep;
         }
-        
+
         yield return cell;
     }
 
@@ -68,7 +68,7 @@ public record SupportGraph
             {
                 continue;
             }
-            
+
             yield return computeUnit;
         }
     }

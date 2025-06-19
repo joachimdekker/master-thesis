@@ -36,7 +36,7 @@ public class ConstructComputeGraph
         return new SupportGraph
         {
             Roots = roots,
-            Tables = tables,
+            Constructs = tables,
         };
     }
 }

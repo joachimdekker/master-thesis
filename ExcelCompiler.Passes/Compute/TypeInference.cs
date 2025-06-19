@@ -17,7 +17,7 @@ public class TypeInference
             {
                 if (!types.All(t => t == types[0]))
                     throw new InvalidOperationException("SUM is not supported for types other than double");
-                
+
                 return types[0];
             }
         },
@@ -118,7 +118,7 @@ public class TypeInference
 
     public SupportGraph Transform(SupportGraph graph)
     {
-        return new TypeInferenceTransformer(graph.Tables).Transform(graph);
+        return new TypeInferenceTransformer(graph.Constructs).Transform(graph);
     }
 }
 
@@ -137,7 +137,7 @@ public record TypeInferenceTransformer : UnitSupportGraphTransformer
         List<Type> types = dependencies.Select(d => d.Type).Distinct().ToList();
 
         // Get the type of the range based on the types
-        Type type = dependencies.Select(d => d.Type).Distinct().SingleOrDefault() 
+        Type type = dependencies.Select(d => d.Type).Distinct().SingleOrDefault()
                     ?? throw new InvalidOperationException("Range references with multiple types are not supported.");
 
         rangeReference.AddDependencies(dependencies);
@@ -155,9 +155,9 @@ public record TypeInferenceTransformer : UnitSupportGraphTransformer
         List<Type> types = dependencies.Select(d => d.Type).ToList();
 
         // Get the type of the function based on the name and the dependencies
-        if (!TypeInference.InferenceRules.TryGetValue(function.Name, out var inferenceRule)) 
+        if (!TypeInference.InferenceRules.TryGetValue(function.Name, out var inferenceRule))
             throw new InvalidOperationException($"Unknown function {function.Name}");
-    
+
         Type type = inferenceRule(types);
 
         // Create the new function

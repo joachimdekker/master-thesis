@@ -20,24 +20,24 @@ public class InsertConstructs
         // The Compute Grid was a better way to do this, but now I am doubting myself.
         // Ultimately, we would want to be able to edit the references.
         // However, we need the graph for that.
-        
+
         // What we could always do, is just edit the references so that they correspond to the data references.
         // And for the computed columns, we can use a special node
         // Then, when we partially reference the table, we can use indices.
         // However, that is only supported in in-memory mode.
-        
+
         // This is good stuff for the discussion though
-        
+
         // Type for type, add the constructs to the grid.
         // Because of how the areas are detected, we can guarantee that no construct is overlapping.
 
         foreach (Table table in constructs.OfType<Table>())
         {
             Representations.Compute.Specialized.Table computeTable = ConvertTable(grid, table);
-            
+
             // Embed the table into the grid
             EmbedTable(grid, table, computeTable);
-            
+
             // Add the table to the list of tables
             grid.Structures.Add(computeTable);
         }
@@ -45,9 +45,9 @@ public class InsertConstructs
         foreach (Chain chain in constructs.OfType<Chain>())
         {
             Representations.Compute.Specialized.Chain computeChain = ConvertChain(grid, chain);
-            
+
             EmbedChain(grid, chain, computeChain);
-            
+
             grid.Structures.Add(computeChain);
         }
 
@@ -63,7 +63,7 @@ public class InsertConstructs
             foreach (var cellLocation in selection.Range)
             {
                 ComputeUnit cell = grid[cellLocation];
-                
+
                 grid[cellLocation] = column switch
                 {
                     DataChainColumn => cell switch
@@ -88,7 +88,7 @@ public class InsertConstructs
         {
             // Skip columns that are not used.
             if (!column.TryGetFirstNonEmptyCell(out var firstCell)) continue;
-            
+
             // Check which version of the column is used
             if (column.Any(c => c is not FormulaCell and not EmptyCell))
             {
@@ -102,7 +102,7 @@ public class InsertConstructs
                 columns.Add(dataColumn);
                 continue;
             }
-            
+
             // Compute the computed column
             var unit = grid[firstCell.Location];
             var computation = chainComputationConverter.Transform(unit);
@@ -110,7 +110,12 @@ public class InsertConstructs
             if (computation.HasType<RecursiveChainColumn.RecursiveCellReference>())
             {
                 // Recursive
-                var initialization = ;
+                var initializationCells = chain.Initialisation.Columns.Single(c => c[0].Location.Column == column[0].Location.Column).Where(c => c is not EmptyCell).ToList();
+
+                // Right now, we only support a single initialization
+                // TODO: Support multiple initialization
+                var initialization = grid[initializationCells[0].Location];
+
                 var recursiveColumn = new RecursiveChainColumn()
                 {
                     Name = name,
@@ -121,12 +126,12 @@ public class InsertConstructs
                 columns.Add(recursiveColumn);
                 continue;
             }
-            
+
             var computedColumn = new ComputedChainColumn()
             {
                 Name = name,
                 Type = firstCell.Type,
-                Computation = computation
+                Computation = computation,
             };
             columns.Add(computedColumn);
         }
@@ -141,19 +146,19 @@ public class InsertConstructs
 
     private void EmbedTable(ComputeGrid grid, Table table, Representations.Compute.Specialized.Table computeTable)
     {
-        // For the whole grid, 
+        // For the whole grid,
         foreach (var (name, column) in table.Columns)
         {
             // Check if the column is computed or not
             TableColumn? computedColumn = computeTable.Columns.SingleOrDefault(c => c.Name == name);
-            
+
             if (computedColumn is null) continue;
-            
+
             // Change the reference to a data or TableComputation node
             foreach (var cellLocation in column.Range)
             {
                 ComputeUnit cell = grid[cellLocation];
-                
+
                 grid[column.Range.From] = computedColumn.ColumnType switch
                 {
                     TableColumn.TableColumnType.Computed => computedColumn.Computation!,
@@ -167,21 +172,21 @@ public class InsertConstructs
             }
         }
     }
-    
+
     private ComputeTable ConvertTable(ComputeGrid grid, Table table)
     {
         List<TableColumn> columns = new();
-        
+
         var converter = new TableComputationConverter(table);
         foreach (var (name, col) in table.Columns)
         {
             // Skip columns that are not used.
             if (!col.TryGetFirstNonEmptyCell(out var firstCell)) continue;
-            
+
             TableColumn.TableColumnType type = firstCell is FormulaCell
                 ? TableColumn.TableColumnType.Computed
                 : TableColumn.TableColumnType.Data;
-            
+
             var unit = grid[firstCell.Location];
 
             // If the column is computed, we need to convert it to an ARM
@@ -196,10 +201,10 @@ public class InsertConstructs
                 Type = firstCell.Type,
                 Computation = computation
             };
-            
+
             columns.Add(column);
         }
-        
+
         return new ComputeTable(table.Name, table.Location, new DataReference(table.Location.From))
         {
             Columns = columns
@@ -213,15 +218,15 @@ file record TableComputationConverter(Table Table) : UnitSupportGraphTransformer
     {
         var location = cellReference.Location;
         var reference = cellReference.Reference;
-        
+
         if (Table.Columns.All(kv => !kv.Value.Range.Contains(reference))) return new CellReference(location, reference);
-        
+
         // Get the column
         string columnName = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
-                
+
         // Create the reference
         var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
-        
+
         tableCellReference.AddDependencies(dependencies);
         return tableCellReference;
     }
@@ -232,14 +237,14 @@ file record ChainComputationConverter(Chain Chain) : UnitSupportGraphTransformer
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
         if (Chain.Columns.All(kv => !kv.Value.Range.Contains(cellReference.Reference))) return cellReference with { Dependencies = dependencies.ToList() };
-        
+
         // Get the column
         string columnName = Chain.Columns.Single(kv => kv.Value.Range.Contains(cellReference.Reference)).Key;
-                
+
         var location = cellReference.Location;
         var reference = cellReference.Reference;
-        
-        // If the reference is in a different row, then it is 
+
+        // If the reference is in a different row, then it is
         if (location.Row != reference.Row)
         {
             return new RecursiveChainColumn.RecursiveCellReference(columnName, Math.Abs(location.Row - reference.Row), location)
@@ -247,11 +252,11 @@ file record ChainComputationConverter(Chain Chain) : UnitSupportGraphTransformer
                 Dependencies = dependencies.ToList()
             };
         }
-        
+
         // Create the reference
         return new ComputedChainColumn.CellReference(columnName, location)
         {
             Dependencies = dependencies.ToList()
-        }; 
+        };
     }
 }
