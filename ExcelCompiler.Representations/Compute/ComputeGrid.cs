@@ -20,7 +20,9 @@ public class ComputeGrid : IEnumerable<ComputeUnit>
     public List<Construct> Structures { get; set; } = new();
 
     public bool ContainsLocation(Location location) => _units.ContainsKey(location);
-    
+
+    public bool TryGetValue(Location location, out ComputeUnit unit) => _units.TryGetValue(location, out unit);
+
     public IEnumerator<ComputeUnit> GetEnumerator()
     {
         return _units.Values.GetEnumerator();

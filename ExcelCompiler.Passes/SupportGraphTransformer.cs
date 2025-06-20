@@ -25,6 +25,8 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 
     protected abstract TRes SupportGraph(SupportGraph graph, IEnumerable<TVal> roots);
 
+    protected virtual TVal Other(ComputeUnit unit, IEnumerable<TVal> dependencies) => throw new ArgumentException("Unsupported cell type.", nameof(unit));
+
     public virtual TRes Transform(SupportGraph graph)
     {
         Dictionary<ComputeUnit, TVal> valueCache = new();
@@ -53,7 +55,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
             ConstantValue<double> constant => Constant(constant, dependencies),
             ConstantValue<bool> constant => Constant(constant, dependencies),
             ConstantValue<DateTime> constant => Constant(constant, dependencies),
-            _ => throw new ArgumentException("Unsupported cell type.", nameof(unit))
+            _ => Other(unit, dependencies),
         };
 
         valueCache[unit] = value;

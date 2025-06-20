@@ -1,4 +1,5 @@
 using ExcelCompiler.Representations.CodeLayout.Expressions;
+using ExcelCompiler.Representations.CodeLayout.Statements;
 using ExcelCompiler.Representations.CodeLayout.TopLevel;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Compute.Specialized;
@@ -29,13 +30,36 @@ public class GenerateTypes
         var typeTransformer = new TypeTransformer();
 
         var properties = chain.Columns.OfType<DataChainColumn>().Select(c => new Property(c.Name, new Type(c.Type))).ToList();
-        var computedProperties = chain.Columns.OfType<ComputedChainColumn>().Select(c => new Property(c.Name, new Type(c.Type))
-        {
-            Getter = typeTransformer.Transform(c.Computation!),
-        }).ToList();
-        var chainProperties
+        var computedProperties = chain.Columns
+            .OfType<ComputedChainColumn>()
+            .Select(c => new Property(c.Name, new Type(c.Type))
+            {
+                Getter = typeTransformer.Transform(c.Computation!),
+            })
+            .ToList();
 
-        return new(chain.Name, [..properties, ..computedProperties], methods);
+        var chainProperties = chain.Columns
+            .OfType<RecursiveChainColumn>()
+            .Select(c =>
+            {
+                Variable counter = new Variable("counter", new Type(typeof(int)));
+                Statement[] body = GenerateRecursiveBody(c, counter);
+
+                return new Method(c.Name, [counter], body);
+            })
+            .ToList();
+
+        return new(chain.Name, [..properties, ..computedProperties], chainProperties);
+    }
+
+    private Statement[] GenerateRecursiveBody(RecursiveChainColumn recursiveChainColumn, Variable counter)
+    {
+        RecursiveTypeTransformer transformer = new RecursiveTypeTransformer();
+        Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(recursiveChainColumn.Initialization)]);
+
+        Statement recursiveCase = new Return(recursiveChainColumn.Computation)
+
+        return [baseCase, recursiveCase];
     }
 
     public Class Generate(Table table)
@@ -67,4 +91,35 @@ file record TypeTransformer() : SupportGraphTransformer<Expression, Expression>
         => throw new InvalidOperationException();
     protected override Expression SupportGraph(SupportGraph graph, IEnumerable<Expression> roots)
         => throw new InvalidOperationException();
+}
+
+file record RecursiveTypeTransformer(Variable RecursionLevel) : TypeTransformer()
+{
+    protected override Expression Other(ComputeUnit unit, IEnumerable<Expression> dependencies)
+    {
+        return unit switch
+        {
+            TableColumn.CellReference c => TableCellReference(c, dependencies),
+            ComputedChainColumn.CellReference c => ComputedCellReference(c, dependencies),
+            RecursiveChainColumn.RecursiveCellReference c => RecursiveCellReference(c, dependencies),
+            _ => throw new InvalidOperationException()
+        };
+    }
+
+    private Expression RecursiveCellReference(RecursiveChainColumn.RecursiveCellReference unit, IEnumerable<Expression> _)
+    {
+        // Recusive Cell Reference
+        Expression expression = new FunctionCall(unit.ColumnName, [new FunctionCall("-", [RecursionLevel, new Constant(unit.Recursion)])]);
+        return expression;
+    }
+
+    private Expression ComputedCellReference(ComputedChainColumn.CellReference unit, IEnumerable<Expression> _)
+    {
+        return new Variable(unit.ColumnName);
+    }
+
+    private Expression TableCellReference(TableColumn.CellReference unit, IEnumerable<Expression> dependencies)
+    {
+        return new Variable(unit.ColumnName);
+    }
 }

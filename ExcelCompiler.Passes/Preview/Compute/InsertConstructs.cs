@@ -107,14 +107,18 @@ public class InsertConstructs
             var unit = grid[firstCell.Location];
             var computation = chainComputationConverter.Transform(unit);
 
-            if (computation.HasType<RecursiveChainColumn.RecursiveCellReference>())
+            if (IsRecursiveComputation(grid, computation))
             {
                 // Recursive
-                var initializationCells = chain.Initialisation.Columns.Single(c => c[0].Location.Column == column[0].Location.Column).Where(c => c is not EmptyCell).ToList();
+                var initializationCell = chain.Initialisation.Columns.SingleOrDefault(c => c[0].Location.Column == column[0].Location.Column)?.SingleOrDefault(c => c is not EmptyCell);
 
-                // Right now, we only support a single initialization
-                // TODO: Support multiple initialization
-                var initialization = grid[initializationCells[0].Location];
+                ComputeUnit? initialization = null;
+                if (initializationCell is null)
+                {
+                    // Right now, we only support a single initialization
+                    // TODO: Support multiple initialization
+                    grid.TryGetValue(initializationCell.Location, out initialization);
+                }
 
                 var recursiveColumn = new RecursiveChainColumn()
                 {
@@ -142,6 +146,18 @@ public class InsertConstructs
             Columns = columns,
             Data = new DataReference(chain.Location.From)
         };
+    }
+
+    private bool IsRecursiveComputation(ComputeGrid grid, ComputeUnit computation)
+    {
+        if (computation.HasType<RecursiveChainColumn.RecursiveCellReference>()) return true;
+
+        // Get all the references in the computation
+        IEnumerable<ComputedChainColumn.CellReference> references =
+            computation.GetByType<ComputedChainColumn.CellReference>();
+
+        // Check if any of them are recursive
+        return references.Any(r => IsRecursiveComputation(grid, grid[r.Location]));
     }
 
     private void EmbedTable(ComputeGrid grid, Table table, Representations.Compute.Specialized.Table computeTable)

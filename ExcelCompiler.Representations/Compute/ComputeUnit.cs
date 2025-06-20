@@ -18,24 +18,24 @@ public abstract record ComputeUnit
     public List<ComputeUnit> Dependencies { get; init; }
     public List<ComputeUnit> Dependents { get; init; }
     public Location Location { get; init; }
-    
+
     public bool IsRoot => Dependents.Count == 0;
-    
+
     public bool IsLeaf => Dependencies.Count == 0;
-    
+
     public ComputeUnit(Location location)
     {
         Location = location;
         Dependencies = [];
         Dependents = [];
     }
-    
+
     public void AddDependency(ComputeUnit dependency)
     {
         Dependencies.Add(dependency);
         dependency.Dependents.Add(this);
     }
-    
+
     public void AddDependencies(IEnumerable<ComputeUnit> dependencies)
     {
         foreach (var dependency in dependencies)
@@ -43,13 +43,13 @@ public abstract record ComputeUnit
             AddDependency(dependency);
         }
     }
-    
+
     public void RemoveDependency(ComputeUnit dependency)
     {
         Dependencies.Remove(dependency);
         dependency.Dependents.Remove(this);
     }
-    
+
     public override string ToString() => JsonSerializer.Serialize(this);
 
     public bool TryGetByLocation(Location location, [NotNullWhen(true)] out ComputeUnit? computeUnit)
@@ -87,12 +87,24 @@ public abstract record ComputeUnit
         return !Dependencies.Where((t, i) => !t.ComputationalEquivalent(other.Dependencies[i])).Any();
     }
 
+    public IEnumerable<T> GetByType<T>()
+    {
+        IEnumerable<T> list = Dependencies.SelectMany(dependency => dependency.GetByType<T>());
+
+        if (this is T t)
+        {
+            return list.Concat([t]);
+        }
+
+        return list;
+    }
+
     public int CountByType<T>()
     where T : ComputeUnit
     {
         return (this is T) ? 1 : 0 + Dependencies.Sum(dependency => dependency.CountByType<T>());
     }
-    
+
     public bool HasType<T>()
     where T : ComputeUnit
     {
