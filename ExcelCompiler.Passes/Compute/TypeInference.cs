@@ -39,82 +39,34 @@ public class TypeInference
             }
         },
         {
-            "-", types =>
-            {
-                // There should be two types
-                if (types.Count != 2)
-                {
-                    throw new InvalidOperationException("MINUS is not supported for more than two types");
-                }
-
-                if (types[0] != types[1])
-                    throw new InvalidOperationException("MINUS is not supported for types other than the same type");
-
-                // Should be a numerical type
-                if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long))
-                    throw new InvalidOperationException("MINUS is not supported for types other than double, int, or long");
-
-                return types[0];
-            }
+            "-", t => CheckOperatorTypes(t, "MINUS")
         },
         {
-            "+", types =>
-            {
-                // There should be two types
-                if (types.Count != 2)
-                {
-                    throw new InvalidOperationException("MINUS is not supported for more than two types");
-                }
-
-                if (types[0] != types[1])
-                    throw new InvalidOperationException("MINUS is not supported for types other than the same type");
-
-                // Should be a numerical type
-                if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long))
-                    throw new InvalidOperationException("MINUS is not supported for types other than double, int, or long");
-
-                return types[0];
-            }
+            "+", t => CheckOperatorTypes(t, "PLUS")
         },
         {
-            "*", types =>
-            {
-                // There should be two types
-                if (types.Count != 2)
-                {
-                    throw new InvalidOperationException("MINUS is not supported for more than two types");
-                }
-
-                if (types[0] != types[1])
-                    throw new InvalidOperationException("MINUS is not supported for types other than the same type");
-
-                // Should be a numerical type
-                if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long))
-                    throw new InvalidOperationException("MINUS is not supported for types other than double, int, or long");
-
-                return types[0];
-            }
+            "*", t => CheckOperatorTypes(t, "TIMES")
         },
         {
-            "/", types =>
-            {
-                // There should be two types
-                if (types.Count != 2)
-                {
-                    throw new InvalidOperationException("MINUS is not supported for more than two types");
-                }
-
-                if (types[0] != types[1])
-                    throw new InvalidOperationException("MINUS is not supported for types other than the same type");
-
-                // Should be a numerical type
-                if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long))
-                    throw new InvalidOperationException("MINUS is not supported for types other than double, int, or long");
-
-                return types[0];
-            }
+            "/", t => CheckOperatorTypes(t, "DIVIDE")
         }
     };
+
+    private static Type CheckOperatorTypes(List<Type> types, string name)
+    {
+        // There should be two types
+        if (types.Count != 2)
+        {
+            throw new InvalidOperationException($"{name} is not supported for more than two types");
+        }
+
+        if (types[0] != types[1]) throw new InvalidOperationException($"{name} is not supported for types other than the same type");
+
+        // Should be a numerical type
+        if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long)) throw new InvalidOperationException($"{name} is not supported for types other than double, int, or long");
+
+        return types[0];
+    }
 
     public SupportGraph Transform(SupportGraph graph)
     {
