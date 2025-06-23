@@ -5,10 +5,10 @@ namespace ExcelCompiler.Passes.Compute;
 [CompilerPass]
 public class PruneEmptyCells
 {
-    public SupportGraph Transform(SupportGraph graph)
+    public ComputeGraph Transform(ComputeGraph graph)
     {
         HashSet<ComputeUnit> visited = new();
-        
+
         // Traverse the support graph and remove empty cells
         foreach (var root in graph.Roots.ToList())
         {
@@ -19,10 +19,10 @@ public class PruneEmptyCells
                 graph.Roots.Remove(root);
                 continue;
             }
-            
+
             TraverseAndPrune(root, visited);
         }
-        
+
         return graph;
     }
 
@@ -32,7 +32,7 @@ public class PruneEmptyCells
         {
             return;
         }
-        
+
         if (node is Nil)
         {
             PruneNode(node);

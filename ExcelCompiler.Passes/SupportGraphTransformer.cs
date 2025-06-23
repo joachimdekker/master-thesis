@@ -23,11 +23,11 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 
     protected abstract TVal Constant<T>(ConstantValue<T> constant, IEnumerable<TVal> dependencies);
 
-    protected abstract TRes SupportGraph(SupportGraph graph, IEnumerable<TVal> roots);
+    protected abstract TRes SupportGraph(ComputeGraph graph, IEnumerable<TVal> roots);
 
     protected virtual TVal Other(ComputeUnit unit, IEnumerable<TVal> dependencies) => throw new ArgumentException("Unsupported cell type.", nameof(unit));
 
-    public virtual TRes Transform(SupportGraph graph)
+    public virtual TRes Transform(ComputeGraph graph)
     {
         Dictionary<ComputeUnit, TVal> valueCache = new();
         IEnumerable<TVal> roots = graph.Roots.Select(r => Transform(r, valueCache));
@@ -75,7 +75,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 /// <remarks>
 /// Make them immutable i.e., we make new instances everytime.
 /// </remarks>
-public abstract record UnitSupportGraphTransformer : SupportGraphTransformer<SupportGraph, ComputeUnit>
+public abstract record UnitSupportGraphTransformer : SupportGraphTransformer<ComputeGraph, ComputeUnit>
 {
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
@@ -112,7 +112,7 @@ public abstract record UnitSupportGraphTransformer : SupportGraphTransformer<Sup
         return constant with { Dependencies = dependencies.ToList() };
     }
 
-    protected override SupportGraph SupportGraph(SupportGraph graph, IEnumerable<ComputeUnit> roots)
+    protected override ComputeGraph SupportGraph(ComputeGraph graph, IEnumerable<ComputeUnit> roots)
     {
         return graph with { Roots = roots.ToList() };
     }

@@ -10,7 +10,7 @@ namespace ExcelCompiler.Representations.Compute;
 /// We use this structure for efficient evaluation of the dependencies.
 /// This class is used to calculate dependencies and interesting structures.
 /// </remarks>
-public record SupportGraph
+public record ComputeGraph
 {
     /// <summary>
     /// Gets or sets the roots of the support graph.
@@ -23,9 +23,9 @@ public record SupportGraph
 
     public List<Construct> Constructs { get; init; } = [];
 
-    public SupportGraph() { }
+    public ComputeGraph() { }
 
-    public SupportGraph(List<ComputeUnit> roots)
+    public ComputeGraph(List<ComputeUnit> roots)
     {
         Roots = roots;
     }

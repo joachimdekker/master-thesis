@@ -11,10 +11,10 @@ namespace ExcelCompiler.Passes.Compute;
 [CompilerPass]
 public class ConstructComputeGraph
 {
-    public SupportGraph Transform(Dictionary<Location, ComputeUnit> units, List<ComputeTable> tables, List<Location> outputs)
+    public ComputeGraph Transform(Dictionary<Location, ComputeUnit> units, List<ComputeTable> tables, List<Location> outputs)
     {
         LinkTransformer transformer = new(units, tables);
-        
+
         // Create the support graph from the units
         // Let's try a new approach and use immutable data structures
         List<ComputeUnit> roots = outputs
@@ -33,7 +33,7 @@ public class ConstructComputeGraph
             }
         }
 
-        return new SupportGraph
+        return new ComputeGraph
         {
             Roots = roots,
             Constructs = tables,
@@ -54,12 +54,12 @@ public record LinkTransformer : UnitSupportGraphTransformer
         _tables = tables;
     }
 
-    public override SupportGraph Transform(SupportGraph graph)
+    public override ComputeGraph Transform(ComputeGraph graph)
     {
         _cache = [];
-        
+
         var supportGraph = base.Transform(graph);
-        
+
         return supportGraph;
     }
 
@@ -71,11 +71,11 @@ public record LinkTransformer : UnitSupportGraphTransformer
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
         Debug.WriteLineIf(!dependencies.Any(), "Cell should not have any dependencies yet.");
-        
+
         // Lookup the reference and transform it
         var unit = _units[cellReference.Reference];
         var linkedUnit = Transform(unit);
-        
+
         return cellReference with
         {
             Dependencies = [linkedUnit],
@@ -85,13 +85,13 @@ public record LinkTransformer : UnitSupportGraphTransformer
     protected override ComputeUnit RangeReference(RangeReference rangeReference, IEnumerable<ComputeUnit> dependencies)
     {
         Debug.WriteLineIf(!dependencies.Any(), "Range should not have any dependencies yet.");
-        
+
         // Lookup the reference and transform it
         var deps = rangeReference.Reference
             .Select(l => _units[l])
             .Select(Transform)
             .ToList();
-        
+
         return rangeReference with
         {
             Dependencies = deps,

@@ -10,7 +10,7 @@ namespace ExcelCompiler.Passes.Preview.Code;
 
 public class GenerateTypes
 {
-    public List<Class> Generate(SupportGraph graph, DataManager dataManager)
+    public List<Class> Generate(ComputeGraph graph, DataManager dataManager)
     {
         var types =
             from construct in graph.Constructs
@@ -97,7 +97,7 @@ file record TypeTransformer() : SupportGraphTransformer<Expression, Expression>
 
     protected override Expression Nil(Nil nil, IEnumerable<Expression> dependencies)
         => throw new InvalidOperationException();
-    protected override Expression SupportGraph(SupportGraph graph, IEnumerable<Expression> roots)
+    protected override Expression SupportGraph(ComputeGraph graph, IEnumerable<Expression> roots)
         => throw new InvalidOperationException();
 }
 

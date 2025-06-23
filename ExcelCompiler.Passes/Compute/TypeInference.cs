@@ -68,7 +68,7 @@ public class TypeInference
         return types[0];
     }
 
-    public SupportGraph Transform(SupportGraph graph)
+    public ComputeGraph Transform(ComputeGraph graph)
     {
         return new TypeInferenceTransformer(graph.Constructs).Transform(graph);
     }

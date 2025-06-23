@@ -30,16 +30,16 @@ public class ComputeToCodePass
     /// <param name="supportGraph">The support graph containing compute operations.</param>
     /// <param name="dataManager"></param>
     /// <returns></returns>
-    public Project Transform(SupportGraph supportGraph, DataManager dataManager)
+    public Project Transform(ComputeGraph computeGraph, DataManager dataManager)
     {
         List<Class> output = [];
 
-        var types = _extractDataClasses.ExtractTypes(supportGraph.Constructs);
+        var types = _extractDataClasses.ExtractTypes(computeGraph.Constructs);
         output.AddRange(types);
 
-        var tableVariables = GenerateTableVars(supportGraph, dataManager, types);
+        var tableVariables = GenerateTableVars(computeGraph, dataManager, types);
 
-        var body = tableVariables.Concat(GenerateStatements(supportGraph)).ToArray();
+        var body = tableVariables.Concat(GenerateStatements(computeGraph)).ToArray();
         var main = new Method("Main", [], body);
         var program = new Class("Program", [], [main]);
 
@@ -61,7 +61,7 @@ public class ComputeToCodePass
     private string VariableName(Location location)
         => (location.Spreadsheet + location.ToA1()).ToCamelCase();
 
-    private Statement[] GenerateStatements(SupportGraph graph)
+    private Statement[] GenerateStatements(ComputeGraph graph)
     {
         List<Statement> statements = new List<Statement>();
 
@@ -102,11 +102,11 @@ public class ComputeToCodePass
         };
     }
 
-    private List<Statement> GenerateTableVars(SupportGraph supportGraph, DataManager dataManager, List<Class> classes)
+    private List<Statement> GenerateTableVars(ComputeGraph computeGraph, DataManager dataManager, List<Class> classes)
     {
         List<Statement> statements = new List<Statement>();
 
-        foreach (Table table in supportGraph.Constructs)
+        foreach (Table table in computeGraph.Constructs)
         {
             Class? type = classes.FirstOrDefault(c => c.Name == (table.Name + " Item").ToPascalCase());
 
