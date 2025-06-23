@@ -1,5 +1,6 @@
 using ExcelCompiler.Passes.Code;
 using ExcelCompiler.Passes.Helpers;
+using ExcelCompiler.Passes.Preview.Code;
 using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.CodeLayout.Statements;
@@ -18,10 +19,12 @@ namespace ExcelCompiler.Passes.Preview;
 public class ComputeToCodePass
 {
     private readonly ExtractDataClasses _extractDataClasses;
+    private readonly GenerateTypes _typeGenerator;
 
-    public ComputeToCodePass(ExtractDataClasses extractDataClasses)
+    public ComputeToCodePass(ExtractDataClasses extractDataClasses, GenerateTypes typeGenerator)
     {
         _extractDataClasses = extractDataClasses;
+        _typeGenerator = typeGenerator;
     }
 
     /// <summary>
@@ -34,7 +37,7 @@ public class ComputeToCodePass
     {
         List<Class> output = [];
 
-        var types = _extractDataClasses.ExtractTypes(supportGraph.Constructs);
+        var types = _typeGenerator.Generate(supportGraph, dataManager);
         output.AddRange(types);
 
         var tableVariables = GenerateTableVars(supportGraph, dataManager, types);
