@@ -45,7 +45,7 @@ public class GenerateTypes
                 Variable counter = new Variable("counter", new Type(typeof(int)));
                 Statement[] body = GenerateRecursiveBody(c, counter);
 
-                return new Method(c.Name, [counter], body);
+                return new Method(c.Name + "At", [counter], body);
             })
             .ToList();
 
@@ -54,17 +54,25 @@ public class GenerateTypes
 
     private Statement[] GenerateRecursiveBody(RecursiveChainColumn recursiveChainColumn, Variable counter)
     {
-        RecursiveTypeTransformer transformer = new RecursiveTypeTransformer();
-        Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(recursiveChainColumn.Initialization)]);
+        RecursiveTypeTransformer transformer = new(counter);
+        Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(transformer.Transform(recursiveChainColumn.Initialization!))]);
 
-        Statement recursiveCase = new Return(recursiveChainColumn.Computation)
+        Statement recursiveCase = new Return(transformer.Transform(recursiveChainColumn.Computation!));
 
         return [baseCase, recursiveCase];
     }
 
     public Class Generate(Table table)
     {
+        var typeTransformer = new TypeTransformer();
 
+        var properties = table.Columns.Where(tc => tc.Computation is null).Select(tc => new Property(tc.Name, new Type(tc.Type))).ToList();
+        var computedProperties = table.Columns.Where(tc => tc.Computation is not null).Select(tc => new Property(tc.Name, new Type(tc.Type))
+        {
+            Getter = typeTransformer.Transform(tc.Computation!),
+        }).ToList();
+
+        return new(table.Name, [..properties, ..computedProperties], []);
     }
 }
 
