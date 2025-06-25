@@ -7,7 +7,7 @@ using TableReference = ExcelCompiler.Representations.Compute.TableReference;
 
 namespace ExcelCompiler.Passes;
 
-public abstract record SupportGraphTransformer<TRes, TVal>
+public abstract record ComputeGraphTransformer<TRes, TVal>
 {
     protected abstract TVal CellReference(CellReference cellReference, IEnumerable<TVal> dependencies);
 
@@ -75,7 +75,7 @@ public abstract record SupportGraphTransformer<TRes, TVal>
 /// <remarks>
 /// Make them immutable i.e., we make new instances everytime.
 /// </remarks>
-public abstract record UnitSupportGraphTransformer : SupportGraphTransformer<ComputeGraph, ComputeUnit>
+public abstract record UnitComputeGraphTransformer : ComputeGraphTransformer<ComputeGraph, ComputeUnit>
 {
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {

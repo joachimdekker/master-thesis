@@ -42,7 +42,7 @@ public class ConstructComputeGraph
 }
 
 
-public record LinkTransformer : UnitSupportGraphTransformer
+public record LinkTransformer : UnitComputeGraphTransformer
 {
     private readonly Dictionary<Location, ComputeUnit> _units;
     private readonly List<ComputeTable> _tables;

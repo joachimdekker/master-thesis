@@ -97,6 +97,7 @@ public class InsertConstructs
                 {
                     Name = name,
                     Type = firstCell.Type,
+                    Location = column.Range,
                 };
 
                 columns.Add(dataColumn);
@@ -126,6 +127,7 @@ public class InsertConstructs
                     Type = firstCell.Type,
                     Computation = computation,
                     Initialization = initialization,
+                    Location = column.Range,
                 };
                 columns.Add(recursiveColumn);
                 continue;
@@ -136,6 +138,7 @@ public class InsertConstructs
                 Name = name,
                 Type = firstCell.Type,
                 Computation = computation,
+                Location = column.Range,
             };
             columns.Add(computedColumn);
         }
@@ -215,7 +218,8 @@ public class InsertConstructs
                 Name = name,
                 ColumnType = type,
                 Type = firstCell.Type,
-                Computation = computation
+                Computation = computation,
+                Location = col.Range,
             };
 
             columns.Add(column);
@@ -228,7 +232,7 @@ public class InsertConstructs
     }
 }
 
-file record TableComputationConverter(Table Table) : UnitSupportGraphTransformer
+file record TableComputationConverter(Table Table) : UnitComputeGraphTransformer
 {
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
@@ -248,7 +252,7 @@ file record TableComputationConverter(Table Table) : UnitSupportGraphTransformer
     }
 }
 
-file record ChainComputationConverter(Chain Chain) : UnitSupportGraphTransformer
+file record ChainComputationConverter(Chain Chain) : UnitComputeGraphTransformer
 {
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {

@@ -51,6 +51,8 @@ public record TableColumn
 
     public Type Type { get; init; }
 
+    public Range Location { get; init; }
+
     public required string Name { get; init; }
 
     public ComputeUnit? Footer { get; set; }

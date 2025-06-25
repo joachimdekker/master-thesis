@@ -22,7 +22,7 @@ public class ExtractComputeTables
     public List<ComputeTable> Transform(Workbook workbook, Dictionary<Location, ComputeUnit> units)
     {
         // Look at the tables of the workbook to see if there are 'good' tables
-        
+
         List<ComputeTable> tables = [];
         foreach (var table in workbook.Constructs.OfType<Table>())
         {
@@ -36,7 +36,7 @@ public class ExtractComputeTables
     private ComputeTable ConvertToComputeTable(Table table, Workbook workbook, Dictionary<Location, ComputeUnit> units)
     {
         List<TableColumn> columns = new();
-        
+
         var converter = new TableComputationConverter(table);
         foreach (var (name, col) in table.Columns)
         {
@@ -45,7 +45,7 @@ public class ExtractComputeTables
 
             // Skip columns that are not used.
             if (!units.TryGetValue(range.From, out var unit)) continue;
-            
+
             TableColumn.TableColumnType type = firstCell is FormulaCell
                 ? TableColumn.TableColumnType.Computed
                 : TableColumn.TableColumnType.Data;
@@ -62,10 +62,10 @@ public class ExtractComputeTables
                 Type = firstCell.Type,
                 Computation = computation
             };
-            
+
             columns.Add(column);
         }
-        
+
         return new ComputeTable(table.Name, table.Location, new DataReference(table.Location.From))
         {
             Columns = columns
@@ -73,23 +73,23 @@ public class ExtractComputeTables
     }
 }
 
-file record TableComputationConverter(Table Table) : UnitSupportGraphTransformer
+file record TableComputationConverter(Table Table) : UnitComputeGraphTransformer
 {
     protected override ComputeUnit CellReference(CellReference cellReference, IEnumerable<ComputeUnit> dependencies)
     {
         var location = cellReference.Location;
         var reference = cellReference.Reference;
-        
+
         if (Table.Columns.All(kv => !kv.Value.Range.Contains(reference))) return new CellReference(location, reference);
-        
+
         // Get the column
         string columnName = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
-                
+
         // Create the reference
         var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
-        
+
         tableCellReference.AddDependencies(dependencies);
         return tableCellReference;
     }
-    
+
 }

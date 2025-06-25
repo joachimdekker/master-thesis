@@ -76,7 +76,7 @@ public class GenerateTypes
     }
 }
 
-file record TypeTransformer() : SupportGraphTransformer<Expression, Expression>
+file record TypeTransformer() : ComputeGraphTransformer<Expression, Expression>
 {
     protected override Expression CellReference(CellReference cellReference, IEnumerable<Expression> dependencies)
         => dependencies.Single();

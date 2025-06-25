@@ -74,7 +74,7 @@ public class TypeInference
     }
 }
 
-public record TypeInferenceTransformer : UnitSupportGraphTransformer
+public record TypeInferenceTransformer : UnitComputeGraphTransformer
 {
     private readonly List<Table> _tables;
 
