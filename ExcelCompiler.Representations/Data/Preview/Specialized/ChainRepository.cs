@@ -45,4 +45,6 @@ public class ChainRepository : IDataRepository
         }
     }
     
+    public IEnumerable<(string ColumnName, List<object> Values)> GetColumns() => Data.Select(x => (x.Key, x.Value));
+    
 }

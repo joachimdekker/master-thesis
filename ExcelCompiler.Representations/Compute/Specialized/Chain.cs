@@ -33,19 +33,19 @@ public abstract record ChainColumn
 
 public record DataChainColumn : ChainColumn
 {
-
+    public record Reference(string ChainName, string ColumnName, int Index, Location Location) : ComputeUnit(Location);
 }
 
 public record ComputedChainColumn : ChainColumn
 {
-    public record CellReference(string ColumnName, Location location) : ComputeUnit(location);
+    public record CellReference(string ChainName, string ColumnName, int Index, Location Location) : ComputeUnit(Location);
 
     public ComputeUnit? Computation { get; set; }
 }
 
 public record RecursiveChainColumn : ChainColumn
 {
-    public record RecursiveCellReference(string ColumnName, int Recursion, Location location) : ComputeUnit(location);
+    public record RecursiveCellReference(string ChainName, string ColumnName, int Recursion, Location Location) : ComputeUnit(Location);
 
     public ComputeUnit? Initialization { get; set; }
 

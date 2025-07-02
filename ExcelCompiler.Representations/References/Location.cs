@@ -5,7 +5,7 @@ namespace ExcelCompiler.Representations.References;
 /// <summary>
 /// Represents a location in a spreadsheet in R1C1 format.
 /// </summary>
-public partial record Location : Reference
+public partial record Location : Reference, IComparable<Location>
 {
     public Location()
     {
@@ -69,5 +69,25 @@ public partial record Location : Reference
     {
         if (column.Length == 0) return 0; 
         return CalculateColumn(column[..^1]) * 26 + (column[^1] - 'A' + 1);
+    }
+
+    public int CompareTo(Location? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        if (other is null) return 1;
+        var spreadsheetComparison = string.Compare(Spreadsheet, other.Spreadsheet, StringComparison.Ordinal);
+        if (spreadsheetComparison != 0) return spreadsheetComparison;
+        var rowComparison = Row.CompareTo(other.Row);
+        return rowComparison != 0 ? rowComparison : Column.CompareTo(other.Column);
+    }
+
+    public static Location Max(params Location[] locations)
+    {
+        return locations.OrderDescending().First();
+    }
+    
+    public static Location Min(params Location[] locations)
+    {
+        return locations.Order().First();
     }
 }

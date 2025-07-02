@@ -62,7 +62,11 @@ public record ComputeGraph
     public IEnumerable<ComputeUnit> EntryPointsOfCells()
     {
         HashSet<Location> visited = new HashSet<Location>();
-        foreach (var computeUnit in TopologicalSorted().Reverse())
+        
+        IEnumerable<ComputeUnit> topologicalSorted = TopologicalSorted();
+        
+        // Reverse the order, since we want to start with the leaves.
+        foreach (var computeUnit in topologicalSorted.Reverse())
         {
             if (!visited.Add(computeUnit.Location))
             {

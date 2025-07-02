@@ -1,10 +1,9 @@
 using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Passes;
 using ExcelCompiler.Passes.Compute;
-using ExcelCompiler.Passes.Data;
+using ExcelCompiler.Passes.Preview.Compute;
 using ExcelCompiler.Passes.Structure;
 using ExcelCompiler.Representations.CodeLayout;
-using ExcelCompiler.Representations.Data;
 using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.DependencyInjection;
@@ -38,17 +37,20 @@ public class ConversionWorker
         DetectStructures detectStructuresPass = _serviceProvider.GetRequiredService<DetectStructures>();
         
         // Compute
-        StructureToComputePass structureToComputePass = _serviceProvider.GetRequiredService<StructureToComputePass>();
+        Passes.Preview.StructureToComputePass structureToComputePass = _serviceProvider.GetRequiredService<Passes.Preview.StructureToComputePass>();
         ConstructComputeGraph constructComputeGraphPass = _serviceProvider.GetRequiredService<ConstructComputeGraph>();
+        
+        InsertConstructs insertConstructsPass = _serviceProvider.GetRequiredService<InsertConstructs>();
+        ReplaceConstructDependencies replaceConstructDependenciesPass = _serviceProvider.GetRequiredService<ReplaceConstructDependencies>();
+        Passes.Preview.ComputeToCodePass computeToCodePass = _serviceProvider.GetRequiredService<Passes.Preview.ComputeToCodePass>();
+        
         TypeInference typeInferencePass = _serviceProvider.GetRequiredService<TypeInference>();
         PruneEmptyCells pruneEmptyCellsPass = _serviceProvider.GetRequiredService<PruneEmptyCells>();
-        ExtractComputeTables extractComputeTablesPass = _serviceProvider.GetRequiredService<ExtractComputeTables>();
 
+        LinkIdenticalnodes linkIdenticalnodesPass = _serviceProvider.GetRequiredService<LinkIdenticalnodes>();
+        
         // Data
         ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
-
-        // Code Layout
-        ComputeToCodePass computeToCodePass = _serviceProvider.GetRequiredService<ComputeToCodePass>();
 
         // Open the stream
         _logger.LogInformation("Opening file {Location}", _options.Location);
@@ -68,16 +70,19 @@ public class ConversionWorker
 
         // Process the graph
         _logger.LogInformation("Executing Structure to Compute pass");
-        var units = structureToComputePass.Transform(workbook, outputs);
+        var grid = structureToComputePass.Transform(workbook, outputs);
         _logger.LogInformation("Executing Extract Compute Tables pass");
-        var tables = extractComputeTablesPass.Transform(workbook, units);
+        grid = insertConstructsPass.Generate(grid, constructs);
+        
         _logger.LogInformation("Executing Construct Compute Graph pass");
-        var graph = constructComputeGraphPass.Transform(units, tables, outputs.ToList());
+        var graph = constructComputeGraphPass.Transform(grid, outputs.ToList());
         graph = typeInferencePass.Transform(graph);
+        graph = replaceConstructDependenciesPass.Transform(graph);
         _logger.LogInformation("Executing Prune Empty Cells pass");
         graph = pruneEmptyCellsPass.Transform(graph);
         _logger.LogInformation("Completed all compiler passes successfully");
-
+        graph = linkIdenticalnodesPass.Transform(graph);
+        
         // Transform to code (layout)
         var project = computeToCodePass.Transform(graph, dataManager);
 

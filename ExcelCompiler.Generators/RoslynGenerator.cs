@@ -128,7 +128,7 @@ public class RoslynGenerator
 
         if (body is [ReturnStatementSyntax {Expression: { } expression}])
         {
-            return methodDeclaration.WithExpressionBody(ArrowExpressionClause(expression));
+            return methodDeclaration.WithExpressionBody(ArrowExpressionClause(expression)).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
         return methodDeclaration.WithBody(Block(body));
@@ -146,6 +146,12 @@ public class RoslynGenerator
                         .WithInitializer(EqualsValueClause(Generate(declaration.Expression))))
             ),
             ExpressionStatement expression => ExpressionStatement(Generate(expression.Expression)),
+            If @if => IfStatement(
+                Generate(@if.Condition), 
+                Block(@if.Then.Select(Generate)), 
+                @if.Else is null 
+                    ? null 
+                    : ElseClause(Block(@if.Else.Select(Generate)))),
             _ => throw new InvalidOperationException("Something went horribly wrong."),
         };
     }
@@ -158,6 +164,7 @@ public class RoslynGenerator
                 Literal((double)constant.Value)),
             Constant { Type.Name: "String" or "string" } constant => LiteralExpression(SyntaxKind.StringLiteralExpression,
                 Literal((string)constant.Value)),
+            Constant { Type.Name: "Int32" or "int" } constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((int)constant.Value)),
             Variable variable => IdentifierName(variable.Name),
             ListExpression list when list.Members.Count != 0 => ObjectCreationExpression(
                     GenericName(Identifier("List"))
@@ -175,6 +182,13 @@ public class RoslynGenerator
                     ParameterList(SeparatedList(lambda.Parameters.Select(p => 
                         Parameter(Identifier(p.Name))))), 
                     Generate(lambda.Body)),
+            ListAccessor listAccessor => ElementAccessExpression(
+                Generate(listAccessor.List))
+                .WithArgumentList(
+                    BracketedArgumentList(
+                        SingletonSeparatedList(
+                            Argument(
+                                Generate(listAccessor.Accessor))))),
         _ => throw new InvalidOperationException($"Expression {expression.GetType()} is not supported at the time")
         };
     }

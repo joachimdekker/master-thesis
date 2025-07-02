@@ -23,7 +23,8 @@ public class DetectChains(ILogger<DetectChains> logger) : DetectTables
         
         return new Chain
         {
-            Name = title ?? area.Range.ToString(),
+            Name = title ?? area.Range.ToString().Replace("!","").Replace(":",""),
+            Initialisation = dataPart.Initialisation,
             Location = area.Range,
             Columns = columns.Zip(columnRanges, (name, range) => (name, (LineSelection)range)).ToDictionary()
         };
@@ -44,7 +45,7 @@ public class DetectChains(ILogger<DetectChains> logger) : DetectTables
             {
                 return (
                     dataPart.GetRows(new System.Range(0, i)), 
-                    dataPart.GetRows(System.Range.StartAt(i))
+                        dataPart.GetRows(System.Range.StartAt(i))
                     );
             }
         }

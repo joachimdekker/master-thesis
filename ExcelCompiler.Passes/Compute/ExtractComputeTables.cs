@@ -86,9 +86,11 @@ file record TableComputationConverter(Table Table) : UnitComputeGraphTransformer
         string columnName = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
 
         // Create the reference
-        var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location);
+        var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location)
+        {
+            Dependencies = dependencies.ToList(),
+        };
 
-        tableCellReference.AddDependencies(dependencies);
         return tableCellReference;
     }
 

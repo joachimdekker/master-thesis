@@ -86,7 +86,11 @@ public class ExtractRepositories
         var columns = schema.Columns.Select((name, type, _) =>
         {
             var columnRange = table.Columns[name];
-            var columnData = columnRange.OfType<ValueCell>().Select(cell => cell.Value).ToList();
+            var columnData = columnRange.Select(cell => cell switch
+            {
+                ValueCell vc => vc.Value,
+                EmptyCell => type.GetDefaultValue(),
+            }).ToList();
             return (name, columnData);
         }).ToDictionary();
 
@@ -95,6 +99,7 @@ public class ExtractRepositories
             Name = table.Name,
             Schema = schema,
             Columns = columns,
+            Count = columns.First().Value.Count,
         };
     }
 
@@ -149,7 +154,9 @@ public class ExtractRepositories
             if (isComputed) continue;
             
             // Get the type of the column
-            var types = columnRange.Select(cell => cell.Type).ToList();
+            var types = columnRange
+                .Where(c => c is not EmptyCell)
+                .Select(cell => cell.Type);
             var type = types.Distinct().Single();
             columnTypes[columnName] = type;
         }

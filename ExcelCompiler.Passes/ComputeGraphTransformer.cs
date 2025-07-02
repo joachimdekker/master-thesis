@@ -1,14 +1,13 @@
 using ExcelCompiler.Representations.Compute;
-using ExcelCompiler.Representations.References;
-using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.References.Range;
-using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
+using ExcelCompiler.Representations.Compute.Specialized;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
 
 namespace ExcelCompiler.Passes;
 
 public abstract record ComputeGraphTransformer<TRes, TVal>
 {
+    protected Dictionary<ComputeUnit, TVal> _valueCache { get; init; } = new();
+    
     protected abstract TVal CellReference(CellReference cellReference, IEnumerable<TVal> dependencies);
 
     protected abstract TVal RangeReference(RangeReference rangeReference, IEnumerable<TVal> dependencies);
@@ -25,23 +24,22 @@ public abstract record ComputeGraphTransformer<TRes, TVal>
 
     protected abstract TRes SupportGraph(ComputeGraph graph, IEnumerable<TVal> roots);
 
-    protected virtual TVal Other(ComputeUnit unit, IEnumerable<TVal> dependencies) => throw new ArgumentException("Unsupported cell type.", nameof(unit));
-
+    protected virtual TVal Other(ComputeUnit unit, IEnumerable<TVal> dependencies) => throw new ArgumentException($"Unsupported cell type: {unit.GetType()}.", nameof(unit));
+    
     public virtual TRes Transform(ComputeGraph graph)
     {
-        Dictionary<ComputeUnit, TVal> valueCache = new();
-        IEnumerable<TVal> roots = graph.Roots.Select(r => Transform(r, valueCache));
+        IEnumerable<TVal> roots = graph.Roots.Select(Transform);
         return SupportGraph(graph, roots);
     }
 
-    protected TVal Transform(ComputeUnit unit, Dictionary<ComputeUnit, TVal> valueCache)
+    public virtual TVal Transform(ComputeUnit unit)
     {
-        if (valueCache.TryGetValue(unit, out var cached))
+        if (_valueCache.TryGetValue(unit, out var cached))
         {
             return cached;
         }
 
-        var dependencies = unit.Dependencies.Select(d => Transform(d, valueCache));
+        var dependencies = unit.Dependencies.Select(d => Transform(d));
         TVal value = unit switch
         {
             CellReference cellReference => CellReference(cellReference, dependencies),
@@ -58,14 +56,8 @@ public abstract record ComputeGraphTransformer<TRes, TVal>
             _ => Other(unit, dependencies),
         };
 
-        valueCache[unit] = value;
+        _valueCache[unit] = value;
         return value;
-    }
-
-    public virtual TVal Transform(ComputeUnit unit)
-    {
-        Dictionary<ComputeUnit, TVal> valueCache = new();
-        return Transform(unit, valueCache);
     }
 }
 
@@ -116,4 +108,6 @@ public abstract record UnitComputeGraphTransformer : ComputeGraphTransformer<Com
     {
         return graph with { Roots = roots.ToList() };
     }
+    
+    protected override ComputeUnit Other(ComputeUnit unit, IEnumerable<ComputeUnit> dependencies) => unit with {Dependencies = dependencies.ToList()};
 }

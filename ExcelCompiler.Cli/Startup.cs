@@ -4,6 +4,7 @@ using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using OfficeOpenXml;
 
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -17,7 +18,13 @@ IConfigurationRoot config = new ConfigurationBuilder()
 
 // Configure the service provider
 IServiceCollection services = new ServiceCollection();
-services.AddLogging(lb => lb.AddSimpleConsole().SetMinimumLevel(LogLevel.Trace));
+services.AddLogging(lb => lb.AddSimpleConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.SingleLine = true;
+    options.TimestampFormat = "[HH:mm:ss] ";
+    options.ColorBehavior = LoggerColorBehavior.Enabled;
+}).SetMinimumLevel(LogLevel.Trace));
 services.AddNamedConfiguration(config);
 services.AddServices();
 

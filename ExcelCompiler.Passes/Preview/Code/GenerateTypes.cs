@@ -1,3 +1,4 @@
+using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.CodeLayout.Statements;
 using ExcelCompiler.Representations.CodeLayout.TopLevel;
@@ -8,6 +9,7 @@ using Type = ExcelCompiler.Representations.CodeLayout.Type;
 
 namespace ExcelCompiler.Passes.Preview.Code;
 
+[CompilerPass]
 public class GenerateTypes
 {
     public List<Class> Generate(ComputeGraph graph, DataManager dataManager)
@@ -29,12 +31,16 @@ public class GenerateTypes
     {
         var typeTransformer = new TypeTransformer();
 
-        var properties = chain.Columns.OfType<DataChainColumn>().Select(c => new Property(c.Name, new Type(c.Type))).ToList();
+        var properties = chain.Columns.OfType<DataChainColumn>().Select(c => new Property(c.Name, new ListOf(new Type(c.Type)))).ToList();
         var computedProperties = chain.Columns
             .OfType<ComputedChainColumn>()
-            .Select(c => new Property(c.Name, new Type(c.Type))
+            .Select(c =>
             {
-                Getter = typeTransformer.Transform(c.Computation!),
+                Variable counter = new Variable("counter", new Type(typeof(int)));
+                RecursiveTypeTransformer transformer = new(counter);
+                Statement[] body = [new Return(transformer.Transform(c.Computation!))];
+
+                return new Method(c.Name + "At", [counter], body);
             })
             .ToList();
 
@@ -49,17 +55,25 @@ public class GenerateTypes
             })
             .ToList();
 
-        return new(chain.Name, [..properties, ..computedProperties], chainProperties);
+        return new(chain.Name, [..properties], [..chainProperties,..computedProperties]);
     }
 
     private Statement[] GenerateRecursiveBody(RecursiveChainColumn recursiveChainColumn, Variable counter)
     {
         RecursiveTypeTransformer transformer = new(counter);
-        Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(transformer.Transform(recursiveChainColumn.Initialization!))]);
+        List<Statement> body = new();
+
+        if (recursiveChainColumn.Initialization is not null)
+        {
+            Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(transformer.Transform(recursiveChainColumn.Initialization!))]);
+            body.Add(baseCase);
+        }
+        
 
         Statement recursiveCase = new Return(transformer.Transform(recursiveChainColumn.Computation!));
-
-        return [baseCase, recursiveCase];
+        
+        
+        return [..body, recursiveCase];
     }
 
     public Class Generate(Table table)
@@ -72,7 +86,7 @@ public class GenerateTypes
             Getter = typeTransformer.Transform(tc.Computation!),
         }).ToList();
 
-        return new(table.Name, [..properties, ..computedProperties], []);
+        return new(table.Name + "Item", [..properties, ..computedProperties], []);
     }
 }
 
@@ -117,16 +131,16 @@ file record RecursiveTypeTransformer(Variable RecursionLevel) : TypeTransformer(
     private Expression RecursiveCellReference(RecursiveChainColumn.RecursiveCellReference unit, IEnumerable<Expression> _)
     {
         // Recusive Cell Reference
-        Expression expression = new FunctionCall(unit.ColumnName, [new FunctionCall("-", [RecursionLevel, new Constant(unit.Recursion)])]);
+        Expression expression = new FunctionCall(unit.ColumnName + "At", [new FunctionCall("-", [RecursionLevel, new Constant(unit.Recursion)])]);
         return expression;
     }
 
     private Expression ComputedCellReference(ComputedChainColumn.CellReference unit, IEnumerable<Expression> _)
     {
-        return new Variable(unit.ColumnName);
+        return new ListAccessor(new Type(unit.Type), new Variable(unit.ColumnName), RecursionLevel);
     }
 
-    private Expression TableCellReference(TableColumn.CellReference unit, IEnumerable<Expression> dependencies)
+    private Expression TableCellReference(TableColumn.CellReference unit, IEnumerable<Expression> _)
     {
         return new Variable(unit.ColumnName);
     }

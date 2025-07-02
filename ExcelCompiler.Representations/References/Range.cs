@@ -1,9 +1,11 @@
 using System.Collections;
+using System.Numerics;
+using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Structure;
 
 namespace ExcelCompiler.Representations.References;
 
-public record Range : Reference, IEnumerable<Location>
+public record Range : Reference, IEnumerable<Location>, IAdditionOperators<Range, Range, Range>
 {
     public string? Spreadsheet => From.Spreadsheet;
     public Location From { get; init;  }
@@ -165,5 +167,17 @@ public record Range : Reference, IEnumerable<Location>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+
+    public static Range operator +(Range left, Range right)
+    {
+        if (left.Spreadsheet != right.Spreadsheet) throw new ArgumentException("Ranges must be in the same spreadsheet.");
+        
+        if (left.From.Column != right.From.Column && left.From.Row != right.From.Row) throw new ArgumentException("Ranges must be in the same column or row.");
+        
+        Location upperLeft = Location.Min(left.From, right.From);
+        Location lowerRight = Location.Max(left.To, right.To);
+        
+        return new Range(upperLeft, lowerRight);
     }
 }

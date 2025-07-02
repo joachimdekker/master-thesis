@@ -1,9 +1,8 @@
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Compute.Specialized;
 using ExcelCompiler.Representations.References;
-using ExcelCompiler.Representations.Structure;
-using Range = ExcelCompiler.Representations.References.Range;
-using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
+using DefaultComputation = ExcelCompiler.Representations.Compute.Nil;
 
 namespace ExcelCompiler.Passes.Compute;
 
@@ -70,29 +69,104 @@ public class TypeInference
 
     public ComputeGraph Transform(ComputeGraph graph)
     {
-        return new TypeInferenceTransformer(graph.Constructs).Transform(graph);
+        var transformer = new TypeInferenceTransformer(graph.Constructs);
+        var computeGraph = transformer.Transform(graph);
+        
+        var inferencedConstructs = from construct in computeGraph.Constructs select Transform(construct, transformer);
+        
+        return computeGraph with
+        {
+            Constructs = inferencedConstructs.ToList(),
+        };
+    }
+
+    private Construct Transform(Construct construct, TypeInferenceTransformer transformer)
+    {
+        return construct switch
+        {
+            Table table => Transform(table, transformer),
+            Chain chain => Transform(chain, transformer),
+            _ => throw new InvalidOperationException($"Unsupported construct type: {construct.GetType()}."),
+        };
+    }
+    
+    private Table Transform(Table construct, TypeInferenceTransformer transformer)
+    {
+        List<TableColumn> columns = construct.Columns.Select(c =>
+        {
+            if (c.ColumnType is TableColumn.TableColumnType.Computed)
+            {
+                var computation = c.Computation;
+                computation = transformer.Transform(computation!);
+                return c with
+                {
+                    Computation = computation,
+                    Type = computation.Type,
+                };
+            }
+
+            return c;
+        }).ToList();
+
+        return construct with
+        {
+            Columns = columns,
+        };
+    }
+    
+    private Chain Transform(Chain construct, TypeInferenceTransformer transformer)
+    {
+        List<ChainColumn> columns = construct.Columns.Select(c =>
+        {
+            if (c is ComputedChainColumn computedChainColumn)
+            {
+                var computation = computedChainColumn.Computation;
+                computation = transformer.Transform(computation!);
+                return computedChainColumn with
+                {
+                    Computation = computation,
+                    Type = computation.Type,
+                };
+            }
+
+            if (c is RecursiveChainColumn recursiveChainColumn)
+            {
+                var computation = recursiveChainColumn.Computation;
+                computation = transformer.Transform(computation!);
+                return recursiveChainColumn with
+                {
+                    Computation = computation,
+                    Type = computation.Type,
+                };
+            }
+
+            return c;
+        }).ToList();
+
+        return construct with
+        {
+            Columns = columns,
+        };
     }
 }
 
 public record TypeInferenceTransformer : UnitComputeGraphTransformer
 {
-    private readonly List<Table> _tables;
+    private readonly List<Construct> _constructs;
 
-    public TypeInferenceTransformer(List<Table> tables)
+    public TypeInferenceTransformer(List<Construct> constructs)
     {
-        _tables = tables;
+        _constructs = constructs;
     }
 
     protected override ComputeUnit RangeReference(RangeReference rangeReference, IEnumerable<ComputeUnit> dependencies)
     {
         // Get the types of the dependencies
-        List<Type> types = dependencies.Select(d => d.Type).Distinct().ToList();
+        var types = dependencies.Where(d => d is not DefaultComputation).Select(d => d.Type).Distinct();
 
         // Get the type of the range based on the types
-        Type type = dependencies.Select(d => d.Type).Distinct().SingleOrDefault()
+        Type type = types.SingleOrDefault()
                     ?? throw new InvalidOperationException("Range references with multiple types are not supported.");
-
-        rangeReference.AddDependencies(dependencies);
 
         return rangeReference with
         {
@@ -136,7 +210,7 @@ public record TypeInferenceTransformer : UnitComputeGraphTransformer
 
     protected override ComputeUnit TableReference(TableReference tableReference, IEnumerable<ComputeUnit> _)
     {
-        var type = _tables
+        var type = _constructs.OfType<Representations.Compute.Specialized.Table>()
             .Single(t => t.Name == tableReference.Reference.TableName)
             .Columns
             .Single(c => c.Name == tableReference.Reference.ColumnNames[0])
@@ -156,4 +230,37 @@ public record TypeInferenceTransformer : UnitComputeGraphTransformer
             Type = typeof(double), // Set the type to double for now.
         };
     }
+
+    private ComputeUnit UpdateCellReferenceWithTypeAndDependencies(
+    ComputeUnit reference, 
+    IEnumerable<ComputeUnit> dependencies)
+{
+    var (type, column) = GetColumnTypeForLocation(reference.Location);
+    return reference switch
+    {
+        ComputedChainColumn.CellReference cr => cr with { Dependencies = dependencies.ToList(), Type = type },
+        RecursiveChainColumn.RecursiveCellReference rcr => rcr with { Dependencies = dependencies.ToList(), Type = type },
+        DataChainColumn.Reference dcr => dcr with { Dependencies = dependencies.ToList(), Type = type },
+        _ => throw new InvalidOperationException($"Unsupported cell reference: {reference.GetType()}."),
+    };
+}
+
+private (Type Type, object Column) GetColumnTypeForLocation(Location location)
+{
+    var chain = _constructs.OfType<Chain>().Single(c => c.Location.Contains(location));
+    var column = chain.Columns.Single(c => c.Location.Contains(location));
+    return (column.Type, column);
+}
+
+protected override ComputeUnit Other(ComputeUnit unit, IEnumerable<ComputeUnit> dependencies)
+{
+    return unit switch
+    {
+        DataChainColumn.Reference 
+            or ComputedChainColumn.CellReference 
+            or RecursiveChainColumn.RecursiveCellReference =>
+            UpdateCellReferenceWithTypeAndDependencies(unit, dependencies),
+        _ => throw new InvalidOperationException($"Unsupported cell type: {unit.GetType()}."),
+    };
+}
 }

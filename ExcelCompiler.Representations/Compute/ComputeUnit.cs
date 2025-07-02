@@ -14,12 +14,10 @@ namespace ExcelCompiler.Representations.Compute;
 /// </remarks>
 public abstract record ComputeUnit
 {
-    public Type Type { get; set; }
-    public List<ComputeUnit> Dependencies { get; init; }
-    public List<ComputeUnit> Dependents { get; init; }
+    public string? Note { get; set; }
+    public Type? Type { get; set; }
+    public IReadOnlyList<ComputeUnit> Dependencies { get; init; }
     public Location Location { get; init; }
-
-    public bool IsRoot => Dependents.Count == 0;
 
     public bool IsLeaf => Dependencies.Count == 0;
 
@@ -27,27 +25,6 @@ public abstract record ComputeUnit
     {
         Location = location;
         Dependencies = [];
-        Dependents = [];
-    }
-
-    public void AddDependency(ComputeUnit dependency)
-    {
-        Dependencies.Add(dependency);
-        dependency.Dependents.Add(this);
-    }
-
-    public void AddDependencies(IEnumerable<ComputeUnit> dependencies)
-    {
-        foreach (var dependency in dependencies)
-        {
-            AddDependency(dependency);
-        }
-    }
-
-    public void RemoveDependency(ComputeUnit dependency)
-    {
-        Dependencies.Remove(dependency);
-        dependency.Dependents.Remove(this);
     }
 
     public override string ToString() => JsonSerializer.Serialize(this);
@@ -109,5 +86,22 @@ public abstract record ComputeUnit
     where T : ComputeUnit
     {
         return (this is T) || Dependencies.Any(dependency => dependency.HasType<T>());
+    }
+
+    public virtual bool Equals(ComputeUnit? other)
+    {
+        return other is not null 
+               && other.Location == Location 
+               && other.Dependencies.Count == Dependencies.Count 
+               && Dependencies.SequenceEqual(other.Dependencies);
+    }
+
+    public override int GetHashCode()
+    {
+        const int mult = 31;
+        const int seed = 0x2D2816FE;
+        var res = Dependencies.Aggregate(seed, (current, dependency) => current * mult + dependency?.GetHashCode() ?? 0);
+        res = res * mult + GetType().GetHashCode();
+        return res * mult + Location.GetHashCode();
     }
 }

@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler", "ExcelCompi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelCompiler.GeneratedProjectRunner", "ExcelCompiler.GeneratedProjectRunner\ExcelCompiler.GeneratedProjectRunner.csproj", "{CF72AFBE-0F5B-405B-A117-68E28CA5484D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelTester", "ExcelTester\ExcelTester.csproj", "{07B1670C-EFB7-496E-8A21-0948A0603367}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,9 +46,14 @@ Global
 		{CF72AFBE-0F5B-405B-A117-68E28CA5484D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF72AFBE-0F5B-405B-A117-68E28CA5484D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF72AFBE-0F5B-405B-A117-68E28CA5484D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07B1670C-EFB7-496E-8A21-0948A0603367}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07B1670C-EFB7-496E-8A21-0948A0603367}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07B1670C-EFB7-496E-8A21-0948A0603367}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07B1670C-EFB7-496E-8A21-0948A0603367}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{45AE20E7-F61D-4C4A-A928-C63CEFE1E974} = {5740070A-618B-40C0-AB86-AA1BCDC2BC5C}
 		{CF72AFBE-0F5B-405B-A117-68E28CA5484D} = {5740070A-618B-40C0-AB86-AA1BCDC2BC5C}
+		{07B1670C-EFB7-496E-8A21-0948A0603367} = {5740070A-618B-40C0-AB86-AA1BCDC2BC5C}
 	EndGlobalSection
 EndGlobal

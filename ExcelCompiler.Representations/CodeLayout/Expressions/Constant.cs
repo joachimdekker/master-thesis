@@ -6,4 +6,9 @@ public record Constant(Type Type, object Value) : Expression(Type)
         : this(new Type(value.GetType()), value)
     {
     }
+
+    public static Expression List(ListOf listType, List<object> values)
+    {
+        return new ListExpression(values.Select(o => new Constant(listType.ElementType, o)).Cast<Expression>().ToList(), listType.ElementType);
+    }
 }

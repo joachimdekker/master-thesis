@@ -6,6 +6,8 @@ using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.CodeLayout.Statements;
 using ExcelCompiler.Representations.CodeLayout.TopLevel;
 using ExcelCompiler.Representations.Compute;
+using ExcelCompiler.Representations.Compute.Specialized;
+using ExcelCompiler.Representations.Data.Preview.Specialized;
 using ExcelCompiler.Representations.References;
 using Table = ExcelCompiler.Representations.Compute.Specialized.Table;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
@@ -21,6 +23,9 @@ public class ComputeToCodePass
     private readonly ExtractDataClasses _extractDataClasses;
     private readonly GenerateTypes _typeGenerator;
 
+    private DataManager _dataManager;
+    private ComputeGraph _computeGraph;
+    
     public ComputeToCodePass(ExtractDataClasses extractDataClasses, GenerateTypes typeGenerator)
     {
         _extractDataClasses = extractDataClasses;
@@ -37,12 +42,18 @@ public class ComputeToCodePass
     {
         List<Class> output = [];
 
+        // Set the global variables (yeah yeah I know, this is a big no no but please, I just want it to work)
+        _dataManager = dataManager;
+        _computeGraph = computeGraph;
+        
         var types = _typeGenerator.Generate(computeGraph, dataManager);
         output.AddRange(types);
 
-        var tableVariables = GenerateTableVars(computeGraph, dataManager, types);
+        var constructVariables = PopulateConstructClasses(computeGraph, dataManager, types);
+        //
+        // var tableVariables = GenerateTableVars(computeGraph, dataManager, types);
 
-        var body = tableVariables.Concat(GenerateStatements(computeGraph)).ToArray();
+        var body = constructVariables.Concat(GenerateStatements(computeGraph)).ToArray();
         var main = new Method("Main", [], body);
         var program = new Class("Program", [], [main]);
 
@@ -55,6 +66,91 @@ public class ComputeToCodePass
         };
 
         return project;
+    }
+
+    private IEnumerable<Statement> PopulateConstructClasses(ComputeGraph computeGraph, DataManager dataManager, List<Class> types)
+    {
+        List<Statement> statements = new List<Statement>();
+        foreach (Construct construct in computeGraph.Constructs)
+        {
+            Class type;
+            IEnumerable<Statement> initializer;
+            switch (construct)
+            {
+                case Table table:
+                    type = types.First(t => t.Name == (table.Name + " Item").ToPascalCase());
+                    initializer = PopulateTableClass(table, 
+                        type,
+                        (dataManager[table.Name] as TableRepository)!,
+                        computeGraph);
+                    statements.AddRange(initializer);
+                    break;
+                case Chain chain:
+                    type = types.First(t => t.Name == chain.Name.ToPascalCase());
+                    initializer = PopulateChainClass(chain, 
+                        type,
+                        (dataManager[chain.Name] as ChainRepository)!,
+                        computeGraph);
+                    statements.AddRange(initializer);
+                    break;
+                
+                default:
+                    throw new InvalidOperationException($"Unsupported construct {construct.GetType().Name}");
+            }
+        }
+        
+        return statements;
+    }
+
+    private IEnumerable<Statement> PopulateChainClass(Chain chain, Class type, ChainRepository chainRepository, ComputeGraph computeGraph)
+    {
+        // Create a new chain class
+        // The chain class is actually just the type with a constructor as a list of lists.
+
+        Method constructor = type.GenerateConstructor();
+        
+        IEnumerable<Expression> arguments = 
+            from parameter in constructor.Parameters 
+            let value = chainRepository.Data.Single(x => x.Key.ToCamelCase() == parameter.Name).Value
+            select Constant.List(parameter.Type as ListOf, value);
+        
+        Expression creation = new ObjectCreation(type, arguments.ToList());
+        Variable variable = new Variable(chain.Name.ToCamelCase(), type);
+        
+        return [new Declaration(variable, creation)];
+    }
+
+    private IEnumerable<Statement> PopulateTableClass(Table table, Class type, TableRepository tableRepo, ComputeGraph computeGraph)
+    {
+        List<Statement> statements = new List<Statement>();
+        
+        Method constructor = type.GenerateConstructor();
+
+        List<Expression> expressions = new List<Expression>();
+        foreach (var row in tableRepo.GetRows())
+        {
+            List<Expression> arguments = constructor.Parameters.Select(p =>
+            {
+                // Get the type
+                Type valueType = new Type(p.Type.Name);
+                object value = row.Single(x => x.Key.ToCamelCase() == p.Name).Value;
+
+                // Get the value
+                return new Constant(valueType, value);
+            }).Cast<Expression>().ToList();
+
+            // Create new constructors
+            ObjectCreation objectCreation = new ObjectCreation(type, arguments);
+
+            expressions.Add(objectCreation);
+        }
+
+        // Construct the class
+        // For the table, it is just a list of the items
+        Expression creation = new ListExpression(expressions);
+        Variable variable = new Variable(table.Name.ToCamelCase(), new ListOf(type));
+        
+        return [new Declaration(variable, creation)];
     }
 
 
@@ -72,8 +168,7 @@ public class ComputeToCodePass
         foreach (var cell in graph.EntryPointsOfCells().Reverse())
         {
             string varName = VariableName(cell);
-            Type type = cell.Type is null ? Type.Derived : new Type(cell.Type);
-            statements.Add(new Declaration(new Variable(varName.ToCamelCase(), type), Generate(cell)));
+            statements.Add(new Declaration(new Variable(varName.ToCamelCase(), new Type(cell.Type ?? typeof(double))), Generate(cell)));
         }
 
         // Return all the roots
@@ -91,8 +186,7 @@ public class ComputeToCodePass
         {
             ConstantValue<double> @double => new Constant(new Type("double"), @double.Value),
 
-            Function {Name: "SUM", Dependencies: [RangeReference or TableReference]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
-
+            Function {Name: "SUM", Dependencies: [RangeReference or TableReference or ColumnOperation]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
             Function func => new FunctionCall(func.Name, func.Dependencies.Select(Generate).ToList()),
             CellReference cellRef => new Variable(VariableName(cellRef.Reference), new Type(cellRef.Type)),
             RangeReference range => new ListExpression(range.Dependencies.Select(l => new Variable(VariableName(l.Location))).ToList<Expression>(), new Type("double")),
@@ -101,76 +195,97 @@ public class ComputeToCodePass
                 "Select",
                 [new Lambda([new Variable("t")],
                     new PropertyAccess(Type.Derived, new Variable("t"), tableRef.Reference.ColumnNames[0].ToPascalCase()))]),
-            _ => throw new InvalidOperationException($"Unsupported compute unit {cell.GetType().Name}"),
+            RecursiveChainColumn.RecursiveCellReference recursiveCellReference => new FunctionCall(new Variable(recursiveCellReference.ChainName.ToCamelCase()), recursiveCellReference.ColumnName.ToPascalCase() + "At", [new Constant(recursiveCellReference.Recursion)]),
+            ComputedChainColumn.CellReference computedChainColumn => new ListAccessor(
+                new Type(computedChainColumn.Type), 
+                new PropertyAccess(new ListOf(new Type(computedChainColumn.Type)), new Variable(computedChainColumn.ChainName.ToCamelCase()), computedChainColumn.ColumnName.ToCamelCase()), 
+                new Constant(computedChainColumn.Index)),
+            
+            ColumnOperation { Structure: Table table } op => new FunctionCall(
+                new Variable(table.Name.ToCamelCase()),
+                "Select",
+                [new Lambda([new Variable("t")],
+                    new PropertyAccess(Type.Derived, new Variable("t"), op.ColumnName))]),
+            
+            ColumnOperation { Structure: Chain chain } op => new PropertyAccess(Type.Derived,
+                new Variable(chain.Name.ToCamelCase()),
+                op.ColumnName),
+            
+            DataChainColumn.Reference dataRef => new ListAccessor(
+                new Type(dataRef.Type), 
+            new PropertyAccess(new ListOf(new Type(dataRef.Type)), new Variable(dataRef.ChainName.ToCamelCase()), dataRef.ColumnName.ToPascalCase()), 
+            new Constant(dataRef.Index)),
+            
+            _ => throw new InvalidOperationException($"Unsupported compute unit {cell.GetType()}"),
         };
     }
 
-    private List<Statement> GenerateTableVars(ComputeGraph computeGraph, DataManager dataManager, List<Class> classes)
-    {
-        List<Statement> statements = new List<Statement>();
-
-        foreach (Table table in computeGraph.Constructs)
-        {
-            Class? type = classes.FirstOrDefault(c => c.Name == (table.Name + " Item").ToPascalCase());
-
-            if (type is null) throw new InvalidOperationException($"Could not find class for table {table.Name}");
-
-            Variable variable = new Variable(table.Name.ToCamelCase(), new ListOf(type));
-
-            Expression expression = GenerateDataExpression(type, dataManager[table.Name]);
-            Declaration variableDeclaration = new Declaration(variable, expression);
-
-            statements.Add(variableDeclaration);
-        }
-
-        return statements;
-    }
-
-    private Expression GenerateDataExpression(Class type, IDataRepository single)
-    {
-        Representations.Data.Preview.InMemoryDataRepository repo =  (single as Representations.Data.Preview.InMemoryDataRepository )!;
-        Representations.Data.Preview.DataSchema schema = (repo.Schema as Representations.Data.Preview.DataSchema)!;
-
-        // Get columns needed for creating the type
-        List<Expression> expressions = new List<Expression>();
-        Method constructor = type.GenerateConstructor();
-
-        Dictionary<string, int> argumentMap = constructor.Parameters.Select(p =>
-        {
-            // Get the index of the parameter in the row from the schema
-            int index = schema.Types.Select(x => x.Key.ToCamelCase()).ToList().IndexOf(p.Name);
-
-            if (index == -1) throw new InvalidOperationException($"Could not find property {p.Name} in schema");
-
-            return (p.Name, index);
-        }).ToDictionary();
-
-        foreach (var row in repo.GetRows())
-        {
-            List<Expression> arguments = constructor.Parameters.Select(p =>
-            {
-                // Get the type
-                Type valueType = new Type(p.Type.Name);
-                object value = row[argumentMap[p.Name]];
-
-                // Get the value
-                return new Constant(valueType, value);
-            }).Cast<Expression>().ToList();
-
-
-            // List<Expression> arguments = schema.Properties.Values.Zip(row)
-            //     .Select((unit) =>
-            //     {
-            //         Type valueType = new Type(unit.First);
-            //         return new Constant(valueType, unit.Second);
-            //     }).Cast<Expression>().ToList();
-
-            // Create new constructors
-            ObjectCreation objectCreation = new ObjectCreation(type, arguments);
-
-            expressions.Add(objectCreation);
-        }
-
-        return new ListExpression(expressions);
-    }
+    // private List<Statement> GenerateTableVars(ComputeGraph computeGraph, DataManager dataManager, List<Class> classes)
+    // {
+    //     List<Statement> statements = new List<Statement>();
+    //
+    //     foreach (Table table in computeGraph.Constructs)
+    //     {
+    //         Class? type = classes.FirstOrDefault(c => c.Name == (table.Name + " Item").ToPascalCase());
+    //
+    //         if (type is null) throw new InvalidOperationException($"Could not find class for table {table.Name}");
+    //
+    //         Variable variable = new Variable(table.Name.ToCamelCase(), new ListOf(type));
+    //
+    //         Expression expression = GenerateDataExpression(type, dataManager[table.Name]);
+    //         Declaration variableDeclaration = new Declaration(variable, expression);
+    //
+    //         statements.Add(variableDeclaration);
+    //     }
+    //
+    //     return statements;
+    // }
+    //
+    // private Expression GenerateDataExpression(Class type, IDataRepository single)
+    // {
+    //     Representations.Data.Preview.InMemoryDataRepository repo =  (single as Representations.Data.Preview.InMemoryDataRepository )!;
+    //     Representations.Data.Preview.DataSchema schema = (repo.Schema as Representations.Data.Preview.DataSchema)!;
+    //
+    //     // Get columns needed for creating the type
+    //     List<Expression> expressions = new List<Expression>();
+    //     Method constructor = type.GenerateConstructor();
+    //
+    //     Dictionary<string, int> argumentMap = constructor.Parameters.Select(p =>
+    //     {
+    //         // Get the index of the parameter in the row from the schema
+    //         int index = schema.Types.Select(x => x.Key.ToCamelCase()).ToList().IndexOf(p.Name);
+    //
+    //         if (index == -1) throw new InvalidOperationException($"Could not find property {p.Name} in schema");
+    //
+    //         return (p.Name, index);
+    //     }).ToDictionary();
+    //
+    //     foreach (var row in repo.GetRows())
+    //     {
+    //         List<Expression> arguments = constructor.Parameters.Select(p =>
+    //         {
+    //             // Get the type
+    //             Type valueType = new Type(p.Type.Name);
+    //             object value = row[argumentMap[p.Name]];
+    //
+    //             // Get the value
+    //             return new Constant(valueType, value);
+    //         }).Cast<Expression>().ToList();
+    //
+    //
+    //         // List<Expression> arguments = schema.Properties.Values.Zip(row)
+    //         //     .Select((unit) =>
+    //         //     {
+    //         //         Type valueType = new Type(unit.First);
+    //         //         return new Constant(valueType, unit.Second);
+    //         //     }).Cast<Expression>().ToList();
+    //
+    //         // Create new constructors
+    //         ObjectCreation objectCreation = new ObjectCreation(type, arguments);
+    //
+    //         expressions.Add(objectCreation);
+    //     }
+    //
+    //     return new ListExpression(expressions);
+    // }
 }
