@@ -1,6 +1,7 @@
 using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Passes;
 using ExcelCompiler.Passes.Compute;
+using ExcelCompiler.Passes.Preview.Code;
 using ExcelCompiler.Passes.Preview.Compute;
 using ExcelCompiler.Passes.Structure;
 using ExcelCompiler.Representations.CodeLayout;
@@ -52,6 +53,9 @@ public class ConversionWorker
         // Data
         ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
 
+        // Compute
+        InjectMemoization memoizationPass = _serviceProvider.GetRequiredService<InjectMemoization>();
+        
         // Open the stream
         _logger.LogInformation("Opening file {Location}", _options.Location);
         _logger.LogInformation("Starting Excel file processing for {Location}", _options.Location);
@@ -85,6 +89,7 @@ public class ConversionWorker
         
         // Transform to code (layout)
         var project = computeToCodePass.Transform(graph, dataManager);
+        project = memoizationPass.Transform(project);
 
         return project;
     }

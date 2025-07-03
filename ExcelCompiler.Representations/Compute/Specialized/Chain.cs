@@ -3,7 +3,7 @@ using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Representations.Compute.Specialized;
 
-public record Chain(Range range) : Construct(range)
+public record Chain(Range Range) : Construct(Range)
 {
     public record ColumnReference(string chainName, string columnName, Location location) : ComputeUnit(location)
     {

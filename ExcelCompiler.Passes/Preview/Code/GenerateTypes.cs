@@ -137,7 +137,7 @@ file record RecursiveTypeTransformer(Variable RecursionLevel) : TypeTransformer(
 
     private Expression ComputedCellReference(ComputedChainColumn.CellReference unit, IEnumerable<Expression> _)
     {
-        return new ListAccessor(new Type(unit.Type), new Variable(unit.ColumnName), RecursionLevel);
+        return new ListAccessor(new Type(unit.Type), new Variable(unit.ColumnName), new FunctionCall("-", [RecursionLevel, new Constant(unit.Index + 1)]));
     }
 
     private Expression TableCellReference(TableColumn.CellReference unit, IEnumerable<Expression> _)

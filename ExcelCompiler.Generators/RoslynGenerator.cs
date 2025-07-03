@@ -101,7 +101,7 @@ public class RoslynGenerator
         if (property.Initializer is not null)
         {
             propertyDeclaration =
-                propertyDeclaration.WithInitializer(EqualsValueClause(Generate(property.Initializer)));
+                propertyDeclaration.WithInitializer(EqualsValueClause(Generate(property.Initializer))).WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
         }
 
         return propertyDeclaration;
@@ -189,6 +189,13 @@ public class RoslynGenerator
                         SingletonSeparatedList(
                             Argument(
                                 Generate(listAccessor.Accessor))))),
+            MapAccessor mapAccessor => ElementAccessExpression(
+                    Generate(mapAccessor.Map))
+                .WithArgumentList(
+                    BracketedArgumentList(
+                        SingletonSeparatedList(
+                            Argument(
+                                Generate(mapAccessor.Accessor))))),
         _ => throw new InvalidOperationException($"Expression {expression.GetType()} is not supported at the time")
         };
     }

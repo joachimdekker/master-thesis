@@ -58,20 +58,15 @@ public class InsertConstructs
     {
         foreach (var column in computeChain.Columns)
         {
-            (string name, LineSelection selection) = chain.Columns.Single(c => c.Key == column.Name);
-
-            foreach (var cellLocation in selection.Range)
+            foreach (var cellLocation in column.Location)
             {
-                ComputeUnit cell = grid[cellLocation];
-
                 int index = cellLocation.Row - column.Location.From.Row;
                 switch (column)
                 {
                     case DataChainColumn dataColumn:
-                        if (cell is Function f) break;
+                        if (grid.TryGetValue(cellLocation, out var cell) && cell is Function) break;
                         
                         // Create a proper data reference
-                        
                         grid[cellLocation] = new DataChainColumn.Reference(
                             ChainName: chain.Name,
                             ColumnName: column.Name,
@@ -93,7 +88,7 @@ public class InsertConstructs
                         grid[cellLocation] = new RecursiveChainColumn.RecursiveCellReference(
                             ChainName: chain.Name,
                             ColumnName: column.Name,
-                            Recursion: index - chain.Initialisation.RowCount,
+                            Recursion: index,
                             Location: cellLocation
                         );
                         break;
@@ -114,6 +109,13 @@ public class InsertConstructs
             // Skip columns that are not used.
             if (!column.TryGetFirstNonEmptyCell(out var firstCell) || !column.Any(c => grid.ContainsLocation(c.Location))) continue;
 
+            // Calculate the range of the column, include the footer and init
+            var range = column.Range with
+            {
+                From = column.Range.From with { Row = column.Range.From.Row - (chain.Initialisation?.Rows.Count ?? 0) },
+                To = column.Range.To with { Row = column.Range.To.Row + (chain.Footer?.Rows.Count ?? 0) },
+            };
+            
             // Check which version of the column is used
             if (column.Any(c => c is not FormulaCell and not EmptyCell))
             {
@@ -122,7 +124,7 @@ public class InsertConstructs
                 {
                     Name = name,
                     Type = firstCell.Type,
-                    Location = column.Range,
+                    Location = range,
                 };
 
                 columns.Add(dataColumn);
@@ -152,7 +154,7 @@ public class InsertConstructs
                     Type = firstCell.Type,
                     Computation = computation,
                     Initialization = initialization,
-                    Location = column.Range,
+                    Location = range,
                 };
                 columns.Add(recursiveColumn);
                 continue;
@@ -163,7 +165,7 @@ public class InsertConstructs
                 Name = name,
                 Type = firstCell.Type,
                 Computation = computation,
-                Location = column.Range,
+                Location = range,
             };
             columns.Add(computedColumn);
         }

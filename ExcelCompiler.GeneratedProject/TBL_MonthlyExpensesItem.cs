@@ -5,12 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ExcelCompiler.Generated;
-public class TBLMonthlyExpensesItem
+public class TBL_MonthlyExpensesItem
 {
     public double ProjectedCost { get; set; }
     public double ActualCost { get; set; }
 
-    public TBLMonthlyExpensesItem(double projectedCost, double actualCost)
+    public TBL_MonthlyExpensesItem(double projectedCost, double actualCost)
     {
         ProjectedCost = projectedCost;
         ActualCost = actualCost;

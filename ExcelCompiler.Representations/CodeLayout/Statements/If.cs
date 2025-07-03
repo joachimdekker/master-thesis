@@ -6,21 +6,29 @@ namespace ExcelCompiler.Representations.CodeLayout.Statements;
 public record If : Conditional
 {
     [SetsRequiredMembers]
-    public If(Expression booleanExpression, List<Statement> thenBody)
+    public If(Expression booleanExpression, List<Statement> thenBody, List<Statement>? elseBody = null)
     {
         Condition = booleanExpression;
         Then = thenBody;
+        Else = elseBody;
     }
 
-    public Expression Condition { get; }
-    public List<Statement> Then { get; }
-    public List<Statement>? Else { get; }
+    public Expression Condition { get; init; }
+    public List<Statement> Then { get; init; }
+    public List<Statement>? Else { get; private set; }
 
     public override required List<(Expression, List<Statement>)> Cases
     {
         get => [(Condition, Then)];
-        init => throw new InvalidOperationException("To set the cases of the IF statement, use the constructor");
+        init {
+            if (value.Count != 1) throw new ArgumentException("If statements can only have one case.");
+            (Condition, Then) = value[0];
+        }
     }
 
-    public override List<Statement> Default => Else ?? new();
+    public override List<Statement>? Default
+    {
+        get { return Else ?? new(); }
+        set { Else = value; }
+    }
 }

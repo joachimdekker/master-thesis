@@ -18,7 +18,7 @@ public record Class : Type
     public Method GenerateConstructor()
     {
         // Get all members that can be set
-        var settableMembers = Members.Where(x => x is not { Getter: not null, Setter: null }).ToArray();
+        var settableMembers = Members.Where(x => x is not { Getter: not null, Setter: null } && x.Initializer is null).ToArray();
         
         // Generate arguments
         var arguments = settableMembers.Select(x => new Variable(x.Name.ToCamelCase(), x.Type)).ToArray();
@@ -29,5 +29,10 @@ public record Class : Type
 
         // Generate constructor
         return new Method(Name, arguments, body.ToArray<Statement>());
+    }
+
+    public override int GetHashCode()
+    {
+        return Name.GetHashCode();
     }
 }

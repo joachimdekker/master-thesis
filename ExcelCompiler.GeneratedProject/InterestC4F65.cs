@@ -8,30 +8,25 @@ namespace ExcelCompiler.Generated;
 public class InterestC4F65
 {
     public List<double> Deposit { get; set; }
+    public Dictionary<Int32,Double> _totalAtMemoization { get; set; } = new Dictionary<Int32,Double>();
 
-    private readonly Dictionary<int, double> _totalCache = new();
-    
-    private readonly Dictionary<int, double> _interestCache = new();
-
-    public double InterestAt(Int32 counter)
-    {
-        if (_interestCache.TryGetValue(counter, out var interest)) return interest;
-        
-        _interestCache[counter] = interest = 0.015 / 12 * TotalAt(counter - 1);
-        return interest;
-    }
-
+    public double InterestAt(Int32 counter) => 0.015 / 12 * TotalAt(counter - 1);
     public double TotalAt(Int32 counter)
     {
+        Int32 key = counter;
+        if (_totalAtMemoization.ContainsKey(key))
+        {
+            return _totalAtMemoization[key];
+        }
+
         if (Equals(counter, 0))
         {
             return 10000;
         }
 
-        if (_totalCache.TryGetValue(counter, out var total)) return total;
-
-        _totalCache[counter] = total = TotalAt(counter - 1) + InterestAt(counter - 0) + Deposit[counter - 1];
-        return total;
+        double result = TotalAt(counter - 1) + InterestAt(counter - 0) + Deposit[counter - 1];
+        _totalAtMemoization.Add(key, result);
+        return result;
     }
 
     public InterestC4F65(List<double> deposit)

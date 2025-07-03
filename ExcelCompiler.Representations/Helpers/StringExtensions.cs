@@ -22,8 +22,7 @@ public static class StringExtensions
         str = str.Replace("-", " ")
             .Replace(".", " ")
             .Replace("(", " ")
-            .Replace(")", " ")
-            .Replace("_", " ");
+            .Replace(")", " ");
         
         StringBuilder sb = new();
         

@@ -24,7 +24,7 @@ services.AddLogging(lb => lb.AddSimpleConsole(options =>
     options.SingleLine = true;
     options.TimestampFormat = "[HH:mm:ss] ";
     options.ColorBehavior = LoggerColorBehavior.Enabled;
-}).SetMinimumLevel(LogLevel.Trace));
+}).SetMinimumLevel(LogLevel.Trace));    
 services.AddNamedConfiguration(config);
 services.AddServices();
 
