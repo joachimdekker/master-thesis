@@ -22,6 +22,8 @@ public record Table : Construct
     public List<TableColumn> Columns { get; init; } = [];
 
     public DataReference Data { get; set; }
+    
+    public TableStructureData? StructureData { get; set; }
 
     public Range Location { get; init; }
 

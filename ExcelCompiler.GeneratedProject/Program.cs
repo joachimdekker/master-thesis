@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ExcelCompiler.Generated;
 public class Program
 {
-    public double Main()
+    public double Main(double monthlyBudgetReportE10)
     {
         List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17 = new List<MonthlyBudgetReportC14F17Item>
         {
@@ -79,15 +79,14 @@ public class Program
         };
         InterestC4F65 interestC4F65 = new InterestC4F65(new List<double> { 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500 });
         double monthlyBudgetReportE9 = monthlyBudgetReportC14F17.Select(t => t.Actual).Sum();
+        double monthlyBudgetReportE8 = tBL_MonthlyExpenses.Select(t => t.ActualCost).Sum();
+        double monthlyBudgetReportE7 = monthlyBudgetReportE9 + monthlyBudgetReportE10 - monthlyBudgetReportE8;
+        double monthlyBudgetReportD9 = monthlyBudgetReportC14F17.Select(t => t.Projected).Sum();
         double interestF65 = interestC4F65.TotalAt(60);
         double interestF5 = interestC4F65.TotalAt(0);
         double interestJ11 = interestC4F65.Deposit.Sum();
         double interestJ12 = interestF65 - interestF5 - interestJ11;
         double monthlyBudgetReportJ7 = interestJ12;
-        double monthlyBudgetReportE10 = monthlyBudgetReportJ7;
-        double monthlyBudgetReportE8 = tBL_MonthlyExpenses.Select(t => t.ActualCost).Sum();
-        double monthlyBudgetReportE7 = monthlyBudgetReportE9 + monthlyBudgetReportE10 - monthlyBudgetReportE8;
-        double monthlyBudgetReportD9 = monthlyBudgetReportC14F17.Select(t => t.Projected).Sum();
         double monthlyBudgetReportD10 = monthlyBudgetReportJ7;
         double monthlyBudgetReportD8 = tBL_MonthlyExpenses.Select(t => t.ProjectedCost).Sum();
         double monthlyBudgetReportD7 = monthlyBudgetReportD9 + monthlyBudgetReportD10 - monthlyBudgetReportD8;

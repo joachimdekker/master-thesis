@@ -231,11 +231,24 @@ public record TypeInferenceTransformer : UnitComputeGraphTransformer
         };
     }
 
+    protected override ComputeUnit Input(Input input, IEnumerable<ComputeUnit> _)
+    {
+        return input with { Type = input.Type ?? typeof(double) };
+    }
+
     private ComputeUnit UpdateCellReferenceWithTypeAndDependencies(
     ComputeUnit reference, 
     IEnumerable<ComputeUnit> dependencies)
 {
     var (type, column) = GetColumnTypeForLocation(reference.Location);
+    
+    // Better return?
+    // return reference with
+    // {
+    //     Dependencies = dependencies.ToList(),
+    //     Type = type,
+    // };
+    
     return reference switch
     {
         ComputedChainColumn.CellReference cr => cr with { Dependencies = dependencies.ToList(), Type = type },

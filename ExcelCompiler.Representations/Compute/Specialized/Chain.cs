@@ -21,6 +21,8 @@ public record Chain(Range Range) : Construct(Range)
     public List<ChainColumn> Columns { get; init; } = [];
 
     public DataReference Data { get; set; }
+    
+    public ChainStructureData StructureData { get; set; } = new();
 }
 
 public abstract record ChainColumn
@@ -52,4 +54,6 @@ public record RecursiveChainColumn : ChainColumn
     public ComputeUnit? Computation { get; set; }
 
     public ComputeUnit? Footer { get; set; }
+    
+    public int NoBaseCases { get; set; }
 }

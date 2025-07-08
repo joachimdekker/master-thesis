@@ -7,7 +7,7 @@ namespace ExcelCompiler.Representations.Compute;
 /// <summary>
 /// Represents the computations that are performed within the workbook in the spreadsheets.
 /// </summary>
-public class ComputeGrid : IEnumerable<ComputeUnit>
+public record ComputeGrid : IEnumerable<ComputeUnit>
 {
     private Dictionary<Location, ComputeUnit> _units = new();
 

@@ -109,6 +109,11 @@ file record TypeTransformer() : ComputeGraphTransformer<Expression, Expression>
     protected override Expression Constant<T>(ConstantValue<T> constant, IEnumerable<Expression> dependencies)
         => new Constant(new Type(typeof(T)), constant.Value!);
 
+    protected override Expression Input(Input input, IEnumerable<Expression> dependencies)
+    {
+        throw new InvalidOperationException();
+    }
+
     protected override Expression Nil(Nil nil, IEnumerable<Expression> dependencies)
         => throw new InvalidOperationException();
     protected override Expression SupportGraph(ComputeGraph graph, IEnumerable<Expression> roots)

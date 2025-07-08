@@ -138,14 +138,21 @@ public class InsertConstructs
             if (IsRecursiveComputation(grid, computation))
             {
                 // Recursive
-                var initializationCell = chain.Initialisation.Columns.SingleOrDefault(c => c[0].Location.Column == column[0].Location.Column)?.SingleOrDefault(c => c is not EmptyCell);
+                var initializationCells = chain.Initialisation.Columns.SingleOrDefault(c => c[0].Location.Column == column[0].Location.Column)?.Where(c => c is not EmptyCell).ToList();
 
-                ComputeUnit? initialization = null;
-                if (initializationCell is not null)
+                if (initializationCells.Count > 1)
                 {
-                    // Right now, we only support a single initialization
-                    // TODO: Support multiple initialization
-                    grid.TryGetValue(initializationCell.Location, out initialization);
+                    throw new InvalidOperationException("Recursive chains must have exactly one initialization cell for now...");
+                }
+                
+                
+  
+                // Right now, we only support a single initialization
+                ComputeUnit? initialization = null;
+                // TODO: Support multiple initialization
+                if (initializationCells.Count == 1)
+                {
+                    grid.TryGetValue(initializationCells[0].Location, out initialization);
                 }
 
                 var recursiveColumn = new RecursiveChainColumn()
@@ -155,6 +162,7 @@ public class InsertConstructs
                     Computation = computation,
                     Initialization = initialization,
                     Location = range,
+                    NoBaseCases = initializationCells.Count,
                 };
                 columns.Add(recursiveColumn);
                 continue;

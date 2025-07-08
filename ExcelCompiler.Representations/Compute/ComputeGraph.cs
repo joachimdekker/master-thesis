@@ -21,6 +21,8 @@ public record ComputeGraph
     /// </remarks>
     public List<ComputeUnit> Roots { get; init; } = [];
 
+    public IEnumerable<Input> Inputs => Roots.SelectMany(r => r.GetByType<Input>());
+
     public List<Construct> Constructs { get; init; } = [];
 
     public ComputeGraph() { }

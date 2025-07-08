@@ -28,7 +28,7 @@ public class ConversionWorker
         _options = options.Value;
     }
 
-    public async Task<Project> ExecuteAsync(ICollection<Location> outputs, CancellationToken cancellationToken = default)
+    public async Task<Project> ExecuteAsync(ICollection<Location> inputs, ICollection<Location> outputs, CancellationToken cancellationToken = default)
     {
         // Get the Compiler Passes from the service provider
 
@@ -40,6 +40,7 @@ public class ConversionWorker
         // Compute
         Passes.Preview.StructureToComputePass structureToComputePass = _serviceProvider.GetRequiredService<Passes.Preview.StructureToComputePass>();
         ConstructComputeGraph constructComputeGraphPass = _serviceProvider.GetRequiredService<ConstructComputeGraph>();
+        InsertInputs insertInputsPass = _serviceProvider.GetRequiredService<InsertInputs>();
         
         InsertConstructs insertConstructsPass = _serviceProvider.GetRequiredService<InsertConstructs>();
         ReplaceConstructDependencies replaceConstructDependenciesPass = _serviceProvider.GetRequiredService<ReplaceConstructDependencies>();
@@ -49,6 +50,7 @@ public class ConversionWorker
         PruneEmptyCells pruneEmptyCellsPass = _serviceProvider.GetRequiredService<PruneEmptyCells>();
 
         LinkIdenticalnodes linkIdenticalnodesPass = _serviceProvider.GetRequiredService<LinkIdenticalnodes>();
+        ExtractStructureData structureDataPass = _serviceProvider.GetRequiredService<ExtractStructureData>();
         
         // Data
         ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
@@ -75,8 +77,10 @@ public class ConversionWorker
         // Process the graph
         _logger.LogInformation("Executing Structure to Compute pass");
         var grid = structureToComputePass.Transform(workbook, outputs);
+        grid = insertInputsPass.Transform(grid, inputs);
         _logger.LogInformation("Executing Extract Compute Tables pass");
         grid = insertConstructsPass.Generate(grid, constructs);
+        grid = structureDataPass.Transform(grid);
         
         _logger.LogInformation("Executing Construct Compute Graph pass");
         var graph = constructComputeGraphPass.Transform(grid, outputs.ToList());

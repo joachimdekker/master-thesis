@@ -1,6 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 ExcelCompiler.Generated.Program program = new();
 
@@ -11,16 +9,15 @@ double total = 0;
 TimeSpan time = TimeSpan.Zero;
 
 double[] inputs = [0.234d, 0.015d, 0.002567d, 0.30d, 0.003652d, 0.05d];
-int count = 1;
+int count = 1_000_000;
 
 Console.WriteLine("Starting Excel calculation test...");
 outerSw.Start();
 for (int i = 0; i < count; i++)
 {
-    Console.WriteLine("Doign the work.");
     var input = inputs[i % inputs.Length];
     sw.Restart();
-    var output = program.Main();
+    var output = program.Main(1912);
     sw.Stop();
     
     total += output;

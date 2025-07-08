@@ -53,8 +53,11 @@ public class ComputeToCodePass
         //
         // var tableVariables = GenerateTableVars(computeGraph, dataManager, types);
 
-        var body = constructVariables.Concat(GenerateStatements(computeGraph)).ToArray();
-        var main = new Method("Main", [], body);
+        Variable[] parameters = computeGraph.Inputs.Select(i => new Variable(VariableName(i.Location), new Type(i.Type))).ToArray();
+        var body = constructVariables.Concat(GenerateStatements(computeGraph)).Where(s => s is not Declaration a || parameters.All(p => p.Name != a.Variable.Name)).ToArray();
+
+        
+        var main = new Method("Main", parameters, body);
         var program = new Class("Program", [], [main]);
 
         output.Add(program);
@@ -187,15 +190,21 @@ public class ComputeToCodePass
             ConstantValue<double> @double => new Constant(new Type("double"), @double.Value),
 
             Function {Name: "SUM", Dependencies: [RangeReference or TableReference or ColumnOperation]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
+            
             Function func => new FunctionCall(func.Name, func.Dependencies.Select(Generate).ToList()),
+            
             CellReference cellRef => new Variable(VariableName(cellRef.Reference), new Type(cellRef.Type)),
+            
             RangeReference range => new ListExpression(range.Dependencies.Select(l => new Variable(VariableName(l.Location))).ToList<Expression>(), new Type("double")),
+            
             TableReference tableRef => new FunctionCall(
                 new Variable(tableRef.Reference.TableName.ToCamelCase()),
                 "Select",
                 [new Lambda([new Variable("t")],
                     new PropertyAccess(Type.Derived, new Variable("t"), tableRef.Reference.ColumnNames[0].ToPascalCase()))]),
+            
             RecursiveChainColumn.RecursiveCellReference recursiveCellReference => new FunctionCall(new Variable(recursiveCellReference.ChainName.ToCamelCase()), recursiveCellReference.ColumnName.ToPascalCase() + "At", [new Constant(recursiveCellReference.Recursion)]),
+            
             ComputedChainColumn.CellReference computedChainColumn => new ListAccessor(
                 new Type(computedChainColumn.Type), 
                 new PropertyAccess(new ListOf(new Type(computedChainColumn.Type)), new Variable(computedChainColumn.ChainName.ToCamelCase()), computedChainColumn.ColumnName.ToCamelCase()), 
@@ -215,6 +224,8 @@ public class ComputeToCodePass
                 new Type(dataRef.Type), 
             new PropertyAccess(new ListOf(new Type(dataRef.Type)), new Variable(dataRef.ChainName.ToCamelCase()), dataRef.ColumnName.ToPascalCase()), 
             new Constant(dataRef.Index)),
+            
+            Input input => new Variable(VariableName(input.Location)),
             
             _ => throw new InvalidOperationException($"Unsupported compute unit {cell.GetType()}"),
         };

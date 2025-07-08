@@ -21,6 +21,8 @@ public abstract record ComputeGraphTransformer<TRes, TVal>
     protected abstract TVal Nil(Nil nil, IEnumerable<TVal> dependencies);
 
     protected abstract TVal Constant<T>(ConstantValue<T> constant, IEnumerable<TVal> dependencies);
+    
+    protected abstract TVal Input(Input input, IEnumerable<TVal> dependencies);
 
     protected abstract TRes SupportGraph(ComputeGraph graph, IEnumerable<TVal> roots);
 
@@ -48,6 +50,7 @@ public abstract record ComputeGraphTransformer<TRes, TVal>
             DataReference dataReference => DataReference(dataReference, dependencies),
             Function function => Function(function, dependencies),
             Nil nil => Nil(nil, dependencies),
+            Input input => Input(input, dependencies),
             // ConstantValue<object> constant => Constant(location, dependencies, constant.Type, constant.Value),
             ConstantValue<string> constant => Constant(constant, dependencies),
             ConstantValue<double> constant => Constant(constant, dependencies),
@@ -103,6 +106,8 @@ public abstract record UnitComputeGraphTransformer : ComputeGraphTransformer<Com
     {
         return constant with { Dependencies = dependencies.ToList() };
     }
+    
+    protected override ComputeUnit Input(Input input, IEnumerable<ComputeUnit> dependencies) => input with {Dependencies = dependencies.ToList()};
 
     protected override ComputeGraph SupportGraph(ComputeGraph graph, IEnumerable<ComputeUnit> roots)
     {
