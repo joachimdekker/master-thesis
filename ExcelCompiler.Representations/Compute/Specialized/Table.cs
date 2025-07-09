@@ -27,7 +27,7 @@ public record Table : Construct
 
     public Range Location { get; init; }
 
-    public Table(string name, Range location, DataReference data) : base(location)
+    public Table(string name, Range location, DataReference data) : base(name, location)
     {
         Name = name;
         Data = data;
@@ -37,7 +37,7 @@ public record Table : Construct
 
 public record TableColumn
 {
-    public record CellReference(string TableName, string ColumnName, Location location) : ComputeUnit(location)
+    public record CellReference(string TableName, string ColumnName, int Index, Location location) : ComputeUnit(location)
     {
     }
 

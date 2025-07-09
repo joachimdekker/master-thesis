@@ -6,7 +6,7 @@ public record ConstantValue<TValue> : ComputeUnit
 {
     public ConstantValue(TValue value, Location location) : base(location)
     {
-        Type = typeof(TValue);
+        Type = new Type(typeof(TValue));
         Value = value;
     }
 

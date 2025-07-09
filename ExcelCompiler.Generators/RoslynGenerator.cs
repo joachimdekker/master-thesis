@@ -169,7 +169,7 @@ public class RoslynGenerator
             ListExpression list when list.Members.Count != 0 => ObjectCreationExpression(
                     GenericName(Identifier("List"))
                     .WithTypeArgumentList(
-                        TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName(list.Type.Name)))))
+                        TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName((list.Type as ListOf)!.ElementType.Name)))))
                 .WithInitializer(InitializerExpression(SyntaxKind.CollectionInitializerExpression)
                 .AddExpressions(list.Members.Select(Generate).ToArray())),
             PropertyAccess accessor => MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,

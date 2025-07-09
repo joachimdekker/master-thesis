@@ -14,6 +14,7 @@ namespace ExcelCompiler.Representations.Compute;
 /// </remarks>
 public abstract record ComputeUnit
 {
+    public Guid Id { get; init; } = Guid.NewGuid();
     public string? Note { get; set; }
     public Type? Type { get; set; }
     public IReadOnlyList<ComputeUnit> Dependencies { get; init; }
@@ -64,22 +65,28 @@ public abstract record ComputeUnit
         return !Dependencies.Where((t, i) => !t.ComputationalEquivalent(other.Dependencies[i])).Any();
     }
 
-    public IEnumerable<T> GetByType<T>()
+    public List<T> GetByType<T>()
     {
-        IEnumerable<T> list = Dependencies.SelectMany(dependency => dependency.GetByType<T>());
+        var cache = new Dictionary<ComputeUnit, List<T>>();
 
-        if (this is T t)
+        return Traverse(this);
+        
+        List<T> Traverse(ComputeUnit unit)
         {
-            return list.Concat([t]);
+            if (cache.TryGetValue(unit, out var result))
+            {
+                return result;
+            }
+            
+            List<T> list = unit.Dependencies.SelectMany(Traverse).ToList();
+            if (unit is T t)
+            {
+                return cache[unit] = [t, ..list];
+            }
+
+            return cache[unit] = list;
         }
-
-        return list;
-    }
-
-    public int CountByType<T>()
-    where T : ComputeUnit
-    {
-        return (this is T) ? 1 : 0 + Dependencies.Sum(dependency => dependency.CountByType<T>());
+        
     }
 
     public bool HasType<T>()
@@ -96,12 +103,16 @@ public abstract record ComputeUnit
                && Dependencies.SequenceEqual(other.Dependencies);
     }
 
+    private int _hashCode = -1;
+
     public override int GetHashCode()
     {
+        if (_hashCode != -1) return _hashCode;
+        
         const int mult = 31;
         const int seed = 0x2D2816FE;
         var res = Dependencies.Aggregate(seed, (current, dependency) => current * mult + dependency?.GetHashCode() ?? 0);
         res = res * mult + GetType().GetHashCode();
-        return res * mult + Location.GetHashCode();
+        return _hashCode = res * mult + Location.GetHashCode();
     }
 }

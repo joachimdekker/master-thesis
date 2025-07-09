@@ -5,7 +5,7 @@ namespace ExcelCompiler.Passes.Compute;
 [CompilerPass]
 public class PruneEmptyCells
 {
-    private readonly HashSet<ComputeUnit> _visited = new();
+    private readonly Dictionary<ComputeUnit, ComputeUnit> _visited = new();
     
     public ComputeGraph Transform(ComputeGraph graph)
     {
@@ -20,11 +20,15 @@ public class PruneEmptyCells
 
     private ComputeUnit Prune(ComputeUnit node)
     {
+        if (_visited.TryGetValue(node, out var unit)) return unit;
+        
         IEnumerable<ComputeUnit> dependencies = node.Dependencies.Where(d => d is not Nil).Select(Prune);
         
-        return node with
+        _visited[node] = node with
         {
             Dependencies = dependencies.ToList(),
         };
+
+        return _visited[node];
     }
 }

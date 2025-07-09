@@ -1,6 +1,7 @@
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Compute.Specialized;
+using Type = ExcelCompiler.Representations.Compute.Type;
 
 namespace ExcelCompiler.Passes.Preview.Compute;
 
@@ -9,12 +10,34 @@ public class ReplaceConstructDependencies
 {
     public ComputeGraph Transform(ComputeGraph graph)
     {
-        var transformer = new RecursiveTypeTransformer(graph.Constructs);
+        var constructGenerators = graph.Constructs.Select(Generate).ToList();
+        var transformer = new RecursiveTypeTransformer(graph.Constructs, constructGenerators);
         return transformer.Transform(graph);
+    }
+
+    private ConstructCreation Generate(Construct arg)
+    {
+        List<ComputeUnit> dependencies = arg switch
+        {
+            Table table => table.StructureData!.Columns.SelectMany(c => c.Data)
+                .Concat(table.StructureData.Constants.Select(c => c.Value))
+                .ToList(),
+            Chain chain => chain.StructureData!.Columns.SelectMany(c => c.Data)
+                .Concat(chain.StructureData.Initialisations.SelectMany(c => c.Data))
+                .Concat(chain.StructureData.Constants.Select(c => c.Value))
+                .ToList(),
+            _ => new List<ComputeUnit>(),
+        };
+        
+        return new ConstructCreation(arg.Location.From, arg.Id)
+        {
+            Dependencies = dependencies,
+            Type = new Type(arg.Id),
+        };
     }
 }
 
-file record RecursiveTypeTransformer(List<Construct> Constructs) : UnitComputeGraphTransformer()
+file record RecursiveTypeTransformer(List<Construct> Constructs, List<ConstructCreation> Constructors) : UnitComputeGraphTransformer()
 {
     protected override ComputeUnit RangeReference(RangeReference rangeReference, IEnumerable<ComputeUnit> dependencies)
     {
@@ -22,29 +45,48 @@ file record RecursiveTypeTransformer(List<Construct> Constructs) : UnitComputeGr
         var construct = Constructs.SingleOrDefault(c => c.Location.Contains(rangeReference.Reference));
         if (construct is null) return rangeReference with { Dependencies = dependencies.ToList() };
 
+        var constructor = Constructors.Single(c => c.ConstructId == construct.Id);
+
         // Get the type of the range based on the type of the construct
-        return construct switch
+        switch (construct)
         {
-            Table table when table.Columns.Any(c => c.Location.Contains(rangeReference.Reference))
-                => new ColumnOperation(table, table.Columns.Single(c => c.Location.Contains(rangeReference.Reference)).Name, rangeReference.Location),
-            Chain chain => ChainRangeReference(chain, rangeReference, dependencies),
-            _ => rangeReference with {Dependencies = dependencies.ToList()},
+            case Table table when table.Columns.Any(c => c.Location.Contains(rangeReference.Reference)):
+                return new ColumnOperation(table,
+                    table.Columns.Single(c => c.Location.Contains(rangeReference.Reference)).Name,
+                    rangeReference.Location)
+                {
+                    Dependencies = [constructor]
+                };
+            case Chain chain:
+                var reference = ChainRangeReference(chain, rangeReference, dependencies);
+                return reference with
+                {
+                    Dependencies = [constructor]
+                };
+            default: return rangeReference with { Dependencies = dependencies.ToList() };
         };
     }
 
     private ComputeUnit ChainRangeReference(Chain chain, RangeReference rangeReference, IEnumerable<ComputeUnit> dependencies)
     {
         ChainColumn? column = chain.Columns.SingleOrDefault(c => c.Location.Contains(rangeReference.Reference));
-
+        
         if (column is null) return rangeReference with { Dependencies = dependencies.ToList() };
 
         // TODO: Perhaps something to easily detect something
-        return new ColumnOperation(chain, column.Name, rangeReference.Location);
+        return new ColumnOperation(chain, column.Name, rangeReference.Location)
+        {
+            
+        };
     }
 
     protected override ComputeUnit TableReference(TableReference tableReference, IEnumerable<ComputeUnit> dependencies)
     {
-        return tableReference with { Dependencies = dependencies.ToList() };
+        var constructor = Constructors.SingleOrDefault(c => c.ConstructId ==  tableReference.Reference.TableName);
+
+        if (constructor is null) throw new InvalidOperationException("Constructor for table not found.");
+        
+        return tableReference with { Dependencies = [..dependencies, constructor] };
     }
 
     protected override ComputeUnit DataReference(DataReference dataReference, IEnumerable<ComputeUnit> dependencies)
@@ -52,7 +94,12 @@ file record RecursiveTypeTransformer(List<Construct> Constructs) : UnitComputeGr
         if (!Constructs.Any(c => c.Location.Contains(dataReference.Location))) return dataReference with { Dependencies = dependencies.ToList() };
         
         Construct construct = Constructs.Single(c => c.Location.Contains(dataReference.Location));
-        CellReference cellRef = new CellReference(dataReference.Location, dataReference.Location) { Type = dataReference.Type, Dependencies = dependencies.ToList() };
+        ConstructCreation creation = Constructors.Single(c => c.ConstructId == construct.Id);
+        CellReference cellRef = new CellReference(dataReference.Location, dataReference.Location)
+        {
+            Type = dataReference.Type, 
+            Dependencies = [creation, ..dependencies]
+        };
 
         return Transform(cellRef);
     }
@@ -62,10 +109,12 @@ file record RecursiveTypeTransformer(List<Construct> Constructs) : UnitComputeGr
         var construct = Constructs.SingleOrDefault(c => c.Location.Contains(cellReference.Reference));
         if (construct is null) return cellReference with { Dependencies = dependencies.ToList() };
 
+        var creation = Constructors.Single(c => c.ConstructId == construct.Id);
+        
         return construct switch
         {
-            Table table => cellReference with { Dependencies = dependencies.ToList() },
-            Chain chain => ChainCellReference(chain, cellReference, dependencies),
+            Table table => cellReference with { Dependencies = [creation, ..dependencies] },
+            Chain chain => ChainCellReference(chain, cellReference, [creation, ..dependencies]),
             _ => cellReference with { Dependencies = dependencies.ToList() },
         };
 
@@ -87,10 +136,25 @@ file record RecursiveTypeTransformer(List<Construct> Constructs) : UnitComputeGr
             if (recursiveColumn.Location.Contains(cellReference.Location))
             {
                 int recursionLevel = recursiveColumn.Location.Select(x => x).ToList().IndexOf(cellReference.Reference);
-                return new RecursiveResultReference(recursiveColumn.Name, chain.Name, recursionLevel, cellReference.Location);
+                return new RecursiveResultReference(recursiveColumn.Name, chain.Name, recursionLevel, cellReference.Location)
+                {
+                    Dependencies = dependencies.ToList(),
+                };
             }
         }
         
         return cellReference with { Dependencies = dependencies.ToList() };
+    }
+
+    protected override ComputeUnit Other(ComputeUnit unit, IEnumerable<ComputeUnit> dependencies)
+    {
+        if (unit is RecursiveChainColumn.RecursiveCellReference rcr)
+        {
+            var creation = Constructors.Single(c => c.ConstructId == rcr.ChainName);
+            
+            return unit with { Dependencies = [creation, ..dependencies] };
+        }
+        
+        return unit with { Dependencies = dependencies.ToList() };
     }
 }

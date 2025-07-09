@@ -8,4 +8,6 @@ public static class TypeExtensions
         
         return Activator.CreateInstance(t)!;
     }
+
+    public static CodeLayout.Type Convert(this Compute.Type? type) => type is null ? new(typeof(double)) : new(type.Name);
 }

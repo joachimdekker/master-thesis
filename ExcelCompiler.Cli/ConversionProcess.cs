@@ -42,7 +42,7 @@ public class ConversionWorker
         ConstructComputeGraph constructComputeGraphPass = _serviceProvider.GetRequiredService<ConstructComputeGraph>();
         InsertInputs insertInputsPass = _serviceProvider.GetRequiredService<InsertInputs>();
         
-        InsertConstructs insertConstructsPass = _serviceProvider.GetRequiredService<InsertConstructs>();
+        ExtractConstructs extractConstructsPass = _serviceProvider.GetRequiredService<ExtractConstructs>();
         ReplaceConstructDependencies replaceConstructDependenciesPass = _serviceProvider.GetRequiredService<ReplaceConstructDependencies>();
         Passes.Preview.ComputeToCodePass computeToCodePass = _serviceProvider.GetRequiredService<Passes.Preview.ComputeToCodePass>();
         
@@ -51,6 +51,7 @@ public class ConversionWorker
 
         LinkIdenticalnodes linkIdenticalnodesPass = _serviceProvider.GetRequiredService<LinkIdenticalnodes>();
         ExtractStructureData structureDataPass = _serviceProvider.GetRequiredService<ExtractStructureData>();
+        InsertConstructs insertConstructsPass = _serviceProvider.GetRequiredService<InsertConstructs>();
         
         // Data
         ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
@@ -79,20 +80,22 @@ public class ConversionWorker
         var grid = structureToComputePass.Transform(workbook, outputs);
         grid = insertInputsPass.Transform(grid, inputs);
         _logger.LogInformation("Executing Extract Compute Tables pass");
-        grid = insertConstructsPass.Generate(grid, constructs);
+        grid = extractConstructsPass.Generate(grid, constructs);
         grid = structureDataPass.Transform(grid);
+        grid = insertConstructsPass.Transform(grid, constructs);
         
         _logger.LogInformation("Executing Construct Compute Graph pass");
         var graph = constructComputeGraphPass.Transform(grid, outputs.ToList());
+        _logger.LogInformation("Inferencing Types");
         graph = typeInferencePass.Transform(graph);
+        _logger.LogInformation("Executing Link Identical nodes pass");
         graph = replaceConstructDependenciesPass.Transform(graph);
         _logger.LogInformation("Executing Prune Empty Cells pass");
         graph = pruneEmptyCellsPass.Transform(graph);
         _logger.LogInformation("Completed all compiler passes successfully");
-        graph = linkIdenticalnodesPass.Transform(graph);
-        
         // Transform to code (layout)
         var project = computeToCodePass.Transform(graph, dataManager);
+        _logger.LogInformation("Executing memoization pass");
         project = memoizationPass.Transform(project);
 
         return project;

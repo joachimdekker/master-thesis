@@ -3,7 +3,7 @@ using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Representations.Compute.Specialized;
 
-public record Chain(Range Range) : Construct(Range)
+public record Chain(string Name, Range Range) : Construct(Name, Range)
 {
     public record ColumnReference(string chainName, string columnName, Location location) : ComputeUnit(location)
     {
@@ -16,13 +16,13 @@ public record Chain(Range Range) : Construct(Range)
         public string ChainName { get; init; } = chainName;
     }
 
-    public string Name { get; init; }
-
     public List<ChainColumn> Columns { get; init; } = [];
 
     public DataReference Data { get; set; }
     
     public ChainStructureData StructureData { get; set; } = new();
+    
+    public int NoBaseCases => Columns.OfType<RecursiveChainColumn>().Select(x => x.NoBaseCases).Max();
 }
 
 public abstract record ChainColumn

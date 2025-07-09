@@ -4,6 +4,7 @@ using ExcelCompiler.Representations.References;
 using ExcelCompiler.Representations.Structure;
 using ComputeTable = ExcelCompiler.Representations.Compute.Specialized.Table;
 using Table = ExcelCompiler.Representations.Structure.Table;
+using Type = ExcelCompiler.Representations.Compute.Type;
 
 namespace ExcelCompiler.Passes.Compute;
 
@@ -59,7 +60,7 @@ public class ExtractComputeTables
             {
                 Name = name,
                 ColumnType = type,
-                Type = firstCell.Type,
+                Type = new Type(firstCell.Type),
                 Computation = computation
             };
 
@@ -84,9 +85,11 @@ file record TableComputationConverter(Table Table) : UnitComputeGraphTransformer
 
         // Get the column
         string columnName = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Key;
+        LineSelection column = Table.Columns.Single(kv => kv.Value.Range.Contains(reference)).Value;
 
         // Create the reference
-        var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, location)
+        int index = cellReference.Reference.Row - column.Range.From.Row;
+        var tableCellReference =  new TableColumn.CellReference(Table.Name, columnName, index, location)
         {
             Dependencies = dependencies.ToList(),
         };

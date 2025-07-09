@@ -43,7 +43,7 @@ public class ExtractStructureData
         // Get the data columns, then get the initializers
         IEnumerable<ColumnData> columns =
             from column in chain.Columns.OfType<DataChainColumn>()
-            let data = column.Location.Select(l => grid[l]).ToList()
+            let data = column.Location.Skip(chain.NoBaseCases).Select(l => grid[l]).ToList()
             select new ColumnData()
             {
                 ColumnId = column.Name,
@@ -53,7 +53,7 @@ public class ExtractStructureData
 
         IEnumerable<ColumnData> initializers =
             from column in chain.Columns.OfType<RecursiveChainColumn>()
-            let initializer = column.Location.Where((_, i) => i < column.NoBaseCases).Select(l => grid[l]).ToList()
+            let initializer = column.Location.Take(column.NoBaseCases).Select(l => grid[l]).ToList()
             select new ColumnData()
             {
                 ColumnId = column.Name,
@@ -65,7 +65,7 @@ public class ExtractStructureData
         {
             StructureId = chain.Name,
             Columns = columns.ToList(),
-            Initialisations = initializers.ToList(),
+            Initialisations = initializers.Where(c => c.Data.Count > 0).ToList(),
         };
     }
 
@@ -85,7 +85,7 @@ public class ExtractStructureData
         return new TableStructureData()
         {
             StructureId = table.Name,
-            Columns = columns.ToList(),
+            Columns = columns.ToList()
         };
     }
 }

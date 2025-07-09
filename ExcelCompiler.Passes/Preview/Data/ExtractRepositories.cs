@@ -2,6 +2,7 @@ using ExcelCompiler.Representations.Data.Preview;
 using ExcelCompiler.Representations.Data.Preview.Specialized;
 using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.Structure;
+using ExcelCompiler.Representations.Structure.Formulas;
 using IDataRepository = ExcelCompiler.Representations.Data.Preview.IDataRepository;
 using InMemoryDataRepository = ExcelCompiler.Representations.Data.Preview.InMemoryDataRepository;
 
@@ -44,8 +45,8 @@ public class ExtractRepositories
             var columnRange = chain.Columns[name];
             var columnData = columnRange.Select(cell => cell switch
             {
-                EmptyCell => type.GetDefaultValue(),
-                ValueCell vcell => vcell.Value,
+                EmptyCell or FormulaCell => type.GetDefaultValue(),
+                ValueCell vcell => vcell.Value, 
                 _ => throw new InvalidOperationException("Unsupported cell type.")
             }).ToList();
             return (name, columnData);
@@ -60,7 +61,7 @@ public class ExtractRepositories
                 {
                     return l switch
                     {
-                        EmptyCell => type.GetDefaultValue(),
+                        EmptyCell or FormulaCell => type.GetDefaultValue(),
                         ValueCell vcell => vcell.Value,
                         _ => throw new InvalidOperationException("Unsupported cell type.")
                     };

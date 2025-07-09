@@ -3,18 +3,21 @@ using ExcelCompiler.Representations.Compute.Specialized;
 using ExcelCompiler.Representations.References;
 using TableReference = ExcelCompiler.Representations.Compute.TableReference;
 using DefaultComputation = ExcelCompiler.Representations.Compute.Nil;
+using Type = ExcelCompiler.Representations.Compute.Type;
 
 namespace ExcelCompiler.Passes.Compute;
 
 [CompilerPass]
 public class TypeInference
 {
+    private static readonly Type BooleanType = new Type("boolean");
+    
     public static readonly Dictionary<string, Func<List<Type>, Type>> InferenceRules = new()
     {
         {
             "SUM", types =>
             {
-                if (!types.All(t => t == types[0]))
+                if (types.Any(t => t != types[0]))
                     throw new InvalidOperationException("SUM is not supported for types other than double");
 
                 return types[0];
@@ -29,7 +32,7 @@ public class TypeInference
                     throw new InvalidOperationException("IF is not supported for more than three types");
                 }
 
-                if (types[0] != typeof(bool))
+                if (types[0] != BooleanType)
                     throw new InvalidOperationException("IF is not supported for types other than bool");
                 if (types[1] != types[2])
                     throw new InvalidOperationException("IF is not supported for types other than the same type");
@@ -62,7 +65,8 @@ public class TypeInference
         if (types[0] != types[1]) throw new InvalidOperationException($"{name} is not supported for types other than the same type");
 
         // Should be a numerical type
-        if (types[0] != typeof(double) && types[0] != typeof(int) && types[0] != typeof(long)) throw new InvalidOperationException($"{name} is not supported for types other than double, int, or long");
+        string[] numericalTypes = ["Double", "double", "int", "Int32", "long"];
+        if (!numericalTypes.Contains(types[0].Name)) throw new InvalidOperationException($"{name} is not supported for types other than double, int, or long");
 
         return types[0];
     }
@@ -227,13 +231,13 @@ public record TypeInferenceTransformer : UnitComputeGraphTransformer
     {
         return nil with
         {
-            Type = typeof(double), // Set the type to double for now.
+            Type = new Type(typeof(double)), // Set the type to double for now.
         };
     }
 
     protected override ComputeUnit Input(Input input, IEnumerable<ComputeUnit> _)
     {
-        return input with { Type = input.Type ?? typeof(double) };
+        return input with { Type = input.Type ?? new Type(typeof(double)) };
     }
 
     private ComputeUnit UpdateCellReferenceWithTypeAndDependencies(
@@ -273,7 +277,20 @@ protected override ComputeUnit Other(ComputeUnit unit, IEnumerable<ComputeUnit> 
             or ComputedChainColumn.CellReference 
             or RecursiveChainColumn.RecursiveCellReference =>
             UpdateCellReferenceWithTypeAndDependencies(unit, dependencies),
+        TableColumn.CellReference tableCellReference => TableCellReference(tableCellReference, dependencies),
         _ => throw new InvalidOperationException($"Unsupported cell type: {unit.GetType()}."),
+    };
+}
+
+private ComputeUnit TableCellReference(TableColumn.CellReference tableCellReference, IEnumerable<ComputeUnit> dependencies)
+{
+    var table = _constructs.OfType<Table>().Single(t => t.Location.Contains(tableCellReference.Location));
+    var column = table.Columns.Single(c => c.Location.Contains(tableCellReference.Location));
+
+    return tableCellReference with
+    {
+        Dependencies = dependencies.ToList(),
+        Type = column.Type
     };
 }
 }

@@ -5,6 +5,8 @@ using ExcelCompiler.Representations.CodeLayout.TopLevel;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Compute.Specialized;
 using ExcelCompiler.Representations.Data.Preview;
+using ExcelCompiler.Representations.Helpers;
+using ListOf = ExcelCompiler.Representations.CodeLayout.ListOf;
 using Type = ExcelCompiler.Representations.CodeLayout.Type;
 
 namespace ExcelCompiler.Passes.Preview.Code;
@@ -31,7 +33,7 @@ public class GenerateTypes
     {
         var typeTransformer = new TypeTransformer();
 
-        var properties = chain.Columns.OfType<DataChainColumn>().Select(c => new Property(c.Name, new ListOf(new Type(c.Type)))).ToList();
+        var properties = chain.Columns.OfType<DataChainColumn>().Select(c => new Property(c.Name, new ListOf(c.Type.Convert()))).ToList();
         var computedProperties = chain.Columns
             .OfType<ComputedChainColumn>()
             .Select(c =>
@@ -80,8 +82,8 @@ public class GenerateTypes
     {
         var typeTransformer = new TypeTransformer();
 
-        var properties = table.Columns.Where(tc => tc.Computation is null).Select(tc => new Property(tc.Name, new Type(tc.Type))).ToList();
-        var computedProperties = table.Columns.Where(tc => tc.Computation is not null).Select(tc => new Property(tc.Name, new Type(tc.Type))
+        var properties = table.Columns.Where(tc => tc.Computation is null).Select(tc => new Property(tc.Name, tc.Type.Convert())).ToList();
+        var computedProperties = table.Columns.Where(tc => tc.Computation is not null).Select(tc => new Property(tc.Name, tc.Type.Convert())
         {
             Getter = typeTransformer.Transform(tc.Computation!),
         }).ToList();
@@ -142,7 +144,7 @@ file record RecursiveTypeTransformer(Variable RecursionLevel) : TypeTransformer(
 
     private Expression ComputedCellReference(ComputedChainColumn.CellReference unit, IEnumerable<Expression> _)
     {
-        return new ListAccessor(new Type(unit.Type), new Variable(unit.ColumnName), new FunctionCall("-", [RecursionLevel, new Constant(unit.Index + 1)]));
+        return new ListAccessor(unit.Type.Convert(), new Variable(unit.ColumnName), new FunctionCall("-", [RecursionLevel, new Constant(unit.Index + 1)]));
     }
 
     private Expression TableCellReference(TableColumn.CellReference unit, IEnumerable<Expression> _)
