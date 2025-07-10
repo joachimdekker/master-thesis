@@ -56,8 +56,10 @@ public class ConversionWorker
         // Data
         ExtractRepositories extractRepositoriesPass = _serviceProvider.GetRequiredService<ExtractRepositories>();
 
-        // Compute
+        // Code
         InjectMemoization memoizationPass = _serviceProvider.GetRequiredService<InjectMemoization>();
+        InsertStatements insertStatementsPass = _serviceProvider.GetRequiredService<InsertStatements>();
+        InlineVariables inlineVariablesPass = _serviceProvider.GetRequiredService<InlineVariables>();
         
         // Open the stream
         _logger.LogInformation("Opening file {Location}", _options.Location);
@@ -97,7 +99,10 @@ public class ConversionWorker
         var project = computeToCodePass.Transform(graph, dataManager);
         _logger.LogInformation("Executing memoization pass");
         project = memoizationPass.Transform(project);
-
+        _logger.LogInformation("Executing inline variables pass");
+        project = inlineVariablesPass.Transform(project);
+        project = insertStatementsPass.Transform(project);
+        
         return project;
     }
 }

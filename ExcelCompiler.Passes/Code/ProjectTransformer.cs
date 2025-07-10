@@ -17,7 +17,7 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
     
     protected abstract TStat Declaration(Declaration declaration, TExpr expression);
     
-    protected abstract TStat Assignment(Assignment assignment, TExpr expression);
+    protected abstract TExpr Assignment(Assignment assignment, TExpr expression);
     
     protected abstract TStat Return(Return returnStatement, TExpr expression);
     
@@ -39,6 +39,7 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
     
     protected abstract TExpr ObjectCreation(ObjectCreation objectCreation, List<TExpr> arguments);
 
+    protected abstract TExpr Let(Let let, TExpr assignment, TExpr expression);
     
     public TRes Transform(Project project)
     {
@@ -82,7 +83,6 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
         return statement switch
         {
             Declaration declaration => Declaration(declaration, Transform(declaration.Expression)),
-            Assignment assignment => Assignment(assignment, Transform(assignment.Expression)),
             Return @return => Return(@return, Transform(@return.ReturnExpr)),
             ExpressionStatement expressionStatement => ExpressionStatement(expressionStatement, Transform(expressionStatement.Expression)),
             If ifStatement => If(ifStatement, Transform(ifStatement.Condition), ifStatement.Then.Select(Transform), ifStatement.Else?.Select(Transform)),
@@ -105,6 +105,8 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
             ObjectCreation objectCreation => ObjectCreation(objectCreation,
                 objectCreation.Arguments.Select(Transform).ToList()),
             PropertyAccess propertyAccess => PropertyAccess(propertyAccess, Transform(propertyAccess.Self)),
+            Assignment assignment => Assignment(assignment, Transform(assignment.Value)),
+            Let let => Let(let, Transform(let.Assignment),Transform(let.Expression)),
             _ => throw new InvalidOperationException($"Unsupported expression {expression.GetType().Name}")
         };
     }
@@ -116,6 +118,17 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
 
 public abstract record UnitProjectTransformer : ProjectTransformer<Project, Class, Method, Property, Statement, Expression>
 {
+    protected override Expression Let(Let let, Expression assignment, Expression expression)
+    {
+        if (assignment is not Assignment a) throw new InvalidOperationException("Assignment is not an assignment");
+        
+        return let with
+        {
+            Assignment = a,
+            Expression = expression
+        };
+    }
+
     protected override Project Project(Project project, List<Class> classes)
     {
         return project with
@@ -159,11 +172,11 @@ public abstract record UnitProjectTransformer : ProjectTransformer<Project, Clas
         };
     }
     
-    protected override Statement Assignment(Assignment assignment, Expression expression)
+    protected override Expression Assignment(Assignment assignment, Expression expression)
     {
         return assignment with
         {
-            Expression = expression
+            Value = expression
         };
     }
     
@@ -326,4 +339,7 @@ public abstract record BulkTransformer<TRes> : ProjectTransformer<TRes, TRes, TR
 
     protected override TRes ListAccessor(ListAccessor listAccessor, TRes list, TRes accessor)
         => Combine(new[] { list, accessor });
+
+    protected override TRes Let(Let let, TRes assignment, TRes expression) 
+        => Combine(new[] { assignment, expression });
 }

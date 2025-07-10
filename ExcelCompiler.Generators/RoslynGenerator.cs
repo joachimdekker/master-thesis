@@ -139,7 +139,6 @@ public class RoslynGenerator
         return statement switch
         {
             Return @return => ReturnStatement(Generate(@return.ReturnExpr)),
-            Assignment assignment => ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(assignment.Variable.Name), Generate(assignment.Expression))),
             Declaration declaration => LocalDeclarationStatement(
                 VariableDeclaration(IdentifierName(declaration.Variable.Type.Name)).AddVariables(
                     VariableDeclarator(declaration.Variable.Name)
@@ -160,6 +159,7 @@ public class RoslynGenerator
     {
         return expression switch
         {
+            Assignment assignment => AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(assignment.Variable.Name), Generate(assignment.Value)),
             Constant { Type.Name: "Double" or "double" } constant => LiteralExpression(SyntaxKind.NumericLiteralExpression,
                 Literal((double)constant.Value)),
             Constant { Type.Name: "String" or "string" } constant => LiteralExpression(SyntaxKind.StringLiteralExpression,
@@ -198,6 +198,7 @@ public class RoslynGenerator
                                 Generate(mapAccessor.Accessor))))),
         _ => throw new InvalidOperationException($"Expression {expression.GetType()} is not supported at the time")
         };
+        
     }
 
     private ExpressionSyntax GenerateConstructor(ObjectCreation objectCreation)

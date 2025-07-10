@@ -1,6 +1,7 @@
 using ExcelCompiler.Passes.Helpers;
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.CodeLayout.Statements;
+using Assignment = ExcelCompiler.Representations.CodeLayout.Expressions.Assignment;
 
 namespace ExcelCompiler.Representations.CodeLayout.TopLevel;
 
@@ -24,8 +25,8 @@ public record Class : Type
         var arguments = settableMembers.Select(x => new Variable(x.Name.ToCamelCase(), x.Type)).ToArray();
         
         // Generate body
-        var body = settableMembers.Select(x => new Assignment(new Variable(x.Name.ToPascalCase(), x.Type),
-            new Variable(x.Name.ToCamelCase(), x.Type)));
+        var body = settableMembers.Select(x =>  new ExpressionStatement(new Assignment(new Variable(x.Name.ToPascalCase(), x.Type),
+            new Variable(x.Name.ToCamelCase(), x.Type))));
 
         // Generate constructor
         return new Method(Name, arguments, body.ToArray<Statement>());

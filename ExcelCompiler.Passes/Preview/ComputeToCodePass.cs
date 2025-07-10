@@ -138,11 +138,13 @@ public class ComputeToCodePass
 
     private Statement[] GenerateStatements(ComputeGraph graph)
     {
-        List<Statement> statements = [];
+        ICollection<Statement> statements = [];
 
         // Create a variable per cell and start at the roots
         foreach (var cell in graph.EntryPointsOfCells().Reverse())
         {
+            if (_computeGraph.Inputs.Contains(cell)) continue;
+            
             if (cell is ConstructCreation cc)
             {
                 //Construct construct = _computeGraph.Constructs.Single(c => c.Id == cc.ConstructId);
@@ -154,17 +156,28 @@ public class ComputeToCodePass
             }
             
             string varName = VariableName(cell);
-            var experssion = Generate(cell);
             statements.Add(new Declaration(new Variable(varName.ToCamelCase(), cell.Type.Convert()), Generate(cell)));
         }
 
+        // Instead of the statement, we use a Let In
+        
+        
         // Return all the roots
         // Right now, we only support a single root
         var root = graph.Roots.Single();
         Type rootType = new Type("double");
-        statements.Add(new Return(new Variable(VariableName(root), rootType)));
+        Expression let = statements.Reverse().Aggregate( new Variable(VariableName(root), rootType),
+            (Expression acc, Statement stat) => 
+            {
+                if (stat is not Declaration decl) throw new InvalidOperationException();
+                
+                Expression expr = decl.Expression;
+                Variable var = decl.Variable;
+                
+                return new Let(new Assignment(var, expr), acc);
+            });
 
-        return statements.ToArray();
+        return [new Return(let)];
     }
 
     private Expression Generate(ComputeUnit cell)
