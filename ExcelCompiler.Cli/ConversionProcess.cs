@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ExtractRepositories = ExcelCompiler.Passes.Preview.Data.ExtractRepositories;
+using Range = ExcelCompiler.Representations.References.Range;
 
 namespace ExcelCompiler.Cli;
 
@@ -28,7 +29,7 @@ public class ConversionWorker
         _options = options.Value;
     }
 
-    public async Task<Project> ExecuteAsync(ICollection<Location> inputs, ICollection<Location> outputs, CancellationToken cancellationToken = default)
+    public async Task<Project> ExecuteAsync(ICollection<Location> singleInputs, ICollection<Range> structureInputs, ICollection<Location> outputs, CancellationToken cancellationToken = default)
     {
         // Get the Compiler Passes from the service provider
 
@@ -45,11 +46,8 @@ public class ConversionWorker
         ExtractConstructs extractConstructsPass = _serviceProvider.GetRequiredService<ExtractConstructs>();
         ReplaceConstructDependencies replaceConstructDependenciesPass = _serviceProvider.GetRequiredService<ReplaceConstructDependencies>();
         Passes.Preview.ComputeToCodePass computeToCodePass = _serviceProvider.GetRequiredService<Passes.Preview.ComputeToCodePass>();
-        
         TypeInference typeInferencePass = _serviceProvider.GetRequiredService<TypeInference>();
         PruneEmptyCells pruneEmptyCellsPass = _serviceProvider.GetRequiredService<PruneEmptyCells>();
-
-        LinkIdenticalnodes linkIdenticalnodesPass = _serviceProvider.GetRequiredService<LinkIdenticalnodes>();
         ExtractStructureData structureDataPass = _serviceProvider.GetRequiredService<ExtractStructureData>();
         InsertConstructs insertConstructsPass = _serviceProvider.GetRequiredService<InsertConstructs>();
         
@@ -70,7 +68,7 @@ public class ConversionWorker
         _logger.LogInformation("Executing Excel to Structure pass");
         Workbook workbook = excelToStructurePass.Transform(excelFile);
         List<Area> areas = detectAreasPass.Detect(workbook).Where(a => !a.Range.IsSingleReference).ToList();
-        List<Construct> constructs = detectStructuresPass.Detect(workbook, areas);
+        List<Construct> constructs = detectStructuresPass.Detect(workbook, areas, structureInputs.ToList());
         workbook.Constructs.AddRange(constructs);
         
         // Extract data
@@ -80,7 +78,7 @@ public class ConversionWorker
         // Process the graph
         _logger.LogInformation("Executing Structure to Compute pass");
         var grid = structureToComputePass.Transform(workbook, outputs);
-        grid = insertInputsPass.Transform(grid, inputs);
+        grid = insertInputsPass.Transform(grid, singleInputs);
         _logger.LogInformation("Executing Extract Compute Tables pass");
         grid = extractConstructsPass.Generate(grid, constructs);
         grid = structureDataPass.Transform(grid);

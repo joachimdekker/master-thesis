@@ -7,14 +7,8 @@ using System.Threading.Tasks;
 namespace ExcelCompiler.Generated;
 public class Program
 {
-    public double Main(double monthlyBudgetReportE10)
+    public double Main(double monthlyBudgetReportE10, List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17)
     {
-        List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17 = new List<MonthlyBudgetReportC14F17Item>
-        {
-            new MonthlyBudgetReportC14F17Item(6000, 5800),
-            new MonthlyBudgetReportC14F17Item(1000, 2300),
-            new MonthlyBudgetReportC14F17Item(2500, 1500)
-        };
         double monthlyBudgetReportE9 = monthlyBudgetReportC14F17.Select(t => t.Actual).Sum();
         List<TBL_MonthlyExpensesItem> tBL_MonthlyExpenses = new List<TBL_MonthlyExpensesItem>
         {

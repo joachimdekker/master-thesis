@@ -138,7 +138,8 @@ public class ExtractConstructs
         Representations.Compute.Specialized.Chain computedChain = new(chain.Name, chain.Location)
         {
             Columns = columns,
-            Data = new DataReference(chain.Location.From)
+            Data = new DataReference(chain.Location.From),
+            IsInput = chain.IsInput
         };
         
         // Update the columns once more
@@ -213,7 +214,8 @@ public class ExtractConstructs
 
         return new ComputeTable(table.Name, table.Location, new DataReference(table.Location.From))
         {
-            Columns = columns
+            Columns = columns,
+            IsInput = table.IsInput
         };
     }
 }

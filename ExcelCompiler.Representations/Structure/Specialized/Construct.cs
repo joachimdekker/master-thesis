@@ -10,4 +10,6 @@ public class Construct
     public required string Name { get; set; }
     
     public required Range Location { get; set; }
+
+    public bool IsInput = false;
 }

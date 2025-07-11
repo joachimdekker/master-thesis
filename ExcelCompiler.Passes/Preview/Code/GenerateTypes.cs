@@ -14,9 +14,9 @@ namespace ExcelCompiler.Passes.Preview.Code;
 [CompilerPass]
 public class GenerateTypes
 {
-    public List<Class> Generate(ComputeGraph graph, DataManager dataManager)
+    public List<(Construct Construct, Class Type)> Generate(ComputeGraph graph, DataManager dataManager)
     {
-        var types =
+        IEnumerable<(Construct Construct, Class Type)>? types =
             from construct in graph.Constructs
             let type = construct switch
             {
@@ -24,7 +24,7 @@ public class GenerateTypes
                 Chain chain => Generate(chain),
                 _ => throw new InvalidOperationException()
             }
-            select type;
+            select (construct, type);
 
         return types.ToList();
     }

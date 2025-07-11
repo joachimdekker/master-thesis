@@ -19,6 +19,7 @@ public class ReplaceConstructDependencies
     {
         List<ComputeUnit> dependencies = arg switch
         {
+            { IsInput: true } => [],
             Table table => table.StructureData!.Columns.SelectMany(c => c.Data)
                 .Concat(table.StructureData.Constants.Select(c => c.Value))
                 .ToList(),

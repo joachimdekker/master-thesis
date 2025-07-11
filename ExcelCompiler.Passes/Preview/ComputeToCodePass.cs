@@ -27,6 +27,7 @@ public class ComputeToCodePass
     private DataManager _dataManager;
     private ComputeGraph _computeGraph;
     private List<Class> _classes;
+    private Dictionary<Construct, Type> _constructRepresentation= new();
     
     public ComputeToCodePass(GenerateTypes typeGenerator)
     {
@@ -48,21 +49,34 @@ public class ComputeToCodePass
         _computeGraph = computeGraph;
         
         var types = _typeGenerator.Generate(computeGraph, dataManager);
-        _classes = types;
-        output.AddRange(types);
+        _classes = types.Select(t => t.Type).ToList();
+        output.AddRange(_classes);
 
+        _constructRepresentation = types.ToDictionary(t => t.Construct, t =>
+        {
+            Type type = t.Type;
+            if (t.Construct is Table)
+            {
+                type = new ListOf(type);
+            }
+            
+            return type;
+        });
+        
         // var constructVariables = PopulateConstructClasses(computeGraph, dataManager, types);
         //
         // var tableVariables = GenerateTableVars(computeGraph, dataManager, types);
 
-        List<Input> inputs = computeGraph.Inputs.ToList();
+        var inputs = computeGraph.Inputs;
         Variable[] parameters = inputs.Select(i => new Variable(VariableName(i.Location), i.Type.Convert())).ToArray();
+        Variable[] structureParams = computeGraph.Constructs.Where(c => c.IsInput).Select(c => new Variable(c.Id.ToCamelCase(), _constructRepresentation[c])).ToArray();
+        
         // var body = constructVariables.Concat(GenerateStatements(computeGraph)).Where(s => s is not Declaration a || parameters.All(p => p.Name != a.Variable.Name)).ToArray();
         var body = GenerateStatements(computeGraph)
             .Where(s => s is not Declaration a || parameters.All(p => p.Name != a.Variable.Name))
             .ToArray();
         
-        var main = new Method("Main", parameters, body);
+        var main = new Method("Main", [..parameters, ..structureParams], body);
         var program = new Class("Program", [], [main]);
 
         output.Add(program);
@@ -147,7 +161,10 @@ public class ComputeToCodePass
             
             if (cell is ConstructCreation cc)
             {
-                //Construct construct = _computeGraph.Constructs.Single(c => c.Id == cc.ConstructId);
+                Construct construct = _computeGraph.Constructs.Single(c => c.Id == cc.ConstructId);
+                
+                if (construct.IsInput) continue;
+                
                 string constructName = cc.ConstructId.ToCamelCase();
                 var expression = CreateConstruct(cc);
                 Type type = expression.Type; 
