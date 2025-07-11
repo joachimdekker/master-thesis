@@ -17,7 +17,7 @@ for (int i = 0; i < count; i++)
 {
     var input = inputs[i % inputs.Length];
     sw.Restart();
-    var output = program.Main(1912);
+    var output = program.Main();
     sw.Stop();
     
     total += output;

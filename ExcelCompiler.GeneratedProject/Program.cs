@@ -7,9 +7,20 @@ using System.Threading.Tasks;
 namespace ExcelCompiler.Generated;
 public class Program
 {
-    public double Main(double monthlyBudgetReportE10, List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17)
+    public double Main()
     {
+        List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17 = new List<MonthlyBudgetReportC14F17Item>
+        {
+            new MonthlyBudgetReportC14F17Item(6000, 5800),
+            new MonthlyBudgetReportC14F17Item(1000, 2300),
+            new MonthlyBudgetReportC14F17Item(2500, 1500)
+        };
         double monthlyBudgetReportE9 = monthlyBudgetReportC14F17.Select(t => t.Actual).Sum();
+        InterestC4F65 interestC4F65 = new InterestC4F65(new List<double> { 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500 });
+        double interestF65 = interestC4F65.TotalAt(60);
+        double interestF5 = interestC4F65.TotalAt(0);
+        double interestJ11 = interestC4F65.Deposit.Sum();
+        double interestJ12 = interestF65 - interestF5 - interestJ11;
         List<TBL_MonthlyExpensesItem> tBL_MonthlyExpenses = new List<TBL_MonthlyExpensesItem>
         {
             new TBL_MonthlyExpensesItem(40, 40),
@@ -73,13 +84,8 @@ public class Program
             new TBL_MonthlyExpensesItem(450, 450)
         };
         double monthlyBudgetReportE8 = tBL_MonthlyExpenses.Select(t => t.ActualCost).Sum();
-        double monthlyBudgetReportE7 = monthlyBudgetReportE9 + monthlyBudgetReportE10 - monthlyBudgetReportE8;
+        double monthlyBudgetReportE7 = monthlyBudgetReportE9 + interestJ12 - monthlyBudgetReportE8;
         double monthlyBudgetReportD9 = monthlyBudgetReportC14F17.Select(t => t.Projected).Sum();
-        InterestC4F65 interestC4F65 = new InterestC4F65(new List<double> { 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500 });
-        double interestF65 = interestC4F65.TotalAt(60);
-        double interestF5 = interestC4F65.TotalAt(0);
-        double interestJ11 = interestC4F65.Deposit.Sum();
-        double interestJ12 = interestF65 - interestF5 - interestJ11;
         double monthlyBudgetReportD8 = tBL_MonthlyExpenses.Select(t => t.ProjectedCost).Sum();
         double monthlyBudgetReportD7 = monthlyBudgetReportD9 + interestJ12 - monthlyBudgetReportD8;
         double monthlyBudgetReportF7 = monthlyBudgetReportE7 - monthlyBudgetReportD7;

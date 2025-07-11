@@ -34,8 +34,8 @@ IServiceProvider provider = services.BuildServiceProvider();
 // Run the worker
 ConversionWorker worker = provider.GetRequiredService<ConversionWorker>();
 var project = await worker.ExecuteAsync(
-    [Location.FromA1("E10", "Monthly budget report")], 
-    [Range.FromString("C14:F17", "Monthly budget report")], 
+    [], //[Location.FromA1("E10", "Monthly budget report")], 
+    [], //[Range.FromString("C14:F17", "Monthly budget report")], 
     [Location.FromA1("F7", "Monthly budget report"), ]);
     
 // Run the project creation worker
