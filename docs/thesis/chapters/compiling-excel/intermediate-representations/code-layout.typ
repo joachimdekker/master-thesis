@@ -45,7 +45,7 @@ More interesting is the function call. This expression represents a call to a fu
 
 A different function call is the anonymous function or lambda function. We represent this function with a separate entity. The lambda function is mostly used in functional contexts, such as the LINQ DSL in C\#. [Perhaps some more explanations?]
 
-Closely related to the member function call, the property accessor represents the access to a property of an object. It contains an expression that should be evaluated to an object. This is mostly used within Lambda functions, for instance when using a LINQ expression to select a whole column from a table. In C\# this would be `table.Select(r => r.Column1)` which uses a lambda function.
+Closely related to the member function call, the property accessor represents the access to a property of an object. It contains asn expression that should be evaluated to an object. This is mostly used within Lambda functions, for instance when using a LINQ expression to select a whole column from a table. In C\# this would be `table.Select(r => r.Column1)` which uses a lambda function.
 
 Finally, it is possible to create an object. This is mostly used when creating the table using internal data. The object creation is based on the constructors of the created type, and contains expressions for the arguments to construct the object.
 

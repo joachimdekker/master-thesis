@@ -1,6 +1,3 @@
-#import "@preview/zebraw:0.5.2": *
-#show: zebraw.with(numbering: false, inset: (left: 2em), )
-
 = Compute Model
 The compute IR models the underlying computational model of Excel, powered by Excel's Formula engine. This layer considers the whole Excel workbook and represents the computation beyond cells and worksheets. 
 
@@ -40,6 +37,23 @@ type Reference =
   | CellReference
   | RangeReference
 ```
+
+#show raw: set text(font: "JetBrains Mono")
+
+#figure(
+  ```
+    ComputeUnit = (location: Location, dependencies: ComputeUnit[], type: Type)
+    |- Nil
+    |- ConstantValue += (value: Value) 
+    |- Reference
+       |- TableReference += (tableName: string, columnName: string)
+       |- CellReference += (reference: Location)
+       |- RangeReference += (from: Location, to: Location) 
+    |- DataReference
+    |- Function
+  ```,
+  
+)
 
 == Compute Unit
 At the core of the compute model lies the compute unit. This unit represents a basic operation with input and output. Compute units can be connected to each other, forming a network or flow of computations. When compute unit _A_ uses the output of compute unit _B_ as input, then we say that unit _B_ is a _dependency_ of unit _A_. Conversely, unit _A_ is a _dependent_ of unit _B_.

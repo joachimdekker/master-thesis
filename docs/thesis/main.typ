@@ -1,12 +1,20 @@
 #include "frontpage.typ"
 #include "abstract.typ"
 
+#import "@preview/wordometer:0.1.4": word-count, total-words
+
+// #show: word-count
+
 #import "utils/chapters.typ": chapter
 
 #text([Contents], weight: "bold", size: 2em)
 #v(2em)
 #outline(title: none, indent: auto, depth: 3)
 #pagebreak(weak: true)
+
+#set par(
+  justify: true,
+)
 
 #let x = context if (not query(heading.where(level: 1).after(here()))
       .map(h => h.location().page())
@@ -28,10 +36,23 @@
   link(l, [Chapter #number])
 }
 
-// Make lvl 2 headings bigger since they should be lvl 1
-#show heading.where(level: 2): set text(size:1.5em)
+#show ref: it => if it.element == none or it.element.func() != heading or it.element.level <= 3 { it } else {
+  let l = it.target
+  let h = it.element
 
-#show heading.where(level: 3): set text(size:1.3em)
+  let count = numbering("1.1", ..counter(heading).at(l).slice(0, 3))
+
+  link(l, [Section #count])
+}
+
+// Make lvl 2 headings bigger since they should be lvl 1
+#show heading.where(level: 2): it => text(it, size:1.5em)
+
+#show heading.where(level: 3): set text(size:1.5em)
+
+#show heading.where(level: 4): it => text([#it.body #v(-0.5em)], size: 1.3em)
+
+#show heading.where(level: 5): it => [_#it.body.text #h(1cm)_]
 
 // Chapter page
 #show heading.where(level: 1): it => {
@@ -39,7 +60,6 @@
   let number = context counter(heading).get().at(0)
   place(bottom, float: false, dy: -0em, dx: -2em, scope: "column", text(number, size: 30em, fill: gray))
   let content = [
-    #set align(right)
     #text([_Chapter #number _], weight: "regular", size: 2em)
     #v(-2.5em)
     #text(it.body, size: 3em)
@@ -56,26 +76,22 @@
       sections = sections.before(bib.location())
     }
     v(2em)
+    set align(left)
     outline(title: none, target: sections, indent: 50%)
   }
   
-  layout(size => {
-    let half = 50% * size.height
-    let pageHalf = 50% * page.height
-
-    let titleHeight = measure(content).height
-    let outlineHeight = measure(topLevelOutline).height
-    
-    v(half - (titleHeight + outlineHeight) / 2)
-  })
-  
+  set align(horizon + right)
   content
+  topLevelOutline
   
 
-  topLevelOutline
 }
 
+#show raw: set text(font: "JetBrains Mono")
+
 // ========================================================== //
+
+// There are #total-words no words.
 
 #include "chapters/introduction/main.typ"
 
@@ -87,3 +103,4 @@
 
 #pagebreak()
 #bibliography("zotero.bib", title: [Bibliography])
+

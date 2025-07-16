@@ -1,8 +1,12 @@
 #let spreadsheet(
   columns: 3,
+  dependencies: (),
+  hasHeader: false,
+  hasFooter: false,
+  hasTitle: false,
   ..content
 ) = {
-  let border(t) = table.cell(text(t, fill: luma(80%), weight: "bold", size: 0.7em), fill: black, inset: 0.5em)
+  let border(t) = table.cell(text(t, fill: luma(80%), weight: "bold", size: 0.7em), fill: black, inset: 0.5em, align: center + horizon,)
 
   let chars = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K")
 
@@ -12,7 +16,7 @@
   
   let sheetArray = content.pos()
   let count = sheetArray.len()
-  let rowCount = calc.div-euclid(count, columns);
+  let rowCount = calc.div-euclid(count, columns) + if (calc.rem(count, columns) == 0) { 0 } else { 1 };
   
   let ri = 1
   for i in range(0, count + rowCount,  step: columns + 1) {
@@ -21,6 +25,32 @@
   }
   
   let tableArgs = topRow + sheetArray
+
+  if dependencies != () {
+    
+  }
+
+  let spreadsheetTable = table(columns: columns + 1, ..tableArgs)
+
+  let beginOffset = if (hasHeader and hasTitle) { 2 } else if (hasHeader or hasTitle) { 1 } else { 0 }
+  let endOffset = if (hasFooter) { 1 } else { 0 }
   
-  return table(columns: columns + 1, ..tableArgs)
+  set table(
+    stroke: (x, y) => (
+      top: if (y >= (rowCount + 1) - endOffset) { 2pt } else { 1pt },
+      bottom: if (y + 1 <= beginOffset) { 2pt } else {1pt},
+      left: 1pt,
+      right: 1pt,
+    ),
+  )
+
+  show table.cell: set align(left)
+  
+  block(
+    stroke: none,
+    [
+      #spreadsheetTable
+    ]
+  )
+  
 }
