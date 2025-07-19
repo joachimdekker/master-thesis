@@ -5,39 +5,39 @@
 
 #chapter("Compiling Excel")
 
-#include "compiler-structure.typ"
+// #include "compiler-structure.typ"
 
-#include "ahead-of-time-compilation.typ"
+// #include "ahead-of-time-compilation.typ"
 
-#include "structure-aware-compilation.typ"
+// #include "structure-aware-compilation.typ"
 
-= High Level Overview
-Before we dive deeper into the representations, it is helpful to discuss the high level overview of the compiler. This section, we walk through the biggest steps of the compiler and relate the different steps and structural models to each other. In subsequent sections, we dive deeper in the actual structure of all the models.
+// = High Level Overview
+// Before we dive deeper into the representations, it is helpful to discuss the high level overview of the compiler. This section, we walk through the biggest steps of the compiler and relate the different steps and structural models to each other. In subsequent sections, we dive deeper in the actual structure of all the models.
 
-#include "examples/budget-example.typ"
+// #include "examples/budget-example.typ"
 
-#include "overview.typ"
+// #include "overview.typ"
 
-#include "intermediate-representations/structural.typ"
+// #include "intermediate-representations/structural.typ"
 #include "intermediate-representations/compute.typ"
-#include "intermediate-representations/data.typ"
+// #include "intermediate-representations/data.typ"
 #include "intermediate-representations/code-layout.typ"
 
 
-#pagebreak()
+// #pagebreak()
 
-#align(
-  center + horizon,
-  [
-    #line(length: 100%)
+// #align(
+//   center + horizon,
+//   [
+//     #line(length: 100%)
 
-    This is the new version of Chapter 2. It is not finished and a lot of the content should be ported over to the new verison. The new version should have more examples, be more understandable and just be more enjoyable to read. Beware that there is totally new information and presentation in here! Please do not skip it :)
+//     This is the new version of Chapter 2. It is not finished and a lot of the content should be ported over to the new verison. The new version should have more examples, be more understandable and just be more enjoyable to read. Beware that there is totally new information and presentation in here! Please do not skip it :)
     
-    #line(length: 100%)
-  ] 
-)
+//     #line(length: 100%)
+//   ] 
+// )
 
-#pagebreak()
+// #pagebreak()
 
 #show figure: it => {
   show raw.where(block: true): it => {
@@ -323,11 +323,13 @@ The structure of the chain-table is similar to the normal table. The chain-table
 // - Using one IR for everything, also the structure is near impossible.
 // - Multiple IRs allow for more granular passes, which make the compiler more maintainable and the code more readable.
 
-= Excelerate
+= Excelerate <sec:excelerate>
 #figure(image("../../images/excel-compiler-overview.png"),
 caption: [Overview of the Excelerate compiler. The phases have been given different colors.])
 
 In this thesis, we introduce Excelerate: the excel compiler that compiles Excel code to C\#. Like we have already discussed in the previous chapter, Excelerate uses structure-aware compilation in order to emit more readable code. Excelerate uses multiple intermediate representations to achieve this. In this subsection, we provide a high-level overview of the compiler and introduce the phases and IRs.
+
+An important design consideration of the Excelerate compiler is the separation of concerns. Within the compiler, we distinguish three phases that rely on eachother but handle separate things. The _Structure Phase_ handles the structure aspect of structure-aware compilation and constructs the structural model. The _Compute Phase_ only deals with the underlying computational model and creates the compute graph, the graph of formula dependencies. Then the _Code Phase_ completes the compilation by converting the compute graph into actual codes as its only concern is the code. This separation of concerns makes the compiler easy to understand and easy to extend.
 
 == High-level overview
 
@@ -435,11 +437,9 @@ Due to the structure-aware compilation, the structures found in the previous pha
   caption: [The compute graph generated for output cell `D5` from the formulae and structures of @fig:overview:structure-representation. Notice the stark difference in representation and simplicity with @fig:family-budget:income-summary-compute-graph where we do not have structures.],
 )<fig:overview:compute-representation>
 
-Besides the computations, we also extract the data into the _Data Model_. The _Data Model_ represents the data and shape of the structures and constants in the spreadsheet. Here, we rely on the type inference being done in the computation phase and the found structures of the structure phase. This results in the following representation
+Besides the computations, we also extract the data of known structures. The _Structure Contents_ represent the data and shape of the structures and constants in the structure. Here, we rely on the type inference being done in the computation phase and the found structures of the structure phase. This results in the following representation
 
-[Insert Data Representation here]
-
-The penultimate step is converting the previously mentioned computational model and data model to the code layout model. In this step, we leave behind the structural compilation, and fully focus on the code. In this last step, we implement a few compiler passes that simplify the code or increase the readability by splitting expressions.
+The penultimate step is converting the previously mentioned computational model together with the structure contents to the code layout model. In this step, we leave behind the structural compilation, and fully focus on the code. In this last step, we implement a few compiler passes that simplify the code or increase the readability by splitting expressions.
 
 [Insert Code Representation here]
 
@@ -447,7 +447,7 @@ Finally, the code is converted to the data model of the Roslyn Compiler Platform
 
 Now that we have given a grand overview, we will dive deeper into the different phases of the compiler. We first discuss the structural phase, pointing out the similarities between the excel spreadsheet and the structural representation. Then, we move over to the compute phase, formally describing the compute model, both in the compute graph and compute grid. We also cover the data phase and representation and discuss how we extract information from this. Finally, we combine the previous two and describe the code representation and the code phase.
 
-= Modeling the workbook
+= Modeling the workbook<sec:structural-phase>
 
 As we have discussed in @sec:trivial-compiler, the structure is of utmost importance for readable code. Hence, it is important to model the structure of the excel workbook. In the first phase of the compiler, the _structural phase_, exactly does this. To capture the design, we use the _structural model_, an intermediate representation designed specifically for the spreadsheet workbook. In this section, we discuss this phase and the accompanying representation along with the passes needed to construct it fully.
 
@@ -524,7 +524,7 @@ For our own intermediate represenation we only consider the worksheets in the `s
 === Extracting the information
 In order to work with the information, we extract the information to our own two-dimensional spreadsheet model. We look at the `sheet.xml` files and parse them to convert the data to our model. When we parse the files, we distinguish between two cells: a _value cell_ and a _formula cell_. The value cell contains constant data and is copied directly without further modification. The formula cell contain a composition of Excel formulae and are parsed before copied to the model. 
 
-The spreadsheet is converted in it's whole, and we might parse sections that we will not use in subsequent steps of the compilation. This is mainly due to the fact that we don't do a dependency analysis in this phase of the compiler.
+The spreadsheet is converted in it's whole, and we might parse sections that we will not use in subsequent steps of the compilation. This is mainly due to the fact that we do not do a dependency analysis in this phase of the compiler.
 
 In order to parse the formula, we use the work of #citeauthor(<aivaloglou_grammar_2015>) who created a near-perfect parser for Excel formulae.  Their "XLParser" tool converts the formula string to a parse tree. We then transform the parse tree to our own abstract syntax tree consisting of basic operations as can be seen in the definition of the tree in @fig:excel:formula-syntax.
 
@@ -781,7 +781,7 @@ The chain table is similar to the table, but an extra reference is added. As suc
 The cell is the atomic unit in a spreadsheet. It represents a constant value or computation depending on the content. A cell is represented by a location and a value. Depending on the value, we assign a special status to the cell. If the content is a raw value like numbers or text, we say that the cell is a _value cell_. If the content is a formula expression that starts with `=`, we call the cell a _formula cell_.
 
 ==== Value Cells
-Value Cells 
+Value Cells are special cells that contain raw values. A value cell will always have a type that can be determined at the time we read the value. For instance, cell `A1` in @chain:example1 is a string value cell, while C3 is a double value cell. We do not distinguish between different numerical types, since Excel does not either.
 
 ==== Formula Cells
 Formula cells are special cells that contain formula and form the basis of the computational model and the transformation of the structural model to the compute model. 
@@ -796,60 +796,236 @@ We do not consider value formatting primarily because Excel stores the content o
 
 That said, the color and fill of the cell can be valuable information when detecting structures, since structures often have the same color in a well-formed spreadsheet. 
 
-=== References
-An important construct we have not talked about is the reference. References are a way to refer to a cell, range or table. They link computations together by representing the (computed) value in another computation. While we consider them to be part of the structure model, they acutally also get used in 
+=== References<subsubsec:references>
+An important construct we have not talked about is the reference. References are a way to refer to a cell, range or table. They link computations together by representing the (computed) value in another computation. While we consider them to be part of the structure model, they actually also get used in other phases of the compiler, as we will use them later int he code generation to link some parts of the code back to the spreadsheets.
 
 // One way to look at a reference is in a _singular_ form. This means that the reference B3 is essentially the same as B3:B3, which denotes a range from cell B3 to cell B3. Semantically, they are the same as they both point to the same cell. 
 
 We distinguish between references to cells like `B3`: _Cell References_; references to ranges like `A1:B3`: _Range References_, and references to tables like `Table[ColumnName]`: _Table References_. We distinguish between these references since they contain information that we can use in further compilation. Take the cell B3 for instance. This cell reference is essentially the same as B3:B3 as they both point to the same cell. However, the B3 cell reference is conceptually different than B3:B3 in programming terms, as the cell reference is just a single value, and the B3:B3 is a singleton array.
 
 ==== Data References
-Cell and Range references are references that reference values and are addressing the structure of the spreadsheet. They cannot reference data that might not be in the spreadsheet yet. For instance, in the budget example, the list of expenses might be different from month to month. To support this, the Excel compiler considers this data (especially in tables and chains at the moment) separately (which we talk about more in @sec:data-model). To reference this data, we use a data reference.
+Cell and Range references are references that reference values and are addressing the structure of the spreadsheet. They cannot reference data that might not be in the spreadsheet yet. For instance, in the budget example, the list of expenses might be different from month to month. To support this, the Excel compiler considers this data (especially in tables and chains at the moment) separately (which we talk about more in the data model). To reference this data, we use a data reference.
 
 = Deriving the Logic
 
-- Introduce the reader to the second area of the compiler: Compute
-- Remind the reader of the Compute IR introduced and convey we will change it up a bit.
+Now that we have the structure of the excel sheets, accompanied by the found structures, we can begin deriving the logic of the workbook. The real magic happens under the hood, where a network of formulas calculates the values of the formula cells. We want to extract this magic from the spreadsheet and translate it to actual code. This is what the Compute Phase of the compiler does: it extracts the computational model found in the network of linked formulas and cells and creates a dependency graph.
 
-== Compute Grid
+We already saw a glimpse of the Compute Phase in the Trivial Compiler in @sec:trivial-compiler, where we explored a simplified version of the Compute Model. Now that we actually have a structural model, we can use it to guide the computation. In this section, we will discuss the full Compute Model and all the compiler passes in the Compute Phase. First, we cover the Compute Unit in more depth, discussing new types of compute unit and the extensibility of the compute unit language. After, we introduce the _Compute Grid_, a datastructure that blends the grid-like structure of the excel sheet with the computational model. Then, we discuss the _Compute Graph_, the heart of the compiler: a representation of the underlying computational model. Finally, we discuss a few more compiler passes.
 
-- Introduce the reader to the compute grid and the references in the compute IR.
-- Describe the pass from the structure to the compute grid.
-  - Mention the structures and that they get special treatment in this IR.
-- Describe the different references possible with an example of the budget spreadsheet.
-- An interesting observation: every converted formula tree is also a tree in the compute grid.
-- Describe other passes that happen at this stage (if any, right now there aren't any).
+// - Introduce the reader to the second area of the compiler: Compute
+// - Remind the reader of the Compute IR introduced and convey we will change it up a bit.
+
+== Compute Unit
+
+#figure(
+  spreadsheet(
+    columns: 4,
+    [], [Projected], [Actual], [Difference],
+    [Income 1], [6.000], [5.800], [=C2-B2],
+    [Income 2], [1.000], [2.300], [=C3-B3],
+    [Extra Income], [2.500], [1.500], [=C4-B4],
+    [], [], [], [],
+    [Balance], [=SUM(D2:D4)], [], []
+  ),
+  caption: [The formulae behind @sps:budget:income. It is clear that there is a relationship between the Projected and Actual column of this table. ],
+  supplement: "Spreadsheet",
+  placement: auto,
+)<sps:compute-unit:budget>
+
+At the core of the compute model lies the compute unit. This unit represents a basic operation with input and output. Compute units can be connected to each other, forming a network or flow of computations. When compute unit _A_ uses the output of compute unit _B_ as input, then we say that unit _B_ is a _dependency_ of unit _A_. Conversely, unit _A_ is a _dependent_ of unit _B_. 
+
+A formula represents a way of computing a value in Excel. Similarly, in Excelerate, the _Compute Unit_ represents a part of the computation that is being done in Excel. We say _part_ here since the Compute Unit often is composed with other Compute Units. To illustrate this, consider the budget income in @sps:compute-unit:budget. The formula in cell `D2` (`= C2 - B2`) can be deconstructed into three Compute Units: the `-` operation or function and the two dependencies to cells `C2` and `B2`. This illustrates the composition of the compute units. Furthermore, when we say that a cell _references_ another cell, structure or compute unit, what we mean is that the cell contains a _reference_ compute unit somewhere in the composition of the compute units in that cell.
+
+As we already saw, there are a few additions to the types of compute unit when compared with the Trivial Compiler in @sec:trivial-compiler. Aside from the simple and generic Function and Constant compute units, the full Compute Model also includes structure-specific units.
+
+=== Generic
+We reiterate the generic compute units for the sake of completeness. The idea of these compute units is that the compiler can always fall back on these units if it detects that structure specific compilation is not possible. For instance, when we do not detect certain structures, we still model their behaviour using normal function and constants, but this will result in less readable code.
+
+==== Constant
+The constant will always be one of the leaves of a composition of compute units. It contains data like a string or a numeric value and is used as arguments for other compute units. 
+
+==== Function
+Functions actually compute data from their arguments. In this phase of the compiler, we only store the signature and arguments of the function and leave the implementation to the next phase. A function will always have dependencies, since it must compute something.
+
+=== Reference
+In the same sense as the MLIR compiler, Excelerate uses lots of references to reference to other structures and IRs. These references often reference to another part of the spreadsheet, or to a structure dynamically. Besides this, we also have structure specific references such as a relative column reference for computed and recursive properties in chains and columns. We will not discuss these here, but instead discuss them in section [insert section about Table/Chain conversion].
+
+==== Normal
+Normal references like the cell, range and table references are references native to Excel. They make use of the references we covered in @subsubsec:references. The normal references reference to an _actual_ location in the spreadsheet and are being used in the Compute Grid to link all compute units together. This means that these references will start without any dependencies, but will eventually depend on the actual compute unit in the cell or range they are referencing to.
+
+The table reference is a bit different than the cell and range references. While it does point to an actual location in the spreadsheet, we do not model it this way. The primary reason for this is the fact that Excelerate views structures like tables as special constructs and allows them to be exchanged for different data. As such, mapping the table reference to an 'hard' range reference referencing a column of a table will over- or underspecify the rows in a user-provided table. 
+
+==== Dynamic
+The structure references are special and are Excelerate-specific. They reference to a certain part of a structure. As we will see in @subsec:compute-grid, references to structures should be made explicit in the compute graph. To illustrate, take @sps:compute-unit:budget, which we already considered to be a table. Notice the `=SUM(D2:D4)` in `B6` which references all the data in the _Difference_ column. We actualy want to replace this range reference with a non-hard-coded reference, which is why we have compute units like _Column Reference_ which references the whole column of a structure, kind of like a more generic Table Reference.
+
+Also when a cell references a single cell in a structure, we need a way to denote this. This is done by looking at the column and the position in the column. For instance, cell C2 would become a _Table Cell Reference_ to the first row of the _Actual_ column or `TableCellReference("Table1", "Actual", 1)`. For the chain, we have similar compute units. The critical reader may already object to this idea, as this notion may break when we introduce data that is different than what was originally in the spreadsheet. We agree, and while we do allow this kind of notation, the compiler will warn the user that it has detected a direct reference to a single cell in the structure.
+
+The exception here is the _Recursive Result Reference_ which is the cell in the last row of a recursive column in a chain-table. The whole purpose of the chain-table is to produce this value, and as such we would like to reference it. The same is true for values in the footers of the structures, which also have special references such as the _Footer Reference_.
+
+
+== Compute Grid<subsec:compute-grid>
+
+Now that we have discussed the compute unit more in-depth, we can finally discuss how it all comes together in the _Compute Grid_ and the _Compute Graph_. We introduce the _Compute Grid_: A sparse two-dimensional grid-like data structure that models the computation done in every individual cell. Essentially, the Compute Grid is the stepping stone between the structure model and the compute graph: it retains the grid-like structure of the structure model, while modelling the calculations according to the compute model. It allows for more granular compilation to the compute model, since we can first convert the cells to the compute model and link them afterwards.
+
+The compute grid is, unlike the structure model, a sparse datastructure. This means that we store the cells by their location in a dictionary. As will become clear in the next subsection, the compute grid has a lot of empty cells due to optimizations. We do not want to store these emtpy cells, as such, we store the cells in a sparse datastructure.
+
+In this subsection, we briefly discuss the straightforward conversion from the structure model to the compute grid. Then, we introduce the conversion and embedding of the structures, highlighting why the compute grid is an excellent datastructure. Finally, we introduce a part of the Data Model that works closely with the Compute Model to capture the data of the structures.
+
+=== Model to Model
+The conversion of the structure pass to the compute pass is pretty straightforward. Essentially, we look at the outputs the user has specified and convert every cell that has a dependency. Notice that we do not link them together yet, since that is done in the Compute Graph. Since we do not link the dependencies, every cell gets a _tree_ of compute units that will turn into a graph when we convert the compute grid to the compute graph.
+
+We begin with the outputs that hte user has specified when they run Excelerate. These outputs will be converted from the structure model to compute units. Then, using a depth-first method, we convert their dependencies in the same way. When a cell has been converted to a composition of compute units, it is added to the compute grid.
+
+An important side effect of this is that we only insert the cells that we depend on and ignore the rest. This makes this compilation step also a optimization step since we remove any cells that would be _dead code_. This is the primary reason why the compute grid is a sparse datastructure in comparison to the structure model, since it can remove a lot of unused cells.
+
+When converting the structure model to the compute model, we mainly distinguish between two cases:
++ The cell is a _Value Cell_: the value of the cell is copied to a _Constant_ compute unit and the type is persisted.
++ The cell is a _Formula Cell_: the parsed formula is converted to a compute unit using a DFS traversal algorithm. Just like _Value Cells_, constant values in the formulae get converted to the _Constant_ compute unit and Excel Functions and references get converted to _Functions_ and _References_ compute units respectively.
+
+=== Converting Structures
+
+An important compiler step is converting the structures from the structure representation to the compute model. It is important to note that structures are stored separately from the compute units, they are their own entity within the compiler and we only store references to the structures in the compute units. 
+
+The conversion process for both structures is pretty similar: we look at the columns that the structure model has given us, and conver them to their respective representation in the compute model. For instance, the chain in @chain:example1 converts its data columns to _Chain Data Columns_ and the recursive columns to the _Chain Recursive Columns_. A big distinction between the structure model chain and the compute model chain is the initialization. Whereas the initialization is stored as a list of rows in the structure model, the compute model embeds the initialization in the different columns. This means that the _Chain Data Column_ does not contain any initialization because it is a data column, whereas the _Chain Recursive Column_ does have a list of initialization values that it can use.
+
+The table is converted in a similar manner, converting the data and computed columns separately to _Table Data Columns_ and _Table Computed Columns_ respectively.
+
+==== Embedding the structures
+An important extra step is to embed the structures in the compute grid so references to the structures get processed correctly. In order to do this, every cell inside the structure will be replaced with a reference to the structure. For every column in the structure, the cells inside the columns will be numbered to indicate the order. For example, cell `C6` in @chain:example1 will be converted to a _Chain Cell Reference_ with column _Deposit_ and index 4.
+
+#figure(
+  [_Placeholder_],
+  caption: [The converted spreadsheet of @chain:example1 in the _Compute Grid_]
+)
+
+
+=== Inserting Input
+One of the reason we are compiling Excel is to provide an easier and more reliable way to provide input/output. 
+As such, the user can mark individual cells or structures as input, which needs to be encoded in the compute model. During the _Insert Input_ compiler step, the input is encoded into the compute model. We do this in the compute grid so we avoid unnecessary linking of code that would calculate the value of the input cell.
+
+The user can also mark a whole structure as input. For example, @sps:monthly-expenses contains the monthly expenses, which is something that changes monthly on it's whole. You may have extra expenses and many of the expenses will vary in cost month-to-month. The compiler supports providing these values in bulk to increase ease-of-use.
+
+=== Extracting Data
+In the case that the user did not mark a structure as input, we need to capture the contents. This data is captured in a separate object, separate from the compute units, the compute grid and the structure. We store a reference to this object in the structure. The data is only extracted from non-computed and non-recursive columns.
+
+The data of a structure is often just plain, constant data, but it is possible that it references data outside of the table through compute unit references. Hence, we extract the data as compute units. 
+
+The extracted data is stored in a way depending on the structure. For instance, the table stores the data in a two-dimensional array since the table contains two-dimensional data. The chain however stores the data per column since some columns contain initialization vectors not found in data columns.
+
+It is important this compilation step is performed _before_ we embed the structures since that step replaces the contents of the structures with references to the extracted content. We could extract the content from the spreadsheets in the structure phase, but that would violate the separation of concerns that we have discussed in @sec:excelerate. Furthermore, we would be converting the formulas to compute units _again_.
+
+
+// The compute grid is a two dimensional data structure that contains compute units.
+
+// - Introduce the reader to the compute grid and the references in the compute IR.
+// - Describe the pass from the structure to the compute grid.
+//   - Mention the structures and that they get special treatment in this IR.
+// - Describe the different references possible with an example of the budget spreadsheet.
+// - An interesting observation: every converted formula tree is also a tree in the compute grid.
+// - Describe other passes that happen at this stage (if any, right now there are not any).
 
 == Compute Graph
 
-- Introduce the compute graph
-- Describe the link pass, where we went from the grid to the graph.
-- Describe the Compute IR formally
+The _Compute Graph_ is the next step in the compilation, linking the compute units in the individual cells to each-other, creating one big graph. The compute graph is a uni-directional non-cyclic graph that describes the underlying compute model of an Excel sheet. The compute graph used in this thesis resembles the support graphs found in Excel or the open implementation by #citeauthor(<sestoft_spreadsheet_2006>). An important distinction is that we explicitly store the structures and allow references to those structures which allows for implicit connection in the graph, where-as those implementations only use direct references and explicit connections.
+
+In this subsection, we discuss the compute graph and how we go from the compute grid to the compute graph. Furthermore, we demonstrate how we make sure the references to the structures will be correct using an extra step that transforms range and cell references to actual references to structures.
+
+=== Grid to Graph
+In order to go from Grid to Graph, we use a similar algorithm as we used with the compute grid. We begin with the inputs and look at the compute unit tree in those cells. Then, for every reference we encounter in that tree, we link that dependency compute unit to the root compute unit of the referenced cell. In case of the range reference, we link all the roots of the cells in the range to the dependency compute unit. Then, for that referenced cell, we do the same, recursively linking all the dependencies.
+
+[Insert example here?]
+
+=== Traversing the Compute Graph
+The compute graph supports the operation for traversing the graph. This is done in topologically sorted way, which means that when we traverse node _a_, we have already traversed the dependencies of _a_. This ensures consistent traversal and updating of the graph.
+Traversing the graph and making updates to the graph is a common operation within a compiler step.
+
+=== Replacing references
+The most important step of all compiler steps is the replacement of the references. While we already cover a lot with the inserting of the references in the compute grid, one reference remains broken: the range reference. When the range reference is compiled to the compute graph, we store all the compute units of the cells in the range as dependencies. When we will compile this to code, we will get a list of all the dependencies. If the range reference just references a random range in the graph, that is exactly what we want. However, when the range reference references the column of a structure, we actually want it to be a special reference.
+
+As such, the _Replace References_ compiler step converts range references that reference a column or other reference of a structure to their respective _Column Reference_. Furthermore, this step simplifies references to structures in single cell references. For instance, when a cell references a cell with a structure reference, it would be mapped as: `A1:=20 * C4` and `C4:=SR('Struct1', 'Col1', 1)`. This pass simplifies this and inserts the latter compute unit into the former, remove a node from the tree (the `C4` node in this case): the single dependency of the `C4` node will be substituted in the `A1` compute unit, resulting in `A1:20 * SR('Struct1', 'Col1', 1)`.
 
 == Type Resolution
+In general, when compiling to strongly typed languages, you need to know the types of the computations you want to model. We already saw in @sec:structural-phase that Excel provides the types at cell level: we used those to infer the types of the cells in a structure and could infer the type of a column based on that. The types we discovered in @sec:structural-phase do not cover the formulas. These types are automatically inferred by Excel and are not disclosed when parsing them. In other words, we need to resolve the types for individual compute units.
 
-- Describe the type resolution algorithm, which is a basic fold on the tree of compute graph.
-- Showcase type resolution of an expression in the budget spreadsheet example.
-- Describe all the different type resolution with pretty figures.
+Since we do know the types of the leaves of the graph, as they are constant values and have been given a type from the start, we can infer the types of their dependents, and thus recursively build a typed Compute Graph. In order to know what the type is of a certain compute unit, we rely on the types of the dependencies and a _Inference Rule_. This inference rule describes what a valid inference is for this compute unit, and what its type might be if there is a valid inference. There can be multiple inference rules for one compute unit.
 
-= Extracting the Data
+For instance, take the _Function_ compute unit, especially the `F('+')` compute unit, which is basic addition between two dependencies. See the inference rule in @inf:type-res:addition, which uses some syntactic sugar to state that the function `F('+')` can be type $tau$ if and only if it has two arguments: which is denoted by the pattern matching `[a1, a2]` that denotes that the list should have two elements `a1` and `a2`; and that those two arguments are both of the same type.
 
-- Introduce the reader to the third area of the compiler: Data
+#import "@preview/curryst:0.5.1": rule, prooftree
+#figure(
+  prooftree(
+    rule(
+      [`F('+', [a1, a2])` : $tau$],
+      [`a1` : $tau$],
+      [`a2` : $tau$],
+    )
+  ),
+  caption: [The inference rule for the `F('+')` compute unit, stating that it needs 2 arguments, and both arguments need to be the same.],
+  supplement: "Rule"
+)<inf:type-res:addition>
 
-_note to self:_ this is the area I am still not sure about how to represent it the best. The implementation works right now, but I am not sure if it is robust.
+Other inference rules, like for cell references are pretty straightforward: they just pass along the type of their single dependency. For range references, we do the same as for the plus operator: we check if the types are the same, and return a list of that type as the type for the range operator, see @inf:type-res:range
 
-== Variable Separation
+#figure(
+  prooftree(
+    rule(
+      [`Range(args)` : $[tau]$],
+      [$forall arg in "args". arg: tau$]
+    )
+  ),
+  caption: [The inference rule for the `Range` compute unit, which can have infinite elements. We require all elements to be of the same type.],
+  supplement: "Rule"
+)<inf:type-res:range>
 
-- Describe the need for the data IR
-  - Variability in the data
-  - Inputs and outputs
-  - Simplify compute model
-- Introduce inputs (and outputs formally).
-- Explain it with an example like the expenses or incomes table in the budget spreadsheet.
+// - Describe the type resolution algorithm, which is a basic fold on the tree of compute graph.
+// - Showcase type resolution of an expression in the budget spreadsheet example.
+// - Describe all the different type resolution with pretty figures.
 
-== The Data IR
+[Insert a paragraph explaining what the final compute graph looks like now (how am I gonna represent that (In typst?!))]
 
-- Formally introduce the Data IR
+=== Precision
+Within Excel, most datatypes adhere to a 15 digit precision. This precision is derived from the IEEE 754 specification, which can only provide 15 digits of significant precision. Hence, we are safe to use the double precision floating data type. 
+Precision is key, especially in the actuarial calculations context. We do not want to lose a few decimal due to precision issues, which would propagate and mean that the pension fund would be paying more or---even worse---less than what you should have gotten.
+
+== The Compute IR
+
+#figure(
+  ```cs
+  record ComputeUnit(Location Location, ComputeUnit[] Dependencies);
+    -> record Nil();
+    -> record ConstantValue(Type Type, dynamic Value);
+    -> record Reference();
+      -> record TableReference();
+      -> record CellReference();
+      -> record RangeReference();
+    -> record DataReference(); // Not the same as a normal reference.
+    -> record Function(string Name);
+    -> record Table(Column[] Columns);
+    -> record Chain(Column[] Columns);
+  record CircularDependency(ComputeUnit[] CircularDependencies)
+  ```,
+  caption: [The Compute IR]
+)
+
+
+
+// = Extracting the Data
+
+// - Introduce the reader to the third area of the compiler: Data
+
+// _note to self:_ this is the area I am still not sure about how to represent it the best. The implementation works right now, but I am not sure if it is robust.
+
+// == Variable Separation
+
+// - Describe the need for the data IR
+//   - Variability in the data
+//   - Inputs and outputs
+//   - Simplify compute model
+// - Introduce inputs (and outputs formally).
+// - Explain it with an example like the expenses or incomes table in the budget spreadsheet.
+
+// == The Data IR
+// - Formally introduce the Data IR
 
 = Generating Readable Code
 
