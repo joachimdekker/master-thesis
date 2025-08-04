@@ -19,9 +19,9 @@
 // #include "overview.typ"
 
 // #include "intermediate-representations/structural.typ"
-#include "intermediate-representations/compute.typ"
+// #include "intermediate-representations/compute.typ"
 // #include "intermediate-representations/data.typ"
-#include "intermediate-representations/code-layout.typ"
+// #include "intermediate-representations/code-layout.typ"
 
 
 // #pagebreak()
@@ -906,7 +906,7 @@ As such, the user can mark individual cells or structures as input, which needs 
 The user can also mark a whole structure as input. For example, @sps:monthly-expenses contains the monthly expenses, which is something that changes monthly on it's whole. You may have extra expenses and many of the expenses will vary in cost month-to-month. The compiler supports providing these values in bulk to increase ease-of-use.
 
 === Extracting Data
-In the case that the user did not mark a structure as input, we need to capture the contents. This data is captured in a separate object, separate from the compute units, the compute grid and the structure. We store a reference to this object in the structure. The data is only extracted from non-computed and non-recursive columns.
+In the case that the user did not mark a structure as input, we need to capture the contents. This data is captured in a separate _Structure Contents_ object, separate from the compute units, the compute grid and the structure. We store a reference to this object in the structure. The data is only extracted from non-computed and non-recursive columns.
 
 The data of a structure is often just plain, constant data, but it is possible that it references data outside of the table through compute unit references. Hence, we extract the data as compute units. 
 
@@ -942,7 +942,9 @@ Traversing the graph and making updates to the graph is a common operation withi
 === Replacing references
 The most important step of all compiler steps is the replacement of the references. While we already cover a lot with the inserting of the references in the compute grid, one reference remains broken: the range reference. When the range reference is compiled to the compute graph, we store all the compute units of the cells in the range as dependencies. When we will compile this to code, we will get a list of all the dependencies. If the range reference just references a random range in the graph, that is exactly what we want. However, when the range reference references the column of a structure, we actually want it to be a special reference.
 
-As such, the _Replace References_ compiler step converts range references that reference a column or other reference of a structure to their respective _Column Reference_. Furthermore, this step simplifies references to structures in single cell references. For instance, when a cell references a cell with a structure reference, it would be mapped as: `A1:=20 * C4` and `C4:=SR('Struct1', 'Col1', 1)`. This pass simplifies this and inserts the latter compute unit into the former, remove a node from the tree (the `C4` node in this case): the single dependency of the `C4` node will be substituted in the `A1` compute unit, resulting in `A1:20 * SR('Struct1', 'Col1', 1)`.
+As such, the _Replace References_ compiler step converts range references that reference a column or other reference of a structure to their respective _Column Reference_. More importantly, this pass also introduces the _creation_ of the structures. Since the structures may have dependencies in their data, which would be stored in the _Structure Contents_ object, this data needs to be calculated first. As such, the calculations for this data is also inserted into the Compute Graph, taking existing nodes into account. Every reference to a structure will have a dependency on the creation of that structure.
+
+// Furthermore, this step simplifies references to structures in single cell references. For instance, when a cell references a cell with a structure reference, it would be mapped as: `A1:=20 * C4` and `C4:=SR('Struct1', 'Col1', 1)`. This pass simplifies this and inserts the latter compute unit into the former, remove a node from the tree (the `C4` node in this case): the single dependency of the `C4` node will be substituted in the `A1` compute unit, resulting in `A1:20 * SR('Struct1', 'Col1', 1)`.
 
 == Type Resolution
 In general, when compiling to strongly typed languages, you need to know the types of the computations you want to model. We already saw in @sec:structural-phase that Excel provides the types at cell level: we used those to infer the types of the cells in a structure and could infer the type of a column based on that. The types we discovered in @sec:structural-phase do not cover the formulas. These types are automatically inferred by Excel and are not disclosed when parsing them. In other words, we need to resolve the types for individual compute units.
@@ -994,6 +996,7 @@ Precision is key, especially in the actuarial calculations context. We do not wa
   record ComputeUnit(Location Location, ComputeUnit[] Dependencies);
     -> record Nil();
     -> record ConstantValue(Type Type, dynamic Value);
+    // References
     -> record Reference();
       -> record TableReference();
       -> record CellReference();
@@ -1029,22 +1032,278 @@ Precision is key, especially in the actuarial calculations context. We do not wa
 
 = Generating Readable Code
 
-- Introduce the reader to the final area of the compiler: Code Layout
-- Clearly state the need for this area and IR
+When we have finished extracting the computations out of the excel sheet and have created a computation based on the structure of the data, it is finally time to produce actual code. The final phase of the compiler, the _Code Phase_ deals with this problem. During the code phase, the compute graph is converted to the code layout model, and then converted to actual programming langauges. In this thesis, we transform the code to C\# code.
+
+The final phase of the compiler is more than just transforming the compute graph to C\# code. As we will see, there are some extra optimalisations that we can do to make the code extra readable. For this, we need an abstraction of the code that we can easily manipulate: the _Code Layout Model_. This is a model that has both object oriented, procedural features as well as functional features. Consequently, the _Code Layout Model_ can acurately model a lot of programming languages, and is a great abstraction, making the compiler also ready for other languages than C\#.
+
+In this section, we will first introduce the _Code Layout Model_ in more detail, doing the last step of the compilation and finally compiling to actual code. We also look at some of the compiler steps and optimalization steps along the way. Finally, we introduce the step that compiles the code layout model to C\# with the help fo the Roslyn API.
 
 == Layout
+The code layout model is the model that provides structural guidance in emitting correct code and ease final transformation on the code. The model simplifies many parts of a normal parse tree and skips a lot of implied syntax.
 
-- Introduce the Layout IR formally
-- Explain it with the budget spreadsheet.
+#figure(
+  ```java
+  Type(String name)
+    -> Class(String name, Property[] members, Method[] methods)
+    -> ListOf(Type member)
+  
+  Method(String name, Statement[] body)
 
-== Emission
+  Property(String name, Type type, Expression? init, Expression? get, Expression? set);
+  
+  Statement()
+    -> If(Expression bool, Statement[] then, Statement[] else)
+    -> ExpressionStatement(Expression expression)
+    -> Declaration(Variable variable, Expression value)
+    -> Return(Expression expression);
+  
+  Expression(Type type)
+    -> Assignment(Variable variable, Expression value)
+    -> Constant(Type type, Object Value)
+    -> FunctionCall(Expression? self, string name, Expression[] arguments)
+    -> Lambda(Variable[] parameters, Expression body)
+    -> Let(Assignment variable, Expression in)
+    -> List()
+    -> ListAccessor(Expression list, Expression index)
+    -> MapAccessor(Expression map, Expression index)
+    -> Property(Expression self, String name)
+    -> Variable(String name)
+    ```,
+    caption: [The Layout IR],
+    placement: auto,
+)<fig:code:model>
 
-- Introduce the Roslyn API formally
-- Explain the pass from layout to Roslyn API and the difficulties there.
- - When to insert trivia to make it more readable
+For instance, if we compare this model with the Roslyn Compiler model (introduced in @subsec:code:emission), the Roslyn Compiler Model allows for the complete modification of the syntax of the language. However, this can also result in invalid C\# syntax. For instance, C\# has a `var` type that automatically infers the type at compile time, like the `auto` type in C++. This 'type' can only be used as a direct or simple type, not as part of a complex or generic type, i.e. `var i = 0;` is valid code, but `List<var> = [1,2,3];` is not. Within the Roslyn Compiler, it is possible to create such a type. The _Code Layout Model_ strictly forbids this.
+
+The _Code Layout Model_ creates, unlike the _Compute Model_ a complete abstract syntax tree without any implicit links such as the references between the structures in the compute model. The root node of the model is the _Project_ which describes all the classes identified in the excel sheet. The actual generated code is housed in a _Method_ in a _Class_. 
+
+Most of the elements of the layout are well-known, such as declarations, statements and expressions. As such, we will not elaborate on them. For the complete overview of the model, we refer to @fig:code:model. That said, there are some elements of the model that are interesting that we want to highlight. In the upcoming subsections, we discuss those highlights.
+
+=== Statements
+
+The IR is able to model standard statements like variable declarations, return and if-statements. Those are synonymous with the statements in many popular languages. That said, an interesting node of the model is the _Expression Statement_. This statement models an expression that is used as a statement. Usually, this is a function call or an assignment. If we look at the declaration of the node, then we see that any expression is valid. This is actually not the case, the model aims to be completely valid, and thus does not allow arbitrary expressions.
+
+=== Let
+
+Many of the expressions are super straightforward and are directly copied from popular object-oriented and procedural programming languages. However, transforming object-oriented code can have it's hassles. If we want to transform a body of a method with procedural statements, it can become quite tricky when working with both expressions and statements. For instance, let's say we want to transform the following snippet of code:
+
+```cs
+...
+int arraySum = [1, 2, 3, 4, 5].Sum();
+...
+```
+
+to
+
+```cs
+...
+int[] array = [1,2,3,4,5];
+int sum = array.Sum();
+...
+```
+
+since in order to this, we need to keep track which statements come before and after this statement, we need to add new statements and we need to alter the expression in the original statement. If we want to do this in simple algorithm, it can become quite complex very very soon.
+
+As such, the _Code Layout_ model introduces a known concept in functional programming languages: the _Let_ expression. This expression essentially models the assignment statement, but does this in an expression. As such, the statements from above can be expressed in one expression:
+
+```hs
+let array = [1,2,3,4,5]
+in array.Sum();
+```
+
+Not only does this simplify the tracking and changing algorithms, as we now only need to concern ourselves with expressions, it also allows for immutability of the assignments. A side effect of this effort is static single assignment, which simplifies analysis and compilation.
+
+=== Types
+Within the Code Layout representation, we consider types really important. Many higher level programming languages are strictly typed languages, which means that everything should have a type at compile time. As such, our model requires the typing of every single entity.
+
+Many types are automatically converted when we convert the compute graph to the code layout model. Furthermore, many expressions and statements do not require their own types, but can infer their types from the types of their children. For instance, take the `ListExpression` which is always of the `ListOf` complex type. The `ListExpression` models a sequence of values of the same type $tau$, and as such, the `ListExpression` will always be of type `ListOf(`$tau$`)`
+
+== Conversion
+
+The code layout model is best explained with an example. In order to create this example, let's take a look at the conversion of the compute model to the code layout model. In the previous section, we created a compute graph with several structures. In this subsection, we gradually convert this compute graph to a representation in the code.
+
+=== Types
+
+Before we convert the actual logic, we need to---once again---take a look at the structures. The structures are special in the compute graph since they represent a certain way of calculating. In the compute layout model, the structures are more integrated---they will not be stored separately. However, they still compile to special code.
+
+==== Tables
+The tables have two types of columns: data and computed. Since a table is defined as independent of other rows, it can be seen as a list of rows. As such, we see the row of a table as one entity and consider the table as a list of that entity. This entity is compiled to a data class that stores the data columns as normal properties, and computed columns as computed properties.
+
+For instance, in the budget example, if we compile the monthly expenses table, we get a new type or class called `MonthlyExpensesItem` containing the properties `ActualCost`, `ProjectedCost`, and the computed property `Difference` which just calculates the difference depending on the other properties.
+
+#figure(
+```cs
+class MonthlyExpensesItem 
+{
+    public double ProjectedCost { get; set; }
+    public double ActualCost { get; set; }
+    public double Difference => ProjectedCost - ActualCost;
+    
+    public MonthlyExpensesItem(double projectedCost, double actualCost)
+    {
+        ProjectedCost = projectedCost;
+        ActualCost = actualCost;
+    }
+}
+```
+)
+
+The actual table is represented by the list of all items: `List<MonthlyExpensesItem>`. Operations on the columns of the table will be done through mapping operations, employing LINQ in C\#. For instance, to get the sum of all the differences in the `monthlyExpenses` table, we say `monthlyExpenses.Sum(m => m.Difference)`. In other languages, this would have nearly the same syntax, such as the map operation in Kotlin: `monthlyExpenses.sumOf { it.Difference }`. 
+
+==== Chain
+As ever, Chains are a bit more complicated than Tables. Because the rows are depending on each other, we cannot exercise the same strategy as with the tables. As such, we represent the chain as its own class. Data columns are stored column-oriented instead of row-oriented. Computed and Recursive columns are calculated on an individual basis: In order to calculate a value in a cell in a computed or recursive column, we need to call the function `{ColumnName}At(x)`. 
+
+For instance, the savings chain in the budget example is compiled to the following code:
+
+#figure(
+```cs
+public class Savings
+{
+    public List<double> Deposit { get; set; }
+
+    public double InterestAt(int counter) => 0.015 / 12 * TotalAt(counter - 1);
+    
+    public double TotalAt(int counter)
+    {
+        if (counter == 0) return 10000;
+        return TotalAt(counter - 1) + InterestAt(counter) + Deposit[counter - 1];
+    }
+
+    public Savings(List<double> deposit)
+    {
+        Deposit = deposit;
+    }
+}
+```,
+caption: [A simplified code snippet of the Savings chain compiled to C\# code.]
+)<code:chain:compiled>
+
+We see here that the _Deposit_ column is compiled to a list of doubles. The computed and recursive columns are compiled to the `InterestAt` and `TotalAt` properties. Notice that the `TotalAt` property contains a recursive call to itself, and thus requires a base case. The computed column _Interest_ does not require a base case since it does not have a reference to itself.
+
+=== Creating the model
+
+Now that we have the types for the structures, we can finally convert the compute graph to the code layout model. In order to do this we use a couple of steps, which we will cover in more detail in the subsections below. First, we introduce variables into the compute graph by using the references of the Compute Model and create the first iteration of the Code Layout Model. Then we iterate upon that model and refine and optimize it, making it more efficient and readable. Finally, we emit the code layout model as code to the disk.
+
+==== Variables
+The first step of the code layout model is the introduction of variables. Like we covered in @sec:trivial-compiler, the Excel compute model can be seen as one big expression that needs to be evaluated. However, as we saw, that would quickly become unreadable. As such, we need to introduce variables to make sense of the big sub-expressions. We also use variables to refer to the structures we created.
+
+In Excelerate, we use the _Formula Cells_ as reference points for the variables. In more precise terms, we start at the root of the Compute Graph, and work our way down the graph. Everytime we encounter a compute unit that is from a new cell, we begin constructing a new variable and put the old one in a _Let_ expression. In other words, we recursively build a big expression of _Lets_. 
+
+From there, we can mutate the whole compute model as one big expression: extract functions, optimize access logic, etc.
+
+==== Statements
+Afterward the optimizations, we need to convert the _Let_ expression to statements, since many programming languages do not support the _Let_ expression. As such, we employ a very simple algorithm that just converts every assignment in every _Let_ expression to a statement. The following code layout model would be transformed:
+
+```
+DeclarationStatement z (Let y = 10
+                        in let x = 10
+                           in x + y)
+```
+
+into:
+
+```
+DeclarationStatement y 10
+DeclarationStatement x 10
+DeclarationStatement z (x + y)
+```
+
+The current layout model is looking more and more like a high level programming language. This example also exemplifies the versatility of the code layout model, as we can have two different styles for variable declaration that are highly coupled in parallel. This versatility is crucial when supporting different programming languages, and makes the Excelerate compiler ready for future expansion.
+
+=== Optimalizations
+
+There are two different optimalization steps we do, one optimizes the code so heavily that it is nearly required to run this step. The other step makes the code more readable with a minor adjustment.
+
+==== Mutual Recursion
+If we take another look at the compiled code in @code:chain:compiled, it looks like normal code. However, when we run the code, it takes ages to complete. This is due to a problem called _Mutual Recursion_ where two recursive functions call upon each other. In the example, we see that the `TotalAt` calls itself _and_ the `InterestAt` function. However, the `InterestAt` function also calls the `TotalAt` function. This means that one call to the TotalAt call creates two extra calls to TotalAt. Hence, the amount of times `TotalAt` is called equals $2^x$ where $x$ is the input to the function.
+
+There are some ways to fix mutual recursion, one of which is to transform mutual recursion to single recursion @kaser_conversion_1993. This is done through inlining of one of the methods. However, this is not really desirable, since it will lead to duplicate code, and that is exactly what we are trying to avoid.
+
+A better fix is the use of memoization. Memoization is the practice of storing the input and output of a pure function as a pair. When a function is executed, the input is checked against that pair, and if there is a matching pair that output is returned, saving on the computation costs and avoiding the spawning of further recursive calls. On the first call with a new input, the output is calculated and added to the list of pairs. 
+
+We do this with the mutual recursion in @code:chain:compiled as well. @code:chain:optimized shows the new mutual recursion solution. Every function that spawns two or more function calls to itself (direct or indirect) will be memoized. As such, `InterestAt` will not use memoization, but `TotalAt` will. This speeds up the execution by orders of magnitude.
+
+#figure(
+```cs
+public class Savings
+{
+    private readonly Dictionary<int,double> _totalAtMemoization = new();
+    
+    public List<double> Deposit { get; set; }
+
+    public double InterestAt(int counter) => 0.015 / 12 * TotalAt(counter - 1);
+    
+    public double TotalAt(int counter)
+    {
+        if (_totalAtMemoization.ContainsKey(counter))
+            return _totalAtMemoization[key];
+
+        if (counter == 0) return 10000;
+
+        double result = TotalAt(counter - 1) + InterestAt(counter - 0) + Deposit[counter - 1];
+        
+        _totalAtMemoization.Add(key, result);
+        return result;
+    }
+
+    public Savings(List<double> deposit)
+    {
+        Deposit = deposit;
+    }
+}
+```,
+caption: [A simplified code snippet of the Savings chain compiled to C\# code.],
+placement: auto
+)<code:chain:optimized>
+
+==== Inlining
+Within some sheets, it is common to display the values from another sheet in a separate cell, and then use that cell for calculations in the sheet, essentially making the display cell a proxy to the other sheets. In the code layout model, this creates a variable that is being assigned to another variable:
+
+```cs 
+double interestJ12 = interestF65 - interestF5 - interestJ11;
+double monthlyBudgetReportJ7 = interestJ12;
+double monthlyBudgetReportD10 = monthlyBudgetReportJ7;
+```
+
+In this optimalization pass, this will be removed. We do this by refactoring the `Let` nodes, checking if a `Let` node contains another `Let` node with the assignment just a variable name. In the end, we will remove this node, and just assign the value directly to the last variable. As such, the example above becomes:
+
+```cs
+double monthlyBudgetReportD10 = interestF65 - interestF5 - interestJ11;
+```
+
+and is instantly more readable.
+
+== Emission <subsec:code:emission>
+
+Just before emission, at the end of the _Code Phase_, we have constructed a language-agnostic representation of the Excel computation. The final challenge is to convert this abstract model into concrete compilable code. In this thesis, we chose C\# for the target or destination language. In this subsection, we briefly cover the Roslyn API to explain what it does. Then we dive into the code generation and explain how we map the code: a pretty straightforward process. Finally, we discuss some of the subtleties needed to make the project actually compile.
+
+=== Roslyn API
+The Roslyn API is an open-source .NET compiler platform developed by Microsoft. It exposes the whole compiler process, from internal data structures to transformations, to the programmer and let's the programmer use the compiler within the C\# language itself. 
+
+Like we spoke about earlier, the Roslyn API is incredible flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive and expressive and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Layout Model_ grants.
+
+It is important to emphasize that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimization, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations. It does this on the Roslyn syntax tree as it is being generated, such as choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used.
+
+=== Mapping
+Translating from the _Code Layout Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this pretty direct, and not much work is needed.  For example, a list initialization in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimalizations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
+
+Furthermore, we rely on a few helper methods from the _Code Layout Model_ to create constructors for types, as they are not explicitly defined in the model but rather derived from the settable data in the structures.
+
+=== Layout
+During emission, we must also address the organization of code into files, namespaces, and classes. The code layout model describes a project as a collection of classes and methods, but leaves file system organization abstract. The emission pass generates a dedicated C\# file for each top-level class, placing them within a common namespace so they can be accessed easily. 
+
 
 = Discussion of the Compiler Design
 
-- This is room for any discussions of the compiler that could not fit into the story.
-- The above should be read like a single story
-- But of course, some things might not fit into it well, so we may want to have a separate section for it.
+// - This is room for any discussions of the compiler that could not fit into the story.
+// - The above should be read like a single story
+// - But of course, some things might not fit into it well, so we may want to have a separate section for it.
+
+- Data IR being removed in favor of the _Structure Contents_
+  - Data IR should have been separate from the Compute IR, but that was not a good idea in the end, because then we could not have data that we got from other parts of the spreadsheet. That would mean that every structure could only have data that was constant from the start, or have the whole structure replaced by an input. Individual items can also be inputs, this was especially tricky for chains that would have references to other sheets for the initialization vector.
+  - The Structure Contents are doing this in the same way as the data IR, describing the type and providing a way to populate the classes.
+  - Furthermore, without the Data IR, we have a simplified design since there are just three sequential phases instead of four phases of which two were parallel.
+- Tables and the computed properties are too simple
+  - The tables and the computed properties are super duper simple, which works for most cases. However, when there is a computed property with external input, that would actually be impossible, since the computation is stored separately and does not have access to the outer scope. This is a considerable threat to validity, but can be solved with a different design of the table.
+    - The real question is if I need to fix this now, or just acknowledge this and continue.
+  - Furthermore, when there are any constants that are actually references to other tables, such as in the savings chain that calculates the interest, these are not pre-computed but are just part of the expression that calculates the interest, which means that input is impossible there. This is an inherent problem with computed properties. A fix is to make sure that every referenced cell in a computed property is saved as an external constant that has to be calculated before a structure can be created.

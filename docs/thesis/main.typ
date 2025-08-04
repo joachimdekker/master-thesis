@@ -4,6 +4,7 @@
 #import "@preview/wordometer:0.1.4": word-count, total-words
 
 // #show: word-count
+// #total-words
 
 #import "utils/chapters.typ": chapter
 
@@ -52,7 +53,14 @@
 
 #show heading.where(level: 4): it => text([#it.body #v(-0.5em)], size: 1.3em)
 
-#show heading.where(level: 5): it => [_#it.body.text #h(1cm)_]
+#show heading.where(level: 5): it => {
+  let body = it.body.text
+  if (not body.ends-with(".")) {
+    body = body + "."
+  }
+  
+  [_#body #h(1cm)_]
+}
 
 // Chapter page
 #show heading.where(level: 1): it => {
