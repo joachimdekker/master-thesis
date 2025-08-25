@@ -7,7 +7,7 @@
 
 #v(-1em)
 
-#text([*Compiling Actuarial Computations to Human Readable Code*], size: 2em)
+#text([*Excelerate: Towards Compiling Excel to Human Readable Code*], size: 2em)
 
 #text([Joachim Dekker], size: 1.5em)
 

@@ -1,6 +1,3 @@
-#import "@preview/zebraw:0.5.2": *
-#show: zebraw.with(numbering: false, inset: (left: 2em), )
-
 = Compute Model
 The compute IR models the underlying computational model of Excel, powered by Excel's Formula engine. This layer considers the whole Excel workbook and represents the computation beyond cells and worksheets. 
 
@@ -41,6 +38,23 @@ type Reference =
   | RangeReference
 ```
 
+#show raw: set text(font: "JetBrains Mono")
+
+#figure(
+  ```
+    ComputeUnit = (location: Location, dependencies: ComputeUnit[], type: Type)
+    |- Nil
+    |- ConstantValue += (value: Value) 
+    |- Reference
+       |- TableReference += (tableName: string, columnName: string)
+       |- CellReference += (reference: Location)
+       |- RangeReference += (from: Location, to: Location) 
+    |- DataReference
+    |- Function
+  ```,
+  
+)
+
 == Compute Unit
 At the core of the compute model lies the compute unit. This unit represents a basic operation with input and output. Compute units can be connected to each other, forming a network or flow of computations. When compute unit _A_ uses the output of compute unit _B_ as input, then we say that unit _B_ is a _dependency_ of unit _A_. Conversely, unit _A_ is a _dependent_ of unit _B_.
 
@@ -63,7 +77,7 @@ A special constant value is the value that represents nothing: the _nil_ node Wh
 == Reference
 Within the compute representation, it is still possible to reference other values. While it is desirable to have no references in the support graph at the end of all the compiler steps, having references can heavily simplify compiler design. Just like in the structural representation, we distinguish between three different kinds of references: _cell_, _range_, and _table_.
 
-A different kind of reference is the data reference. As we will discuss in @sec:data-model, the data and compute model are closely collaborating within the compiler. For computations to work, the data in these repositories should be addressable. This is possible through the _data reference_, which is essentially a  tuple $"ref"_"data" = (N_"repo", L)$ where $N_"repo"$ is the unique name of the repository, and $L$ is the location within the repository to reference, which may be a range or a single cell.
+A different kind of reference is the data reference. As we will discuss in the data model, the data and compute model are closely collaborating within the compiler. For computations to work, the data in these repositories should be addressable. This is possible through the _data reference_, which is essentially a  tuple $"ref"_"data" = (N_"repo", L)$ where $N_"repo"$ is the unique name of the repository, and $L$ is the location within the repository to reference, which may be a range or a single cell.
 
 == Compute
 In order to actually compute data, Excel uses formulas. These formulae and compositions thereof are converted to a graph of _Functions_. In this representation, functions are only represented in their signature form, without their implementation. We leave this part to the code-layout representation and a single compiler step which converts the functions to their respective code representation.

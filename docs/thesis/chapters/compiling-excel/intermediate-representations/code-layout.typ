@@ -45,7 +45,7 @@ More interesting is the function call. This expression represents a call to a fu
 
 A different function call is the anonymous function or lambda function. We represent this function with a separate entity. The lambda function is mostly used in functional contexts, such as the LINQ DSL in C\#. [Perhaps some more explanations?]
 
-Closely related to the member function call, the property accessor represents the access to a property of an object. It contains an expression that should be evaluated to an object. This is mostly used within Lambda functions, for instance when using a LINQ expression to select a whole column from a table. In C\# this would be `table.Select(r => r.Column1)` which uses a lambda function.
+Closely related to the member function call, the property accessor represents the access to a property of an object. It contains as an expression that should be evaluated to an object. This is mostly used within Lambda functions, for instance when using a LINQ expression to select a whole column from a table. In C\# this would be `table.Select(r => r.Column1)` which uses a lambda function.
 
 Finally, it is possible to create an object. This is mostly used when creating the table using internal data. The object creation is based on the constructors of the created type, and contains expressions for the arguments to construct the object.
 
@@ -54,4 +54,4 @@ In the above sections, we already briefly mentioned that some expressions and cl
 
 Types can be simple or complex. Simple types are types that represent a single value, and are used to construct complex types. Complex types are compositions of simple and complex types. Often, complex types are represented by a class or struct, where methods allow for manipulation of the datatype.
 
-Just like C\#, the model provides both the possiblity for simple and complex types. A special entity is the `ListOf` complex type.  As discussed above, we have the `ListExpression` which models a sequence and is not bound by a List or Array type. Hence, we need to reflect this in our own typing system. As such as ListExpression will always have the ListOf type.
+Just like C\#, the model provides both the possibility for simple and complex types. A special entity is the `ListOf` complex type.  As discussed above, we have the `ListExpression` which models a sequence and is not bound by a List or Array type. Hence, we need to reflect this in our own typing system. As such as `ListExpression` will always have the `ListOf` type.
