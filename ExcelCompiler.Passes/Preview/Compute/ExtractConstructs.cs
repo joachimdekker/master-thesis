@@ -16,7 +16,7 @@ namespace ExcelCompiler.Passes.Preview.Compute;
 [CompilerPass]
 public class ExtractConstructs
 {
-    public ComputeGrid Generate(ComputeGrid grid, List<StructureConstruct> constructs)
+    public ComputeGrid Generate(ComputeGrid grid, List<StructureConstruct> constructs, List<Location> results)
     {
         // The Compute Grid was a better way to do this, but now I am doubting myself.
         // Ultimately, we would want to be able to edit the references.
@@ -32,22 +32,28 @@ public class ExtractConstructs
         // Type for type, add the constructs to the grid.
         // Because of how the areas are detected, we can guarantee that no construct is overlapping.
 
-        foreach (Table table in constructs.OfType<Table>())
+        // Remove the constructs that have outputs in them
+        // We actually don't want this, but it will do for now.
+        
+        
+        // Edge case: if the result is inside a structure,
+        // we need to add the whole structure to the grid, not only the result
+        
+        List<StructureConstruct> structures = constructs
+            .Where(c => !results.Any(r => c.Location.Contains(r)))
+            .ToList();
+        
+        foreach (Table table in structures.OfType<Table>())
         {
             Representations.Compute.Specialized.Table computeTable = ConvertTable(grid, table);
-
-            // // Embed the table into the grid
-            //EmbedTable(grid, table, computeTable);
 
             // Add the table to the list of tables
             grid.Structures.Add(computeTable);
         }
 
-        foreach (Chain chain in constructs.OfType<Chain>())
+        foreach (Chain chain in structures.OfType<Chain>())
         {
             Representations.Compute.Specialized.Chain computeChain = ConvertChain(grid, chain);
-
-            //EmbedChain(grid, chain, computeChain);
 
             grid.Structures.Add(computeChain);
         }
@@ -64,7 +70,7 @@ public class ExtractConstructs
         {
             // Skip columns that are not used.
             if (!column.TryGetFirstNonEmptyCell(out var firstCell) || !column.Any(c => grid.ContainsLocation(c.Location))) continue;
-
+            
             // Calculate the range of the column, include the footer and init
             var range = column.Range with
             {
@@ -100,8 +106,6 @@ public class ExtractConstructs
                 {
                     throw new InvalidOperationException("Recursive chains must have exactly one initialization cell for now...");
                 }
-                
-                
   
                 // Right now, we only support a single initialization
                 ComputeUnit? initialization = null;

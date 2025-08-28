@@ -1,12 +1,12 @@
 ﻿using ExcelCompiler.Cli;
+using ExcelCompiler.Cli.Config;
 using ExcelCompiler.Representations.References;
-using ExcelCompiler.Representations.Structure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
-using Range = ExcelCompiler.Representations.References.Range;
 
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
@@ -15,6 +15,7 @@ IConfigurationRoot config = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
+    .AddCommandLine(args)
     .Build();
 
 // Configure the service provider
@@ -31,12 +32,25 @@ services.AddServices();
 
 IServiceProvider provider = services.BuildServiceProvider();
 
+// Get the inputs and outputs
+
+FileConfiguration fileConfig = provider.GetRequiredService<IOptions<FileConfiguration>>().Value;
+
+if (fileConfig.Inputs is null || fileConfig.Inputs.Count == 0)
+    throw new InvalidOperationException("No inputs found.");
+
+if (fileConfig.Outputs is null || fileConfig.Outputs.Count == 0)
+    throw new InvalidOperationException("No outputs found.");
+
+var inputs = fileConfig.Inputs!.Select(i => Reference.Parse(i)).OfType<Location>().ToList();
+var outputs = fileConfig.Outputs!.Select(i => Reference.Parse(i)).OfType<Location>().ToList();
+
 // Run the worker
 ConversionWorker worker = provider.GetRequiredService<ConversionWorker>();
 var project = await worker.ExecuteAsync(
-    [], //[Location.FromA1("E10", "Monthly budget report")], 
+    inputs, //[Location.FromA1("E10", "Monthly budget report")], 
     [], //[Range.FromString("C14:F17", "Monthly budget report")], 
-    [Location.FromA1("F7", "Monthly budget report"), ]);
+    outputs);
     
 // Run the project creation worker
 ProjectCreationWorker projectWorker = provider.GetRequiredService<ProjectCreationWorker>();

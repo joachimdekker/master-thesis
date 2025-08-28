@@ -7,12 +7,4 @@ using System.Threading.Tasks;
 namespace ExcelCompiler.Generated;
 public class MonthlyBudgetReportC14F17Item
 {
-    public double Projected { get; set; }
-    public double Actual { get; set; }
-
-    public MonthlyBudgetReportC14F17Item(double projected, double actual)
-    {
-        Projected = projected;
-        Actual = actual;
-    }
 }

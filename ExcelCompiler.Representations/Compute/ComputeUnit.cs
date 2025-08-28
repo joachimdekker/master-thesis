@@ -78,7 +78,7 @@ public abstract record ComputeUnit
                 return result;
             }
             
-            List<T> list = unit.Dependencies.SelectMany(Traverse).ToList();
+            List<T> list = unit.Dependencies.Where(d => !cache.ContainsKey(d)).SelectMany(Traverse).ToList();
             if (unit is T t)
             {
                 return cache[unit] = [t, ..list];

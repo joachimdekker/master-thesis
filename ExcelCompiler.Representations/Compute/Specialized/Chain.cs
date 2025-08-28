@@ -1,3 +1,4 @@
+using ExcelCompiler.Representations.Helpers;
 using ExcelCompiler.Representations.References;
 using Range = ExcelCompiler.Representations.References.Range;
 
@@ -22,7 +23,7 @@ public record Chain(string Name, Range Range) : Construct(Name, Range)
     
     public ChainStructureData StructureData { get; set; } = new();
     
-    public int NoBaseCases => Columns.OfType<RecursiveChainColumn>().Select(x => x.NoBaseCases).Max();
+    public int NoBaseCases => Columns.OfType<RecursiveChainColumn>().Select(x => x.NoBaseCases).MaxOrDefault(0);
 }
 
 public abstract record ChainColumn

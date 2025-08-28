@@ -10,7 +10,7 @@ public class PruneEmptyCells
     public ComputeGraph Transform(ComputeGraph graph)
     {
 
-        List<ComputeUnit> roots = graph.Roots.Where(r => r is not Nil).Select(Prune).ToList();
+        List<ComputeUnit> roots = graph.Roots.Where(r => r is not Nil).Select(cu => Prune(cu)).ToList();
 
         return graph with
         {
@@ -22,7 +22,7 @@ public class PruneEmptyCells
     {
         if (_visited.TryGetValue(node, out var unit)) return unit;
         
-        IEnumerable<ComputeUnit> dependencies = node.Dependencies.Where(d => d is not Nil).Select(Prune);
+        IEnumerable<ComputeUnit> dependencies = PruneDependencies(node);
         
         _visited[node] = node with
         {
@@ -30,5 +30,23 @@ public class PruneEmptyCells
         };
 
         return _visited[node];
+    }
+
+    private IEnumerable<ComputeUnit> PruneDependencies(ComputeUnit node)
+    {
+        foreach (var dependency in node.Dependencies)
+        {
+            if (dependency is not Nil)
+            {
+                yield return Prune(dependency);
+                continue;
+            }
+            
+            // Check for default values
+            if (dependency.Type?.Name is "double" or "Double")
+            {
+                yield return new ConstantValue<double>(0, dependency.Location);
+            }
+        }
     }
 }
