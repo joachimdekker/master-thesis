@@ -29,7 +29,7 @@ public class ConversionWorker
         _options = options.Value;
     }
 
-    public async Task<Project> ExecuteAsync(ICollection<Location> singleInputs, ICollection<Range> structureInputs, ICollection<Location> outputs, CancellationToken cancellationToken = default)
+    public Task<Project> ExecuteAsync(ICollection<Location> singleInputs, ICollection<Range> structureInputs, List<Location> outputs, CancellationToken cancellationToken = default)
     {
         // Get the Compiler Passes from the service provider
 
@@ -80,12 +80,12 @@ public class ConversionWorker
         var grid = structureToComputePass.Transform(workbook, outputs);
         grid = insertInputsPass.Transform(grid, singleInputs);
         _logger.LogInformation("Executing Extract Compute Tables pass");
-        grid = extractConstructsPass.Generate(grid, constructs);
+        grid = extractConstructsPass.Generate(grid, constructs, outputs);
         grid = structureDataPass.Transform(grid);
         grid = insertConstructsPass.Transform(grid, constructs);
         
         _logger.LogInformation("Executing Construct Compute Graph pass");
-        var graph = constructComputeGraphPass.Transform(grid, outputs.ToList());
+        var graph = constructComputeGraphPass.Transform(grid, outputs);
         _logger.LogInformation("Inferencing Types");
         graph = typeInferencePass.Transform(graph);
         _logger.LogInformation("Executing Link Identical nodes pass");
@@ -93,6 +93,7 @@ public class ConversionWorker
         _logger.LogInformation("Executing Prune Empty Cells pass");
         graph = pruneEmptyCellsPass.Transform(graph);
         _logger.LogInformation("Completed all compiler passes successfully");
+        
         // Transform to code (layout)
         var project = computeToCodePass.Transform(graph, dataManager);
         _logger.LogInformation("Executing memoization pass");
@@ -101,6 +102,6 @@ public class ConversionWorker
         project = inlineVariablesPass.Transform(project);
         project = insertStatementsPass.Transform(project);
         
-        return project;
+        return Task.FromResult(project);
     }
 }

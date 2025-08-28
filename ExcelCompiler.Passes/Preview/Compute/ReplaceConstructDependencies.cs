@@ -149,9 +149,14 @@ file record RecursiveTypeTransformer(List<Construct> Constructs, List<ConstructC
 
     protected override ComputeUnit Other(ComputeUnit unit, IEnumerable<ComputeUnit> dependencies)
     {
-        if (unit is RecursiveChainColumn.RecursiveCellReference rcr)
+        if (unit is RecursiveChainColumn.RecursiveCellReference or DataChainColumn.Reference)
         {
-            var creation = Constructors.Single(c => c.ConstructId == rcr.ChainName);
+            var creation = Constructors.Single(c => c.ConstructId == unit switch
+            {
+                RecursiveChainColumn.RecursiveCellReference r => r.ChainName,
+                DataChainColumn.Reference r => r.ChainName,
+                _ => throw new InvalidOperationException(),
+            });
             
             return unit with { Dependencies = [creation, ..dependencies] };
         }

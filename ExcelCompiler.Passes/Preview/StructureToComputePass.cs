@@ -12,10 +12,16 @@ namespace ExcelCompiler.Passes.Preview;
 [CompilerPass]
 public class StructureToComputePass
 {
-    public ComputeGrid Transform(Workbook workbook, IEnumerable<Location> results)
+    public ComputeGrid Transform(Workbook workbook, List<Location> results)
     {
         ComputeGrid computeGrid = new ComputeGrid();
+        PopulateComputeGrid(workbook, results, computeGrid);
         
+        return computeGrid;
+    }
+
+    private void PopulateComputeGrid(Workbook workbook, IEnumerable<Location> results, ComputeGrid computeGrid)
+    {
         Stack<Location> stack = new Stack<Location>(results);
         while(stack.Count != 0) {
             Location location = stack.Pop();
@@ -31,8 +37,6 @@ public class StructureToComputePass
             
             stack.PushRange(references);
         }
-        
-        return computeGrid;
     }
 
     private static ComputeUnit CreateComputeUnitFromCell(Location location, Cell cell)

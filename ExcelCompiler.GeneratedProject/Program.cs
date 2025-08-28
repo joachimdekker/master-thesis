@@ -7,88 +7,78 @@ using System.Threading.Tasks;
 namespace ExcelCompiler.Generated;
 public class Program
 {
-    public double Main()
+    public double Main(double interestD28)
     {
-        List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17 = new List<MonthlyBudgetReportC14F17Item>
-        {
-            new MonthlyBudgetReportC14F17Item(6000, 5800),
-            new MonthlyBudgetReportC14F17Item(1000, 2300),
-            new MonthlyBudgetReportC14F17Item(2500, 1500)
-        };
-        double monthlyBudgetReportE9 = monthlyBudgetReportC14F17.Select(t => t.Actual).Sum();
-        InterestC4F65 interestC4F65 = new InterestC4F65(new List<double> { 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500, 500 });
-        double interestF65 = interestC4F65.TotalAt(60);
-        double interestF5 = interestC4F65.TotalAt(0);
-        double interestJ11 = interestC4F65.Deposit.Sum();
-        double interestJ12 = interestF65 - interestF5 - interestJ11;
-        List<TBL_MonthlyExpensesItem> tBL_MonthlyExpenses = new List<TBL_MonthlyExpensesItem>
-        {
-            new TBL_MonthlyExpensesItem(40, 40),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(100, 100),
-            new TBL_MonthlyExpensesItem(50, 40),
-            new TBL_MonthlyExpensesItem(200, 150),
-            new TBL_MonthlyExpensesItem(50, 28),
-            new TBL_MonthlyExpensesItem(50, 30),
-            new TBL_MonthlyExpensesItem(0, 40),
-            new TBL_MonthlyExpensesItem(20, 50),
-            new TBL_MonthlyExpensesItem(30, 20),
-            new TBL_MonthlyExpensesItem(1000, 1200),
-            new TBL_MonthlyExpensesItem(100, 120),
-            new TBL_MonthlyExpensesItem(75, 100),
-            new TBL_MonthlyExpensesItem(25, 25),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(100, 100),
-            new TBL_MonthlyExpensesItem(45, 50),
-            new TBL_MonthlyExpensesItem(300, 400),
-            new TBL_MonthlyExpensesItem(200, 0),
-            new TBL_MonthlyExpensesItem(200, 150),
-            new TBL_MonthlyExpensesItem(1700, 1700),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(100, 100),
-            new TBL_MonthlyExpensesItem(60, 60),
-            new TBL_MonthlyExpensesItem(35, 39),
-            new TBL_MonthlyExpensesItem(40, 55),
-            new TBL_MonthlyExpensesItem(25, 22),
-            new TBL_MonthlyExpensesItem(25, 26),
-            new TBL_MonthlyExpensesItem(400, 400),
-            new TBL_MonthlyExpensesItem(400, 400),
-            new TBL_MonthlyExpensesItem(100, 100),
-            new TBL_MonthlyExpensesItem(200, 200),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(150, 140),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(150, 75),
-            new TBL_MonthlyExpensesItem(20, 25),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(200, 200),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(300, 300),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(100, 150),
-            new TBL_MonthlyExpensesItem(450, 400),
-            new TBL_MonthlyExpensesItem(300, 300),
-            new TBL_MonthlyExpensesItem(25, 25),
-            new TBL_MonthlyExpensesItem(100, 50),
-            new TBL_MonthlyExpensesItem(0, 0),
-            new TBL_MonthlyExpensesItem(450, 450)
-        };
-        double monthlyBudgetReportE8 = tBL_MonthlyExpenses.Select(t => t.ActualCost).Sum();
-        double monthlyBudgetReportE7 = monthlyBudgetReportE9 + interestJ12 - monthlyBudgetReportE8;
-        double monthlyBudgetReportD9 = monthlyBudgetReportC14F17.Select(t => t.Projected).Sum();
-        double monthlyBudgetReportD8 = tBL_MonthlyExpenses.Select(t => t.ProjectedCost).Sum();
-        double monthlyBudgetReportD7 = monthlyBudgetReportD9 + interestJ12 - monthlyBudgetReportD8;
-        double monthlyBudgetReportF7 = monthlyBudgetReportE7 - monthlyBudgetReportD7;
-        return monthlyBudgetReportF7;
+        double interestJ9 = 0.015 / 12;
+        double interestD6 = interestJ9 * 10000;
+        double interestF6 = 10000 + interestD6 + 500;
+        double interestD7 = interestJ9 * interestF6;
+        double interestF7 = interestF6 + interestD7 + 500;
+        double interestD8 = interestJ9 * interestF7;
+        double interestF8 = interestF7 + interestD8 + 500;
+        double interestD9 = interestJ9 * interestF8;
+        double interestF9 = interestF8 + interestD9 + 500;
+        double interestD10 = interestJ9 * interestF9;
+        double interestF10 = interestF9 + interestD10 + 500;
+        double interestD11 = interestJ9 * interestF10;
+        double interestF11 = interestF10 + interestD11 + 500;
+        double interestD12 = interestJ9 * interestF11;
+        double interestF12 = interestF11 + interestD12 + 500;
+        double interestD13 = interestJ9 * interestF12;
+        double interestF13 = interestF12 + interestD13 + 500;
+        double interestD14 = interestJ9 * interestF13;
+        double interestF14 = interestF13 + interestD14 + 500;
+        double interestD15 = interestJ9 * interestF14;
+        double interestF15 = interestF14 + interestD15 + 500;
+        double interestD16 = interestJ9 * interestF15;
+        double interestF16 = interestF15 + interestD16 + 500;
+        double interestD17 = interestJ9 * interestF16;
+        double interestF17 = interestF16 + interestD17 + 500;
+        double interestD18 = interestJ9 * interestF17;
+        double interestF18 = interestF17 + interestD18 + 500;
+        double interestD19 = interestJ9 * interestF18;
+        double interestF19 = interestF18 + interestD19 + 500;
+        double interestD20 = interestJ9 * interestF19;
+        double interestF20 = interestF19 + interestD20 + 500;
+        double interestD21 = interestJ9 * interestF20;
+        double interestF21 = interestF20 + interestD21 + 500;
+        double interestD22 = interestJ9 * interestF21;
+        double interestF22 = interestF21 + interestD22 + 500;
+        double interestD23 = interestJ9 * interestF22;
+        double interestF23 = interestF22 + interestD23 + 500;
+        double interestD24 = interestJ9 * interestF23;
+        double interestF24 = interestF23 + interestD24 + 500;
+        double interestD25 = interestJ9 * interestF24;
+        double interestF25 = interestF24 + interestD25 + 500;
+        double interestD26 = interestJ9 * interestF25;
+        double interestF26 = interestF25 + interestD26 + 500;
+        double interestD27 = interestJ9 * interestF26;
+        double interestF27 = interestF26 + interestD27 + 500;
+        double interestF28 = interestF27 + interestD28 + 500;
+        double interestD29 = interestJ9 * interestF28;
+        double interestF29 = interestF28 + interestD29 + 500;
+        double interestD30 = interestJ9 * interestF29;
+        double interestF30 = interestF29 + interestD30 + 500;
+        double interestD31 = interestJ9 * interestF30;
+        double interestF31 = interestF30 + interestD31 + 500;
+        double interestD32 = interestJ9 * interestF31;
+        double interestF32 = interestF31 + interestD32 + 500;
+        double interestD33 = interestJ9 * interestF32;
+        double interestF33 = interestF32 + interestD33 + 500;
+        double interestD34 = interestJ9 * interestF33;
+        double interestF34 = interestF33 + interestD34 + 500;
+        double interestD35 = interestJ9 * interestF34;
+        double interestF35 = interestF34 + interestD35 + 500;
+        double interestD36 = interestJ9 * interestF35;
+        double interestF36 = interestF35 + interestD36 + 500;
+        double interestD37 = interestJ9 * interestF36;
+        double interestF37 = interestF36 + interestD37 + 500;
+        double interestD38 = interestJ9 * interestF37;
+        double interestF38 = interestF37 + interestD38 + 500;
+        double interestD39 = interestJ9 * interestF38;
+        double interestF39 = interestF38 + interestD39 + 500;
+        double interestD40 = interestJ9 * interestF39;
+        double interestF40 = interestF39 + interestD40 + 500;
+        return interestF40;
     }
 }
