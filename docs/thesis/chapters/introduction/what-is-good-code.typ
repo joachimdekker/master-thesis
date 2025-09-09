@@ -1,0 +1,16 @@
+#import "../../utils/cite-tools.typ": citeauthor
+
+= Idiomatic Code
+
+_Idiomatic_ means "containing expressions that are natural to a native speaker of a language" @lea_idiomatic_2025. While this definition is meant for natural languages, we can also extend it to programming languages: "containing expressions that are natural to a senior programmer writing the language".
+While software engineers consider creating code as a big part of their job @jetbrains_software_2024, one universal definition of what is considered 'good' code is hard to determine. This was made clear by #citeauthor(<borstler_i_2018>) in their aptly titled paper: "I know it when I see it", indicating that factors of code quality are diverse across demographics @borstler_i_2018. 
+
+Yet, a plethora of books and papers have been written on what is considered good or idiomatic code @mcconnell_code_2004 @hunter-zinck_ten_2021 @fowler_refactoring_2019 @winter_agile_2014 @hunt_pragmatic_2011. In this section, we briefly provide an overview of what the literature considers to be 'good' code.
+
+#citeauthor(<borstler_developers_2023>) interviewed developers, students and educators on the factors of code quality. Comprehensibility and Structure were the most commonly named factors @borstler_developers_2023 @borstler_i_2018, which is confirmed in several other sources @mcconnell_code_2004 @hunter-zinck_ten_2021 @hunt_pragmatic_2011 @fowler_refactoring_2019 @winter_agile_2014. According to #citeauthor(<fowler_refactoring_2019>), structure directly relates to comprehensibility since humans read code. They give an example where an extremely long function is harder to read than multiple shorter functions with one orchestrating function.
+
+An important factor of structure is no duplication---commonly stated as DRY or 'Don't Repeat Yourself' @fowler_refactoring_2019 @hunt_pragmatic_2011 @borstler_developers_2023. Duplication can increase risks when a part of the duplicated code requires rework: often the duplicated part is forgotten and does not get updated @fowler_refactoring_2019 @hunt_pragmatic_2011. For example, when applying an operation on a list, it is very uncommon (and a bad code practice) to verbosely apply the operation to every array element. Instead, we use a for loop or map that loops over the list and applies the operation. 
+
+All of these factors contribute to one larger code quality: readability @borstler_developers_2023 @borstler_i_2018 @hunter-zinck_ten_2021. According to #citeauthor(<fakhoury_measuring_2020>), readability influences cognitive load and performance of developers. 
+
+To summarize, comprehensibility and structure are very important. Combined with reduced duplication it leads to better readability, which is something we want to achieve. More concretely: in this thesis, we consider 'good' code as code a senior developer would have written in their best language. Furthermore, we follow the style guide of the language, written by Microsoft. This style guide establishes that we need to use the newest language features, write clear, concise code, and adhere to the naming conventions. We acknowledge this is still vague and that idiomatic code is pretty subjective. We will give more examples of what we consider good C\# code in @sec:eval:readability.
