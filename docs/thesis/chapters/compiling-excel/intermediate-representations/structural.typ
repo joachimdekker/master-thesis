@@ -84,7 +84,7 @@ Still, semantically, it is important to still consider these formula cells apart
 It is possible to use custom formatting for a cell in Excel. For instance, a number $4.00$
 can be formatted to let it look like a currency $euro 4.00$. It is often used with dates. 
 
-We do not consider formatting primarily because Excel stores the content of a cell apart from the formatted value. Hence, we can always take the 'normalized' value and use these in our calculations. This avoids the conversion of formatted values to normalized values.
+We do not consider formatting primarily because Excel stores the content of a cell apart from the formatted value. Hence, we can always take the 'normalised' value and use these in our calculations. This avoids the conversion of formatted values to normalised values.
 
 == References
 References are a way to refer to a cell, range or table. They link computations together by representing the (computed) value in another computation.

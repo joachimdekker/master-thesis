@@ -330,7 +330,7 @@ The structure of the chain-table is similar to the normal table. The chain-table
 // - Using one IR for everything, also the structure is near impossible.
 // - Multiple IRs allow for more granular passes, which make the compiler more maintainable and the code more readable.
 
-= Excelerate <sec:excelerate>
+= #text("Excelerate") <sec:excelerate>
 #figure(image("../../images/excel-compiler-overview.png"),
 caption: [Overview of the Excelerate compiler. The phases have been given different colors.])
 
@@ -454,7 +454,7 @@ Finally, the code is converted to the data model of the Roslyn Compiler Platform
 
 Now that we have given a grand overview, we will dive deeper into the different phases of the compiler. We first discuss the structural phase, pointing out the similarities between the excel spreadsheet and the structural representation. Then, we move over to the compute phase, formally describing the compute model, both in the compute graph and compute grid. We also cover the data phase and representation and discuss how we extract information from this. Finally, we combine the previous two and describe the code representation and the code phase.
 
-= Modeling the workbook<sec:structural-phase>
+= Modeling the workbook
 
 As we have discussed in @sec:trivial-compiler, the structure is of utmost importance for readable code. Hence, it is important to model the structure of the excel workbook. In the first phase of the compiler, the _structural phase_, exactly does this. To capture the design, we use the _structural model_, an intermediate representation designed specifically for the spreadsheet workbook. In this section, we discuss this phase and the accompanying representation along with the passes needed to construct it fully.
 
@@ -526,14 +526,14 @@ For our own intermediate represenation we only consider the worksheets in the `s
 ```,
   caption: [A row in the `sheet1.xml` file describing the contents of the cells in the worksheet.],
   placement: auto
-)<fig:excel:sheet-structure>
+)
 
 === Extracting the information
 In order to work with the information, we extract the information to our own two-dimensional spreadsheet model. We look at the `sheet.xml` files and parse them to convert the data to our model. When we parse the files, we distinguish between two cells: a _value cell_ and a _formula cell_. The value cell contains constant data and is copied directly without further modification. The formula cell contain a composition of Excel formulae and are parsed before copied to the model. 
 
 The spreadsheet is converted in it's whole, and we might parse sections that we will not use in subsequent steps of the compilation. This is mainly due to the fact that we do not do a dependency analysis in this phase of the compiler.
 
-In order to parse the formula, we use the work of #citeauthor(<aivaloglou_grammar_2015>) who created a near-perfect parser for Excel formulae.  Their "XLParser" tool converts the formula string to a parse tree. We then transform the parse tree to our own abstract syntax tree consisting of basic operations as can be seen in the definition of the tree in @fig:excel:formula-syntax.
+In order to parse the formula, we use the work of #citeauthor(<aivaloglou_grammar_2015>) who created a near-perfect parser for Excel formulae. Their "XLParser" tool converts the formula string to a parse tree. We then transform the parse tree to our own abstract syntax tree consisting of basic operations as can be seen in the definition of the tree in @fig:excel:formula-syntax.
 
 #figure(
   "[[Placeholder]]",
@@ -723,7 +723,7 @@ Chains are detected according to the following specification and requirements:
 
 While the specification of the chain looks similar to the table, it is important to note that when a computed chain references a recursive chain column, it will automatically become an recursive chain column since we need the value of that cell, which can only be calculated recursively. Furthermore, a big difference between the table and the chain is the initialisation. We detect the initialisation by looking at the cell types. When a column needs an initialisation, it will need a value cell for the base case or initialisation and formula cells to calculate the rest.  
 
-A great example of the conversion of a chain is the savings spreadsheet, for which an excerpt can be found in @chain:example1. Note that we find two areas: A1:D8 and F1:F2. Only A1:D8 is detected as a column. We can see two recursive columns: _Interest_ and _Total_ which both reference the previous columns. 
+A great example of the conversion of a chain is the savings spreadsheet, for which an excerpt can be found in @chain:example1. Note that we find two areas: A1:D8 and F1:F2. Only A1:D8 is detected as a chain. We can see two recursive columns: _Interest_ and _Total_ which both reference the previous columns. 
 
 Extracting the chain structure is nearly the same as the table: we simply mark the initialisation and data columns separately in order for them to be categorized and transformed in the next phase. We mark these with the help of the `Selection` datastructure. It results in a _Chain_ structure that is added to the collection of structures in the workbook.
 
@@ -737,7 +737,7 @@ Extracting the chain structure is nearly the same as the table: we simply mark t
   
 == Formal definition of the Structure IR
 
-We have discussed the structural phase of the compiler in high level above. Now, we want to take the time to cover a more formal definition of the structure model. This representation captures the exact essence of the whole Excel Workbook (or file) and allows for manipulation on cell level. The model preserves the grid layout of the spreadsheet and acts as a foundational structure for building higher-level representations, anchoring the subsequent computations to their visual and logical positions in the spreadsheet. An overview can be seen in @ir:structure.
+We have discussed the structural phase of the compiler at a high level above. Now, we want to take the time to cover a more formal definition of the structure model. This representation captures the exact essence of the whole Excel Workbook (or file) and allows for manipulation on cell level. The model preserves the grid layout of the spreadsheet and acts as a foundational structure for building higher-level representations, anchoring the subsequent computations to their visual and logical positions in the spreadsheet. An overview can be seen in @ir:structure.
 
 #figure(
 ```cs
@@ -757,11 +757,6 @@ record Cell(Location Location);
   -> record FormulaCell(string Formula);
 
 record Table(string Name, Range Location, Column[] Column);
-
-record Reference();
-  -> record Location(int Row, int Column, string Spreadsheet)
-  -> record Range(Location From, Location To)
-  -> record TableReference(string Table, string[] Columns)
 ```,
 placement: auto,
 caption: [The definition of the Structure Model. It essentially represents the Excel workbook while adding some features like the structures. ]
@@ -841,7 +836,7 @@ We already saw a glimpse of the Compute Phase in the Trivial Compiler in @sec:tr
 
 At the core of the compute model lies the compute unit. This unit represents a basic operation with input and output. Compute units can be connected to each other, forming a network or flow of computations. When compute unit _A_ uses the output of compute unit _B_ as input, then we say that unit _B_ is a _dependency_ of unit _A_. Conversely, unit _A_ is a _dependent_ of unit _B_. 
 
-A formula represents a way of computing a value in Excel. Similarly, in Excelerate, the _Compute Unit_ represents a part of the computation that is being done in Excel. We say _part_ here since the Compute Unit often is composed with other Compute Units. To illustrate this, consider the budget income in @sps:compute-unit:budget. The formula in cell `D2` (`= C2 - B2`) can be deconstructed into three Compute Units: the `-` operation or function and the two dependencies to cells `C2` and `B2`. This illustrates the composition of the compute units. Furthermore, when we say that a cell _references_ another cell, structure or compute unit, what we mean is that the cell contains a _reference_ compute unit somewhere in the composition of the compute units in that cell.
+A formula represents a way of computing a value in Excel. Similarly, in Excelerate, the _Compute Unit_ represents a part of the computation that is being done in Excel. We say _part_ here since the Compute Unit often is composed with other Compute Units. To illustrate this, consider the budget income in @sps:compute-unit:budget. The formula in cell `D2` (`= C2 - B2`) can be deconstructed into three Compute Units: the "`-`" operation or function and the two dependencies to cells `C2` and `B2`. This illustrates the composition of the compute units. Furthermore, when we say that a cell _references_ another cell, structure or compute unit, what we mean is that the cell contains a _reference_ compute unit somewhere in the composition of the compute units in that cell.
 
 As we already saw, there are a few additions to the types of compute unit when compared with the Trivial Compiler in @sec:trivial-compiler. Aside from the simple and generic Function and Constant compute units, the full Compute Model also includes structure-specific units.
 
@@ -863,7 +858,7 @@ Normal references like the cell, range and table references are references nativ
 The table reference is a bit different than the cell and range references. While it does point to an actual location in the spreadsheet, we do not model it this way. The primary reason for this is the fact that Excelerate views structures like tables as special constructs and allows them to be exchanged for different data. As such, mapping the table reference to an 'hard' range reference referencing a column of a table will over- or underspecify the rows in a user-provided table. 
 
 ==== Dynamic
-The structure references are special and are Excelerate-specific. They reference to a certain part of a structure. As we will see in @subsec:compute-grid, references to structures should be made explicit in the compute graph. To illustrate, take @sps:compute-unit:budget, which we already considered to be a table. Notice the `=SUM(D2:D4)` in `B6` which references all the data in the _Difference_ column. We actualy want to replace this range reference with a non-hard-coded reference, which is why we have compute units like _Column Reference_ which references the whole column of a structure, kind of like a more generic Table Reference.
+The structure references are special and are Excelerate-specific. They reference to a certain part of a structure. As we will see in @subsec:compute-grid, references to structures should be made explicit in the compute graph. To illustrate, take @sps:compute-unit:budget, which we already considered to be a table. Notice the `=SUM(D2:D4)` in `B6` which references all the data in the _Difference_ column. We actually want to replace this range reference with a non-hard-coded reference, which is why we have compute units like _Column Reference_ which references the whole column of a structure, kind of like a more generic Table Reference.
 
 Also when a cell references a single cell in a structure, we need a way to denote this. This is done by looking at the column and the position in the column. For instance, cell C2 would become a _Table Cell Reference_ to the first row of the _Actual_ column or `TableCellReference("Table1", "Actual", 1)`. For the chain, we have similar compute units. The critical reader may already object to this idea, as this notion may break when we introduce data that is different than what was originally in the spreadsheet. We agree, and while we do allow this kind of notation, the compiler will warn the user that it has detected a direct reference to a single cell in the structure.
 
@@ -874,7 +869,7 @@ The exception here is the _Recursive Result Reference_ which is the cell in the 
 
 Now that we have discussed the compute unit more in-depth, we can finally discuss how it all comes together in the _Compute Grid_ and the _Compute Graph_. We introduce the _Compute Grid_: A sparse two-dimensional grid-like data structure that models the computation done in every individual cell. Essentially, the Compute Grid is the stepping stone between the structure model and the compute graph: it retains the grid-like structure of the structure model, while modelling the calculations according to the compute model. It allows for more granular compilation to the compute model, since we can first convert the cells to the compute model and link them afterwards.
 
-The compute grid is, unlike the structure model, a sparse datastructure. This means that we store the cells by their location in a dictionary. As will become clear in the next subsection, the compute grid has a lot of empty cells due to optimizations. We do not want to store these emtpy cells, as such, we store the cells in a sparse datastructure.
+The compute grid is, unlike the structure model, a sparse datastructure. This means that we store the cells by their location in a dictionary. As will become clear in the next subsection, the compute grid has a lot of empty cells due to optimisations. We do not want to store these emtpy cells, as such, we store the cells in a sparse datastructure.
 
 In this subsection, we briefly discuss the straightforward conversion from the structure model to the compute grid. Then, we introduce the conversion and embedding of the structures, highlighting why the compute grid is an excellent datastructure. Finally, we introduce a part of the Data Model that works closely with the Compute Model to capture the data of the structures.
 
@@ -883,7 +878,7 @@ The conversion of the structure pass to the compute pass is pretty straightforwa
 
 We begin with the outputs that the user has specified when they run Excelerate. These outputs will be converted from the structure model to compute units. Then, using a depth-first method, we convert their dependencies in the same way. When a cell has been converted to a composition of compute units, it is added to the compute grid.
 
-An important side effect of this is that we only insert the cells that we depend on and ignore the rest. This makes this compilation step also a optimization step since we remove any cells that would be _dead code_. This is the primary reason why the compute grid is a sparse datastructure in comparison to the structure model, since it can remove a lot of unused cells.
+An important side effect of this is that we only insert the cells that we depend on and ignore the rest. This makes this compilation step also a optimisation step since we remove any cells that would be _dead code_. This is the primary reason why the compute grid is a sparse data structure in comparison to the structure model, since it can remove a lot of unused cells.
 
 When converting the structure model to the compute model, we mainly distinguish between two cases:
 + The cell is a _Value Cell_: the value of the cell is copied to a _Constant_ compute unit and the type is persisted.
@@ -954,9 +949,9 @@ As such, the _Replace References_ compiler step converts range references that r
 // Furthermore, this step simplifies references to structures in single cell references. For instance, when a cell references a cell with a structure reference, it would be mapped as: `A1:=20 * C4` and `C4:=SR('Struct1', 'Col1', 1)`. This pass simplifies this and inserts the latter compute unit into the former, remove a node from the tree (the `C4` node in this case): the single dependency of the `C4` node will be substituted in the `A1` compute unit, resulting in `A1:20 * SR('Struct1', 'Col1', 1)`.
 
 == Type Resolution
-In general, when compiling to strongly typed languages, you need to know the types of the computations you want to model. We already saw in @sec:structural-phase that Excel provides the types at cell level: we used those to infer the types of the cells in a structure and could infer the type of a column based on that. The types we discovered in @sec:structural-phase do not cover the formulas. These types are automatically inferred by Excel and are not disclosed when parsing them. In other words, we need to resolve the types for individual compute units.
+In general, when compiling to strongly-typed languages, you need to know the types of the computations you want to model. We already saw in @sec:structural-phase that Excel provides the types at cell level: we used those to infer the types of the cells in a structure and could infer the type of a column based on that. The types we discovered in @sec:structural-phase do not cover the formulas. These types are automatically inferred by Excel and are not disclosed when parsing them. In other words, we need to resolve the types for individual compute units.
 
-Since we do know the types of the leaves of the graph, as they are constant values and have been given a type from the start, we can infer the types of their dependents, and thus recursively build a typed Compute Graph. In order to know what the type is of a certain compute unit, we rely on the types of the dependencies and a _Inference Rule_. This inference rule describes what a valid inference is for this compute unit, and what its type might be if there is a valid inference. There can be multiple inference rules for one compute unit.
+Since we do know the types of the leaves of the graph, as they are constant values and have been given a type from the start, we can infer the types of their dependents, and thus recursively build a typed Compute Graph. In order to know what the type is of a certain compute unit, we rely on the types of the dependencies and an inference rule. This inference rule describes what a valid inference is for this compute unit, and what its type might be if there is a valid inference. There can be multiple inference rules for one compute unit.
 
 For instance, take the _Function_ compute unit, especially the `F('+')` compute unit, which is basic addition between two dependencies. See the inference rule in @inf:type-res:addition, which uses some syntactic sugar to state that the function `F('+')` can be type $tau$ if and only if it has two arguments: which is denoted by the pattern matching `[a1, a2]` that denotes that the list should have two elements `a1` and `a2`; and that those two arguments are both of the same type.
 
@@ -995,6 +990,8 @@ Other inference rules, like for cell references are pretty straightforward: they
 === Precision
 Within Excel, most datatypes adhere to a 15 digit precision. This precision is derived from the IEEE 754 specification, which can only provide 15 digits of significant precision. Hence, we are safe to use the double precision floating data type. 
 Precision is key, especially in the actuarial calculations context. We do not want to lose a few decimal due to precision issues, which would propagate and mean that the pension fund would be paying more or---even worse---less than what you should have gotten.
+
+// This is beter in the next section right?
 
 == The Compute IR
 
@@ -1037,14 +1034,14 @@ Precision is key, especially in the actuarial calculations context. We do not wa
 
 = Generating Readable Code
 
-When we have finished extracting the computations out of the excel sheet and have created a computation based on the structure of the data, it is finally time to produce actual code. The final phase of the compiler, the _Code Phase_ deals with this problem. During the code phase, the compute graph is converted to the code layout model, and then converted to actual programming langauges. In this thesis, we transform the code to C\# code.
+When we have finished extracting the computations out of the excel sheet and have created a computation based on the structure of the data, it is finally time to produce actual code. The final phase of the compiler, the _Code Phase_ deals with this problem. During the code phase, the compute graph is converted to the code layout model, and then converted to actual programming languages. In this thesis, we transform the code to C\# code.
 
-The final phase of the compiler is more than just transforming the compute graph to C\# code. As we will see, there are some extra optimalisations that we can do to make the code extra readable. For this, we need an abstraction of the code that we can easily manipulate: the _Code Layout Model_. This is a model that has both object oriented, procedural features as well as functional features. Consequently, the _Code Layout Model_ can acurately model a lot of programming languages, and is a great abstraction, making the compiler also ready for other languages than C\#.
+The final phase of the compiler is more than just transforming the compute graph to C\# code. As we will see, there are some extra optimisations that we can do to make the code extra readable. For this, we need an abstraction of the code that we can easily manipulate: the _Code Layout Model_. This is a model that has both object oriented, procedural features as well as functional features. Consequently, the _Code Layout Model_ can accurately model a lot of programming languages, and is a great abstraction, making the compiler also ready for other languages than C\#.
 
 In this section, we will first introduce the _Code Layout Model_ in more detail, doing the last step of the compilation and finally compiling to actual code. We also look at some of the compiler steps and optimization steps along the way. Finally, we introduce the step that compiles the code layout model to C\# with the help of the Roslyn API.
 
 == Layout
-The code layout model is the model that provides structural guidance in emitting correct code and ease final transformation on the code. The model simplifies many parts of a normal parse tree and skips a lot of implied syntax.
+The code layout model is the model that provides structural guidance in emitting correct code and ease final transformation of the code. The model simplifies many parts of a normal parse tree and skips a lot of implied syntax.
 
 #figure(
   ```java
@@ -1057,7 +1054,7 @@ The code layout model is the model that provides structural guidance in emitting
   Property(String name, Type type, Expression? init, Expression? get, Expression? set);
   
   Statement()
-    -> If(Expression bool, Statement[] then, Statement[] else)
+    -> If(Expression cond, Statement[] then, Statement[] else)
     -> ExpressionStatement(Expression expression)
     -> Declaration(Variable variable, Expression value)
     -> Return(Expression expression);
@@ -1090,7 +1087,7 @@ The IR is able to model standard statements like variable declarations, return a
 
 === Let
 
-Many of the expressions are super straightforward and are directly copied from popular object-oriented and procedural programming languages. However, transforming object-oriented code can have it's hassles. If we want to transform a body of a method with procedural statements, it can become quite tricky when working with both expressions and statements. For instance, let's say we want to transform the following snippet of code:
+Many of the expressions are straightforward and are directly copied from popular object-oriented and procedural programming languages. However, transforming object-oriented code can have its hassles. If we want to transform the body of a method with procedural statements, it can become quite tricky when working with both expressions and statements. For instance, let's say we want to transform the following snippet of code:
 
 ```cs
 ...
@@ -1113,13 +1110,13 @@ As such, the _Code Layout_ model introduces a known concept in functional progra
 
 ```hs
 let array = [1,2,3,4,5]
-in array.Sum();
+in array.Sum() / 5d;
 ```
 
 Not only does this simplify the tracking and changing algorithms, as we now only need to concern ourselves with expressions, it also allows for immutability of the assignments. A side effect of this effort is static single assignment, which simplifies analysis and compilation.
 
 === Types
-Within the Code Layout representation, we consider types really important. Many higher level programming languages are strictly typed languages, which means that everything should have a type at compile time. As such, our model requires the typing of every single entity.
+Within the Code Layout representation, we consider types really important. Many high-level programming languages are strictly typed languages, which means that everything should have a type at compile time. As such, our model requires the typing of every single entity.
 
 Many types are automatically converted when we convert the compute graph to the code layout model. Furthermore, many expressions and statements do not require their own types, but can infer their types from the types of their children. For instance, take the `ListExpression` which is always of the `ListOf` complex type. The `ListExpression` models a sequence of values of the same type $tau$, and as such, the `ListExpression` will always be of type `ListOf(`$tau$`)`
 
@@ -1180,24 +1177,24 @@ public class Savings
     }
 }
 ```,
-caption: [A simplified code snippet of the Savings chain compiled to C\# code.]
+caption: [A code snippet of the Savings chain compiled to C\# code.]
 )<code:chain:compiled>
 
 We see here that the _Deposit_ column is compiled to a list of doubles. The computed and recursive columns are compiled to the `InterestAt` and `TotalAt` properties. Notice that the `TotalAt` property contains a recursive call to itself, and thus requires a base case. The computed column _Interest_ does not require a base case since it does not have a reference to itself.
 
 === Creating the model
 
-Now that we have the types for the structures, we can finally convert the compute graph to the code layout model. In order to do this we use a couple of steps, which we will cover in more detail in the subsections below. First, we introduce variables into the compute graph by using the references of the Compute Model and create the first iteration of the Code Layout Model. Then we iterate upon that model and refine and optimize it, making it more efficient and readable. Finally, we emit the code layout model as code to the disk.
+Now that we have the types for the structures, we can finally convert the compute graph to the code layout model. In order to do this we use a couple of steps, which we will cover in more detail in the subsections below. First, we introduce variables into the compute graph by using the references of the Compute Model and create the first iteration of the Code Layout Model. Then we iterate upon that model and refine and optimise it, making it more efficient and readable. Finally, we emit the code layout model as code to the disk.
 
 ==== Variables
 The first step of the code layout model is the introduction of variables. Like we covered in @sec:trivial-compiler, the Excel compute model can be seen as one big expression that needs to be evaluated. However, as we saw, that would quickly become unreadable. As such, we need to introduce variables to make sense of the big sub-expressions. We also use variables to refer to the structures we created.
 
-In Excelerate, we use the _Formula Cells_ as reference points for the variables. In more precise terms, we start at the root of the Compute Graph, and work our way down the graph. Everytime we encounter a compute unit that is from a new cell, we begin constructing a new variable and put the old one in a _Let_ expression. In other words, we recursively build a big expression of _Lets_. 
+In Excelerate, we use the _Formula Cells_ as reference points for the variables. In more precise terms, we start at a root of the Compute Graph, and work our way down the graph. Every time we encounter a compute unit that is from a new cell, we begin constructing a new variable and put the old one in a _Let_ expression. In other words, we recursively build a big expression of _Lets_. 
 
-From there, we can mutate the whole compute model as one big expression: extract functions, optimize access logic, etc.
+From there, we can mutate the whole compute model as one big expression: extract functions, optimise access logic, etc.
 
 ==== Statements
-Afterward the optimizations, we need to convert the _Let_ expression to statements, since many programming languages do not support the _Let_ expression. As such, we employ a very simple algorithm that just converts every assignment in every _Let_ expression to a statement. The following code layout model would be transformed:
+After the optimisations, we need to convert the _Let_ expression to statements, since many programming languages do not support the _Let_ expression. As such, we employ a very simple algorithm that just converts every assignment in every _Let_ expression to a statement. The following code layout model would be transformed:
 
 ```
 DeclarationStatement z (Let y = 10
@@ -1215,7 +1212,7 @@ DeclarationStatement z (x + y)
 
 The current layout model is looking more and more like a high level programming language. This example also exemplifies the versatility of the code layout model, as we can have two different styles for variable declaration that are highly coupled in parallel. This versatility is crucial when supporting different programming languages, and makes the Excelerate compiler ready for future expansion.
 
-=== Optimizations
+=== Optimisations
 
 There are two different optimization steps we do, one optimizes the code so heavily that it is nearly required to run this step. The other step makes the code more readable with a minor adjustment.
 
@@ -1280,17 +1277,17 @@ and is instantly more readable.
 
 == Emission <subsec:code:emission>
 
-Just before emission, at the end of the _Code Phase_, we have constructed a language-agnostic representation of the Excel computation. The final challenge is to convert this abstract model into concrete compilable code. In this thesis, we chose C\# for the target or destination language. In this subsection, we briefly cover the Roslyn API to explain what it does. Then we dive into the code generation and explain how we map the code: a pretty straightforward process. Finally, we discuss some of the subtleties needed to make the project actually compile.
+Just before emission, at the end of the _Code Phase_, we have constructed a language-agnostic representation of the Excel computation. The final challenge is to convert this abstract model into concrete compilable code. In this thesis, we chose C\# for the target or destination language. In this subsection, we briefly cover the Roslyn API to explain what it does. Then we dive into the code generation and explain how we map the code: a straightforward process. Finally, we discuss some of the subtleties needed to make the project actually compile.
 
 === Roslyn API
 The Roslyn API is an open-source .NET compiler platform developed by Microsoft. It exposes the whole compiler process, from internal data structures to transformations, to the programmer and let's the programmer use the compiler within the C\# language itself. 
 
-Like we spoke about earlier, the Roslyn API is incredible flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive and expressive and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Layout Model_ grants.
+Like we spoke about earlier, the Roslyn API is incredible flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive, verbose, and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Layout Model_ grants.
 
 It is important to emphasize that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimization, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations. It does this on the Roslyn syntax tree as it is being generated, such as choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used.
 
 === Mapping
-Translating from the _Code Layout Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this pretty direct, and not much work is needed.  For example, a list initialization in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimizations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
+Translating from the _Code Layout Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this direct, and not much work is needed.  For example, a list initialization in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimisations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
 
 Furthermore, we rely on a few helper methods from the _Code Layout Model_ to create constructors for types, as they are not explicitly defined in the model but rather derived from the settable data in the structures.
 

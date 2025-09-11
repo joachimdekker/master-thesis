@@ -3,7 +3,7 @@
 = Idiomatic Code
 
 _Idiomatic_ means "containing expressions that are natural to a native speaker of a language" @lea_idiomatic_2025. While this definition is meant for natural languages, we can also extend it to programming languages: "containing expressions that are natural to a senior programmer writing the language".
-While software engineers consider creating code as a big part of their job @jetbrains_software_2024, one universal definition of what is considered 'good' code is hard to determine. This was made clear by #citeauthor(<borstler_i_2018>) in their aptly titled paper: "I know it when I see it", indicating that factors of code quality are diverse across demographics @borstler_i_2018. 
+While software engineers consider creating code as a big part of their job @jetbrains_software_2024, one universal definition of what is considered 'good' code is hard to determine. This was made clear by #citeauthor(<borstler_i_2018>) in their paper---aptly titled "I know it when I see it"---indicating that factors of code quality are diverse across demographics @borstler_i_2018. 
 
 Yet, a plethora of books and papers have been written on what is considered good or idiomatic code @mcconnell_code_2004 @hunter-zinck_ten_2021 @fowler_refactoring_2019 @winter_agile_2014 @hunt_pragmatic_2011. In this section, we briefly provide an overview of what the literature considers to be 'good' code.
 

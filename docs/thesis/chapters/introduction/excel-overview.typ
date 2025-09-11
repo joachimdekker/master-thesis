@@ -1,4 +1,4 @@
-= Excel
+= Excel<sec:intro:excel>
 
 Excel is an (online) spreadsheet application developed by Microsoft. It is used extensively in the world of Finance, as can be inferred by the sheer amount of financial-themed books and papers on the topic. It allows for data modelling, manipulation and analysis, transforming a painful manual calculation into an automated process in just a few clicks. 
 
@@ -53,6 +53,7 @@ In Excel, a formula is an expression that calculates the value of a cell. Every 
 - Functions are predefined operations that perform specific calculations on their arguments. For example, `SUM(1;2;3;4;5)` will sum up the arguments. An interesting thing with Excel is that the names and notation of the functions are language dependent. For instance, in Dutch, the `SUM` function is translated to `SOM`. As well as the notation for the arguments list, where in one language the arguments are split with a semi-colon `;` , another language splits them with a comma `,`.
 - Operators are special functions that can be inlined. For example, the plus `+` or minus `-` operators. For the order of operations, Excel follows the PEMDAS rule.
 - References provide pointers to other cells or ranges within the worksheet in the form of the _A1-notation_. This notation targets the rows and columns, where the columns are represented by the alfabet, and the rows by a number. For instance, the cell in the third column, and fourth row, would be `C4`. [Provide Example with different references] References can be _relative_ to the cell or _absolute_. _absolute references_ are started with a dollar sign `$`. It is possible to only make the row or column absolute, to create a _hybrid reference_.
+  - It is possible to reference other worksheets by appending the worksheet name to the reference with an '`!`' infix. For example, to reference cell `C4` in the `Monthly Expenses` from anywhere in the workbook, we use `'Monthly Expenses'!C4`. Notice how the use of spaces is allowed as long as the name of the worksheet is between quotes (`'`).
 
 // == Calculation-Mode
 // While most of the underlying logic of Excel is not available, since Excel is a commercial project, there are no official sources that discuss the underlying working of Excel. However, 

@@ -6,7 +6,7 @@
   hasTitle: false,
   ..content
 ) = {
-  let border(t) = table.cell(text(t, fill: luma(80%), weight: "bold", size: 0.7em), fill: black, inset: 0.5em, align: center + horizon,)
+  let border(t) = table.cell(text(t, fill: luma(80%), weight: "bold", size: 0.6em), fill: black, inset: (x:0.5em, y:0.3em), align: center + horizon,)
 
   let chars = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K")
 
