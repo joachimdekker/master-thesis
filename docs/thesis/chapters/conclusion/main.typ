@@ -2,7 +2,7 @@
 
 #chapter("Conclusion")
 
-#include "related-work.typ"
+// #include "related-work.typ"
 
 #include "conclusion.typ"
 

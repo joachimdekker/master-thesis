@@ -51,29 +51,35 @@
   it
 }
 
+//
+// MAKE ALL TERMS CURSIVE!!!
+//
 
 At first glance, an Excel workbook might seem like a collection of mere numbers and formulas, arranged in rows and columns. Yet, beneath this seemingly simple grid lies a carefully orchestrated structure that not only conveys data but also encodes lots of semantics and context.
 
-Consider the family budget spreadsheet introduced in the previous chapter in @fig:family-budget:overview. Just looking at the data and formulas to calculate the full budget is unreadable. The formulas, structure and styles make the spreadsheet extra strong. As we will show in this chapter, translating the spreadsheet bears a lot of similarities. Translating this spreadsheet into C\# code is not just a matter of converting the underlying epxression. The bigger challenge lies in preserving the readability and implicit structure that gives the spreadsheet its meaning.
+Consider the family budget spreadsheet introduced in the previous chapter in @fig:family-budget:overview. The data and formulas alone do not communicate the semantics of the spreadsheet well. The styles and structures used in the spreadsheet is what transforms these pieces of data into an understandable presentation. As we will show in this chapter, the ideal code bears lots of similarities to the structures in the spreadsheets. As such, translating this spreadsheet into C\# code is not just a matter of converting the underlying expression. The bigger challenge lies in preserving the readability and implicit structure that gives the spreadsheet its meaning.
 
-This chapter begins with the most straightforward approach, which we dub the trivial compiler. We show it is easy to compile a spreadsheet to code by treating the spreadsheet as a flat collection of formulas. The result is correct, but not absolutely not analyzable or _idiomatic_. In the upcoming subsection, we explain why this is the case, and what we view as idiomatic code.
+This chapter begins with the most straightforward approach, which we dub the _Trivial Compiler_. We show it is easy to compile a spreadsheet to code by treating the spreadsheet as a flat collection of formulas. The result is correct, however, it cannot be analyzed nor is it _idiomatic_. In the upcoming subsection, we explain why this is the case, and what we view as idiomatic code.
 
-Recognizing this limitation, we then introduce a more robust approach: _structure-aware compilation_. This approach captures the structure of the spreadsheet and guides the compilation process. Consequently, the compiler can produce code that is not only correct but also easier to read and maintain, preserving the spreadsheet’s original semantics.
+Recognizing this limitation, we then introduce a more robust approach: _structure-aware compilation_. This approach captures the structure of the spreadsheet and guides the compilation process. Consequently, the compiler can produce code that is not only correct but also easier to read and maintain. Essentially, it preserves the spreadsheet’s original semantics.
 
-In the remainder of this chapter, we explore the latter of this approach in detail, describing the compiler while walking down the steps. We cover the algorithms and intermediate representations necessary to support this structure-aware compilation for Excel.
+In the remainder of this chapter, we explore the latter of this approach in detail, describing the compiler while walking down the steps the compiler takes when transforming the spreadsheet. We cover the algorithms and intermediate representations necessary to support this structure-aware compilation for Excel.
 
 = The Trivial Route<sec:trivial-compiler>
 The most trivial way to compile an Excel workbook is by extracting the underlying computational model and compiling it directly to C\# code. The underlying computational model is comprised of a graph of connected formulae, where formulae in different cells are connected through the use of references.
-In this section, we briefly discuss the easiest way to compile an excel sheet and evaluate the output. As we will see in the rest of the thesis, we can use a different, more robust form of _structure-aware compilation_ to compile the spreadsheet better.
+In this section, we briefly discuss the easiest way to compile an excel sheet and evaluate the output. This is done in order to highlight the shortcomings of this method and the difficulties of creating idiomatic code. The remainder of the thesis introduces _structure-aware compilation_: a more robust form of compilation achieving more idiomatic transformations.
+// we will see in the rest of the thesis, we can use a different, more robust form of _structure-aware compilation_ to compile the spreadsheet better.
 
 #include "examples/budget-income.typ"
 
-We walk through the example of a portion of the budget spreadsheet, shown in @sps:budget:income. We see it is a table that describes the three incomes of the family, with the expected (projected) and the actual amount of money that has been received this month. This is a basic example since there are not that many complexities in this spreadsheet. However, we will see that the simple compiler cannot even compile this simple example.
+We walk through the example of a portion of the budget spreadsheet, shown in @sps:budget:income. This table describes the three incomes of the family, with the expected (*Projected*) and the actual amount of money that has been received this month.
+This is a basic example since there are not that many complexities in this spreadsheet. @sps:budget:income:formulae shows the formulae behind the spreadsheet. In order to calculate the total difference in expected versus actual earnings, we need to sum up three values, which each take the difference between two values. However, we will see that the simple compiler cannot even compile this simple example.
 
 == Compute Units
-For simplicities sake in this section, we will assume we already can easily access the contents of the cells. The first step or compiler pass of the trivial compiler is extracting the compute flow graph. However, unlike in other languages, in Excel has no explicit control flow, except for certain formulas. 
+For the sake of simplicity, we assume that cell contents are readily accessible. We avoid 
+For simplicities sake in this section, we will assume we already can easily access the contents of the cells. The first step or compiler pass of the trivial compiler is extracting the control flow graph. However, unlike in other languages, in Excel has no explicit control flow, except for certain formulas. 
 
-Hence, we construct a Compute Graph (which is similar but distinct from a compute flow graph), where we consider the contents, functions and operators to be nodes in the graph. We call the nodes in the graph _Compute Units_. The graph is undirected, and can have multiple roots. The outputs of the program are the roots of the graph. For instance, if we look at a different view of @sps:budget:income we see the formulae that computes the cell `D5`. If we take this as an output of our generated program, we can trace the dependencies that are needed to calculate D5, and their dependencies, etc... to generate a tree (or graph since we can re-use cells) of calculations. 
+Hence, we construct a Compute Graph (which is similar but distinct from a control flow graph), where we consider the contents, functions and operators to be nodes in the graph. We call the nodes in the graph _Compute Units_. The graph is undirected, and can have multiple roots. The outputs of the program are the roots of the graph. For instance, if we look at a different view of @sps:budget:income we see the formulae that computes the cell `D5`. If we take this as an output of our generated program, we can trace the dependencies that are needed to calculate D5, and their dependencies, etc... to generate a tree (or graph since we can re-use cells) of calculations. 
 
 While we construct this tree, we convert every cell with a constant to a _constant_ compute unit. This compute unit cannot have dependencies and acts as a leaf of the graph. Cells `B2:C4` are all cells with constants, and will thus be converted to a constant compute unit. 
 
@@ -127,7 +133,8 @@ If a cell contains a formula, it is a different story. We need to be sure to ful
 In the end we will construct a compute graph like in @fig:family-budget:income-summary-compute-graph. The `Sum` formula has three dependencies, which all have two constant dependencies. It is clear to see that this notation and intermediate representation describes the computation that is being done in @sps:budget:income.
 
 == Compiling the code
-When the compute graph is constructed, the code can be generated. The generated compute graph can be seen as one large deconstructed expression. The compute graph generated in @fig:family-budget:income-summary-compute-graph can be expressed as the expression: ``` SUM(2500-1000,1000-2300,5800-6000)```. While we can extract some of the operations in this expression to make the code more legible, it will be come more difficult to read when the expression is larger. Furthermore, the  
+When the compute graph is constructed, the code can be generated. The generated compute graph can be seen as one large deconstructed expression. The compute graph generated in @fig:family-budget:income-summary-compute-graph can be expressed as the expression: ``` SUM(2500-1000,1000-2300,5800-6000)```. While we can extract some of the operations in this expression to make the code more legible, it will become more difficult to read when the expression is larger. 
+//Furthermore, the  
 
 Compiling the structure to C\# is straight-forward. We conduct a fold operation on the compute graph, converting the leaves to C\# constants. By induction, we then convert a node with their already converted dependencies to C\# code. For instance, the minus operation in @fig:family-budget:income-summary-compute-graph would be converted to the minus operator in C\#: `<A> - (<B>)`. Since the fold makes sure that the dependencies of the minus operation are already converted, we can just fill it in so we get `2500 - 1000`. Since C\# also support functional notation, even aggregation operations like `SUM` can be compiled. 
 
@@ -874,7 +881,7 @@ In this subsection, we briefly discuss the straightforward conversion from the s
 === Model to Model
 The conversion of the structure pass to the compute pass is pretty straightforward. Essentially, we look at the outputs the user has specified and convert every cell that has a dependency. Notice that we do not link them together yet, since that is done in the Compute Graph. Since we do not link the dependencies, every cell gets a _tree_ of compute units that will turn into a graph when we convert the compute grid to the compute graph.
 
-We begin with the outputs that hte user has specified when they run Excelerate. These outputs will be converted from the structure model to compute units. Then, using a depth-first method, we convert their dependencies in the same way. When a cell has been converted to a composition of compute units, it is added to the compute grid.
+We begin with the outputs that the user has specified when they run Excelerate. These outputs will be converted from the structure model to compute units. Then, using a depth-first method, we convert their dependencies in the same way. When a cell has been converted to a composition of compute units, it is added to the compute grid.
 
 An important side effect of this is that we only insert the cells that we depend on and ignore the rest. This makes this compilation step also a optimization step since we remove any cells that would be _dead code_. This is the primary reason why the compute grid is a sparse datastructure in comparison to the structure model, since it can remove a lot of unused cells.
 
@@ -1003,8 +1010,6 @@ Precision is key, especially in the actuarial calculations context. We do not wa
       -> record RangeReference();
     -> record DataReference(); // Not the same as a normal reference.
     -> record Function(string Name);
-    -> record Table(Column[] Columns);
-    -> record Chain(Column[] Columns);
   record CircularDependency(ComputeUnit[] CircularDependencies)
   ```,
   caption: [The Compute IR]
@@ -1036,7 +1041,7 @@ When we have finished extracting the computations out of the excel sheet and hav
 
 The final phase of the compiler is more than just transforming the compute graph to C\# code. As we will see, there are some extra optimalisations that we can do to make the code extra readable. For this, we need an abstraction of the code that we can easily manipulate: the _Code Layout Model_. This is a model that has both object oriented, procedural features as well as functional features. Consequently, the _Code Layout Model_ can acurately model a lot of programming languages, and is a great abstraction, making the compiler also ready for other languages than C\#.
 
-In this section, we will first introduce the _Code Layout Model_ in more detail, doing the last step of the compilation and finally compiling to actual code. We also look at some of the compiler steps and optimalization steps along the way. Finally, we introduce the step that compiles the code layout model to C\# with the help fo the Roslyn API.
+In this section, we will first introduce the _Code Layout Model_ in more detail, doing the last step of the compilation and finally compiling to actual code. We also look at some of the compiler steps and optimization steps along the way. Finally, we introduce the step that compiles the code layout model to C\# with the help of the Roslyn API.
 
 == Layout
 The code layout model is the model that provides structural guidance in emitting correct code and ease final transformation on the code. The model simplifies many parts of a normal parse tree and skips a lot of implied syntax.
@@ -1210,9 +1215,9 @@ DeclarationStatement z (x + y)
 
 The current layout model is looking more and more like a high level programming language. This example also exemplifies the versatility of the code layout model, as we can have two different styles for variable declaration that are highly coupled in parallel. This versatility is crucial when supporting different programming languages, and makes the Excelerate compiler ready for future expansion.
 
-=== Optimalizations
+=== Optimizations
 
-There are two different optimalization steps we do, one optimizes the code so heavily that it is nearly required to run this step. The other step makes the code more readable with a minor adjustment.
+There are two different optimization steps we do, one optimizes the code so heavily that it is nearly required to run this step. The other step makes the code more readable with a minor adjustment.
 
 ==== Mutual Recursion
 If we take another look at the compiled code in @code:chain:compiled, it looks like normal code. However, when we run the code, it takes ages to complete. This is due to a problem called _Mutual Recursion_ where two recursive functions call upon each other. In the example, we see that the `TotalAt` calls itself _and_ the `InterestAt` function. However, the `InterestAt` function also calls the `TotalAt` function. This means that one call to the TotalAt call creates two extra calls to TotalAt. Hence, the amount of times `TotalAt` is called equals $2^x$ where $x$ is the input to the function.
@@ -1265,7 +1270,7 @@ double monthlyBudgetReportJ7 = interestJ12;
 double monthlyBudgetReportD10 = monthlyBudgetReportJ7;
 ```
 
-In this optimalization pass, this will be removed. We do this by refactoring the `Let` nodes, checking if a `Let` node contains another `Let` node with the assignment just a variable name. In the end, we will remove this node, and just assign the value directly to the last variable. As such, the example above becomes:
+In this optimization pass, this will be removed. We do this by refactoring the `Let` nodes, checking if a `Let` node contains another `Let` node with the assignment just a variable name. In the end, we will remove this node, and just assign the value directly to the last variable. As such, the example above becomes:
 
 ```cs
 double monthlyBudgetReportD10 = interestF65 - interestF5 - interestJ11;
@@ -1285,7 +1290,7 @@ Like we spoke about earlier, the Roslyn API is incredible flexible and expressiv
 It is important to emphasize that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimization, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations. It does this on the Roslyn syntax tree as it is being generated, such as choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used.
 
 === Mapping
-Translating from the _Code Layout Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this pretty direct, and not much work is needed.  For example, a list initialization in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimalizations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
+Translating from the _Code Layout Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this pretty direct, and not much work is needed.  For example, a list initialization in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimizations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
 
 Furthermore, we rely on a few helper methods from the _Code Layout Model_ to create constructors for types, as they are not explicitly defined in the model but rather derived from the settable data in the structures.
 

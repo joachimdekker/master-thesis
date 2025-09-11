@@ -13,8 +13,6 @@
 
 #v(22em)
 
-
-
 _Master Software Engineering_
 
 #table(
@@ -28,7 +26,7 @@ _Master Software Engineering_
   [*Student*], [Joachim Dekker, 15887715, #linebreak() `joachim.dekker@{student.uva.nl,infosupport.com}`],
   [*Academic Supervisor*], [dr. Andrés Goens Jokisch (PCS), `a.goens@uva.nl`],
   [*Daily Supervisor*], [Bjorn Jacobs MSc., `bjorn.jacobs@infosupport.com`],
-  [*Host*], [#link("https://www.infosupport.com/", [Info Support B.V.]), Business Unit Finance (BUF) at #link("https://maps.app.goo.gl/8PizXQEhjCxAAm7PA", [Kruisboog 42, 3905TG Veenendaal])],
+  [*Host*], [#link("https://www.infosupport.com/", [Info Support B.V.]), Business Unit Finance (BUF) at #link("https://maps.app.goo.gl/8PizXQEhjCxAAm7PA", [Kruisboog 42, 3905 TG Veenendaal])],
   [*Date*], [#datetime.today().display()]
 )
 

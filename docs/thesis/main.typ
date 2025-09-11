@@ -17,9 +17,9 @@
   justify: true,
 )
 
-#let x = context if (not query(heading.where(level: 1).after(here()))
-      .map(h => h.location().page())
-      .at(0, default: 0) == here().page()) { 0 }
+// #let x = context if (not query(heading.where(level: 1).after(here()))
+//       .map(h => h.location().page())
+//       .at(0, default: 0) == here().page()) { 0 }
 
 // Make sure chapters are level 1 heading and other headings get level 2
 #set heading(numbering: "1.", offset: 1)
@@ -97,6 +97,8 @@
 
 #show raw: set text(font: "JetBrains Mono")
 
+#show "Excelerate": smallcaps
+
 // ========================================================== //
 
 // There are #total-words no words.
@@ -110,5 +112,5 @@
 #include "chapters/conclusion/main.typ"
 
 #pagebreak()
-#bibliography("zotero.bib", title: [Bibliography])
+#bibliography("zotero.bib", title: [Bibliography], style: "short-cite.csl")
 
