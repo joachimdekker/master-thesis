@@ -100,7 +100,7 @@ foreach (var xlsx in xlsxFiles)
         total++;
         if (!comparer.Compare(key.Results, output, appConfig.NumericTolerance, out var diffs))
         {
-            logger.LogError("Results do not compare:\n{diffs}", diffs.Combine("\n"));
+            logger.LogError("Results do not compare ({input} | {ouptut}): {diffs}", key.Trial.InputCells[0].AddressWithSheet, key.Trial.OutputCells[0].AddressWithSheet, diffs.Combine(" ++ "));
             continue;
         }
         passed++;
@@ -110,6 +110,6 @@ foreach (var xlsx in xlsxFiles)
 }
 
 swAll.Stop();
-Console.WriteLine($"\n=== Summary ===");
-Console.WriteLine($"Tests: {passed}/{total} passed  |  Duration: {swAll.Elapsed}");
+logger.LogInformation($"\n=== Summary ===");
+logger.LogInformation($"Tests: {passed}/{total} passed  |  Duration: {swAll.Elapsed}");
 return passed == total && total > 0 ? 0 : 2;

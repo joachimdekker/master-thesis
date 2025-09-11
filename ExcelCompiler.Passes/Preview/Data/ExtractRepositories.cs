@@ -158,7 +158,9 @@ public class ExtractRepositories
             var types = columnRange
                 .Where(c => c is not EmptyCell)
                 .Select(cell => cell.Type);
-            var type = types.Distinct().Single();
+            
+            // Always default to doubles
+            var type = types.Distinct().SingleOrDefault(typeof(double));
             columnTypes[columnName] = type;
         }
 

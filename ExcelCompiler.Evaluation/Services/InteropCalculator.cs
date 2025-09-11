@@ -28,7 +28,7 @@ public sealed class InteropCalculator
                 var (sheetName, address) = SplitAddress(kvp.Key);
                 var ws = (Excel.Worksheet) wb.Worksheets[sheetName];
                 var range = ws.Range[address];
-                SetRangeValue(range, kvp.Value);
+                SetRangeValue(range, kvp.Value, false);
                 ComHelpers.Release(range);
                 ComHelpers.Release(ws);
             }
@@ -89,13 +89,24 @@ public sealed class InteropCalculator
                 var trial = group.Key;
 
                 // Collect the values of the inputs
-                var inputs = new Dictionary<string, object>();
+                var inputs = new Dictionary<string, (bool IsFormula, object Value)>();
                 foreach (var input in trial.InputCells)
                 {
                     var ws = (Excel.Worksheet)workbook.Worksheets[input.SheetName];
                     var range = ws.Range[input.Address];
                     object? v = range.Value2;
-                    inputs[input.AddressWithSheet] = v ?? "";
+                    
+                    // If the value is a formula get the formula instead of the cell value
+                    if (range.Formula is not null)
+                    {
+                        v = range.Formula;
+                        inputs[input.AddressWithSheet] = (true, v);
+                    }
+                    else
+                    {
+                        inputs[input.AddressWithSheet] = (false, v);   
+                    }
+                    
                     ComHelpers.Release(range);
                     ComHelpers.Release(ws);
                 }
@@ -109,13 +120,12 @@ public sealed class InteropCalculator
                         var (sheetName, address) = SplitAddress(kvp.Key);
                         var ws = (Excel.Worksheet)workbook.Worksheets[sheetName];
                         var range = ws.Range[address];
-                        SetRangeValue(range, kvp.Value);
+                        SetRangeValue(range, kvp.Value, false);
                         ComHelpers.Release(range);
                         ComHelpers.Release(ws);
                     }
 
                     // Calculate
-                    Console.WriteLine("Calculating...");
                     app.Calculate();
 
                     // Read outputs
@@ -139,7 +149,7 @@ public sealed class InteropCalculator
                     var (sheetName, _) = SplitAddress(address);
                     var ws = (Excel.Worksheet)workbook.Worksheets[sheetName];
                     var range = ws.Range[address];
-                    SetRangeValue(range, value);
+                    SetRangeValue(range, value.Value, value.IsFormula);
                     ComHelpers.Release(range);
                 }
             }
@@ -163,8 +173,14 @@ public sealed class InteropCalculator
         return (sheetBangAddress[1..(idx-1)], sheetBangAddress[(idx + 1)..]);
     }
 
-    private static void SetRangeValue(Excel.Range range, object value)
+    private static void SetRangeValue(Excel.Range range, object value, bool isFormula = false)
     {
+        if (isFormula)
+        {
+            range.Formula = value.ToString();
+            return;
+        }
+        
         range.Value2 = value switch
         {
             bool or double => value,

@@ -71,7 +71,10 @@ public class ExcelToStructurePass
     private Cell? GetCell(Location cellLocation, ExcelPackage excelFile)
     {
         var cell = excelFile.Workbook.Worksheets[cellLocation.Spreadsheet].Cells[cellLocation.Row, cellLocation.Column];
-            
+        
+        // If the cell is a merged cell, only return when we target the left-most cell
+        // if (cell.Merge) 
+        
         // Check if the cell contains a value or a formula
         bool isFormula = cell.Formula is not null and not "";
         if (!isFormula && cell.Value is null or "") return null!;
@@ -92,91 +95,5 @@ public class ExcelToStructurePass
         }
         
         return new FormulaCell(cellLocation, cell.Value.GetType(), cell.Formula!);
-
-        // ParseTreeNode node = ExcelFormulaParser.Parse(cell.Formula!);
-        //
-        // // Convert the parse tree node to a formula
-        // ComputeUnit formula = ConvertParseTreeToFormula(node, cellLocation);
-        // return formula;
     }
-    //
-    // private ComputeUnit ConvertParseTreeToFormula(ParseTreeNode node, Location location)
-    // {
-    //     if (node.IsParentheses()) return ConvertParseTreeToFormula(node.ChildNodes[1], location);
-    //     
-    //     return node.Type() switch
-    //     {
-    //         GrammarNames.Formula => ConvertParseTreeToFormula(node.ChildNodes[0], location),
-    //         GrammarNames.FunctionCall => ParseFunctionCall(node, location),
-    //         GrammarNames.Text => new ConstantValue<string>(node.Token.ValueString, location),
-    //         GrammarNames.Number => new ConstantValue<decimal>(decimal.Parse(node.Token.ValueString), location),
-    //         GrammarNames.Reference => ParseReference(node, location),
-    //         GrammarNames.UDFunctionCall => throw new ArgumentException(
-    //             "User-defined functions are not supported at this time.", nameof(node)),
-    //         _ => node switch
-    //         {
-    //             { ChildNodes.Count: 1 } childNode => ConvertParseTreeToFormula(childNode, location),
-    //             _ => throw new ArgumentException("Unsupported parse tree node.", nameof(node))
-    //         }
-    //     };
-    // }
-    //
-    //
-    // private ComputeUnit ParseReference(ParseTreeNode node, Location location)
-    // {
-    //     // if (node.IsRange())
-    //     // {
-    //     //     return new FunctionComposition("Range", [
-    //     //         ParseReferenceItem(node.ChildNodes[0], location),
-    //     //         ParseReferenceItem(node.ChildNodes[2], location)
-    //     //     ], location);
-    //     // }
-    //     
-    //     return ParseReferenceItem(node, location);
-    // }
-    //
-    // private ComputeUnit ParseReferenceItem(ParseTreeNode node, Location location)
-    // {
-    //     Reference reference = Reference.Parse(node.Print());
-    //
-    //     return reference switch
-    //     {
-    //         Location locationRef => new CellReference(location, locationRef with {Spreadsheet = locationRef.Spreadsheet ?? location.Spreadsheet}),
-    //         Range range => new RangeReference(location, range with {To = range.To with {Spreadsheet = range.To.Spreadsheet ?? location.Spreadsheet}, From = range.From with {Spreadsheet = range.From.Spreadsheet ?? location.Spreadsheet}}),
-    //         TableReference tableRef => new Representations.Compute.TableReference(location, tableRef),
-    //         _ => throw new ArgumentException("Unsupported reference type.", nameof(reference))
-    //     };
-    // }
-    //
-    // private ComputeUnit ParseFunctionCall(ParseTreeNode node, Location location)
-    // {
-    //     if (node.IsBinaryOperation())
-    //     {
-    //         // Binary operator
-    //         Function func = new Function(location, node.ChildNodes[1].Token.ValueString);
-    //         func.AddDependency(ConvertParseTreeToFormula(node.ChildNodes[0], location));
-    //         func.AddDependency(ConvertParseTreeToFormula(node.ChildNodes[2], location));
-    //         return func;
-    //     }
-    //     
-    //     if (node.IsFunction())
-    //     {
-    //         // Excel function call
-    //         Function func = new Function(location, node.GetFunction());
-    //         foreach (var child in node.GetFunctionArguments().Select(c => ConvertParseTreeToFormula(c, location)))
-    //         {
-    //             func.AddDependency(child);
-    //         }
-    //
-    //         return func;
-    //     }
-    //     
-    //     // It can also be a unary operator like a percentage or something
-    //     if (node.IsUnaryPrefixOperation())
-    //     {
-    //         return new Function(node.ChildNodes[0].Token.ValueString + node.ChildNodes[1].Token.ValueString, location);
-    //     }
-    //     
-    //     throw new ArgumentException("Unsupported parse tree node.", nameof(node));
-    // }
 }

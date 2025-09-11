@@ -33,7 +33,7 @@ public class DetectChains(ILogger<DetectChains> logger) : DetectTables
     public (Selection Initialisation, Selection Data) ExtractChainData(Spreadsheet spreadsheet, Area area,
         out string? title, out List<Cell>? header)
     {
-        var dataPart = ExtractTableData(spreadsheet, area, out title, out header);
+        var dataPart = ExtractTableData(spreadsheet, area, out title, out header, out _);
         
         // Split the data part into the initialisation and the data part
         var rows = dataPart.Rows.Select(CalcHeuristic).ToList();

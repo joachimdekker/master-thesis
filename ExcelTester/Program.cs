@@ -46,7 +46,6 @@ outerSw.Start();
 int count = 1_000_000;
 for (int i = 0; i < count; i++)
 {
-    
     if (i % 1000 == 0)
     {
         Console.WriteLine($"Iteration {i} of {count} ({outerSw.Elapsed.TotalSeconds})");

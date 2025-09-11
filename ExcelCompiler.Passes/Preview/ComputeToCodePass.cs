@@ -24,7 +24,6 @@ public class ComputeToCodePass
 {
     private readonly GenerateTypes _typeGenerator;
 
-    private DataManager _dataManager;
     private ComputeGraph _computeGraph;
     private List<Class> _classes;
     private Dictionary<Construct, Type> _constructRepresentation= new();
@@ -45,10 +44,9 @@ public class ComputeToCodePass
         List<Class> output = [];
 
         // Set the global variables (yeah yeah I know, this is a big no no but please, I just want it to work)
-        _dataManager = dataManager;
         _computeGraph = computeGraph;
         
-        var types = _typeGenerator.Generate(computeGraph, dataManager);
+        var types = _typeGenerator.Generate(computeGraph);
         _classes = types.Select(t => t.Type).ToList();
         output.AddRange(_classes);
 

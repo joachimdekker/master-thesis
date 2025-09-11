@@ -28,7 +28,10 @@ public class DetectAreas
         var graph = ConvertSpreadsheetToGraph(spreadsheet);
         var connectedComponents = FindConnectedComponents(graph);
         var areas = CreateAreasFromComponents(spreadsheet, connectedComponents);
-
+        
+        // Remove areas that are 1 column or 1 row
+        areas = areas.Where(a => a.Range is { Width: > 1, Height: > 1 }).ToList();
+        
         return areas;
     }
 

@@ -214,7 +214,7 @@ public record TypeInferenceTransformer : UnitComputeGraphTransformer
 
     protected override ComputeUnit TableReference(TableReference tableReference, IEnumerable<ComputeUnit> _)
     {
-        var type = _constructs.OfType<Representations.Compute.Specialized.Table>()
+        var type = _constructs.OfType<Table>()
             .Single(t => t.Name == tableReference.Reference.TableName)
             .Columns
             .Single(c => c.Name == tableReference.Reference.ColumnNames[0])

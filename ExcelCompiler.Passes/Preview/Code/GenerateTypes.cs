@@ -4,7 +4,6 @@ using ExcelCompiler.Representations.CodeLayout.Statements;
 using ExcelCompiler.Representations.CodeLayout.TopLevel;
 using ExcelCompiler.Representations.Compute;
 using ExcelCompiler.Representations.Compute.Specialized;
-using ExcelCompiler.Representations.Data.Preview;
 using ExcelCompiler.Representations.Helpers;
 using ListOf = ExcelCompiler.Representations.CodeLayout.ListOf;
 using Type = ExcelCompiler.Representations.CodeLayout.Type;
@@ -14,7 +13,7 @@ namespace ExcelCompiler.Passes.Preview.Code;
 [CompilerPass]
 public class GenerateTypes
 {
-    public List<(Construct Construct, Class Type)> Generate(ComputeGraph graph, DataManager dataManager)
+    public List<(Construct Construct, Class Type)> Generate(ComputeGraph graph)
     {
         IEnumerable<(Construct Construct, Class Type)>? types =
             from construct in graph.Constructs

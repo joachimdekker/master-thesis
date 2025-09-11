@@ -24,7 +24,7 @@ public class DetectTables
     /// <returns></returns>
     public Table Convert(Spreadsheet spreadsheet, Area area)
     {
-        var tableData = ExtractTableData(spreadsheet, area, out string? title, out List<Cell>? header);
+        var tableData = ExtractTableData(spreadsheet, area, out string? title, out List<Cell>? header, out var footer);
         
         // Get the columns
         bool hasHeader = header.All(c => c is ValueCell<string>);
@@ -39,6 +39,7 @@ public class DetectTables
             Location = area.Range,
             Header = hasHeader ? (Selection)header : null,
             Data = tableData,
+            Footer = footer,
             Columns = columns.Zip(columnRanges, (name, range) => (name, (LineSelection)range)).ToDictionary()
         };
     }
@@ -58,7 +59,7 @@ public class DetectTables
     {
         // Check if the table has an header
         // A header is classified if the first row of the area contains all text.
-        var dataPart = ExtractTableData(spreadsheet, area, out _, out _);
+        var dataPart = ExtractTableData(spreadsheet, area, out _, out var headers, out _);
         
         // Columns are the same
         int noColumns = dataPart.ColumnCount;
@@ -69,14 +70,17 @@ public class DetectTables
             // Only check if the type is not computed
             if (column[0] is FormulaCell)
             {
-                if (!IsComputedColumn(column, area)) return false;
+                if (!IsComputedColumn(column, area, headers)) return false;
                 continue;
             }
             
-            // Get the type of the cell
-            // Replace with logic that extracts the type from the first available one.
-            Type type = column[0].Type;
-            Type cellType = column[0].GetType();
+            // Check if the column is empty.
+            if (column.All(c => c is EmptyCell)) continue;
+            
+            // Get the first available type
+            Cell firstNonEmpty = column.First(c => c is not EmptyCell);
+            Type type = firstNonEmpty.Type;
+            Type cellType = firstNonEmpty.GetType();
             
             // Check if columns are the same.
             if (column.Where(c => c is not EmptyCell).Any(c => c.GetType() != cellType || c.Type != type)) return false;
@@ -85,7 +89,7 @@ public class DetectTables
         return true;
     }
 
-    protected static Selection ExtractTableData(Spreadsheet spreadsheet, Area area, out string? title, out List<Cell>? header)
+    protected Selection ExtractTableData(Spreadsheet spreadsheet, Area area, out string? title, out List<Cell>? header, out List<Cell>? footer)
     {
         // The table may have a header
         var tableCells = spreadsheet[area.Range];
@@ -93,10 +97,12 @@ public class DetectTables
         // The table may have a title.
         bool hasTitle = TryGetTitle(tableCells, out title);
         bool hasHeader = TryGetHeader(tableCells, hasTitle, out header);
+        bool hasFooter = TryGetFooter(tableCells, hasTitle, header, out footer);
 
         int startData = (hasTitle ? 1 : 0) + (hasHeader ? 1 : 0);
+        int endData = tableCells.RowCount - 1 - (hasFooter ? 1 : 0);
         
-        var dataPart = tableCells.GetRows(System.Range.StartAt(hasHeader ? 1 : 0));
+        var dataPart = tableCells.GetRows(startData..endData);
         return dataPart;
     }
 
@@ -134,7 +140,81 @@ public class DetectTables
         return true;
     }
 
-    protected bool IsComputedColumn(List<Cell> column, Area area)
+    protected bool TryGetFooter(Selection selection, bool hasTitle, List<Cell>? headers, [NotNullWhen(true)] out List<Cell>? footer)
+    {
+        footer = null!;
+        List<Cell> lastRow = selection.GetRow(selection.RowCount - 1);
+        List<Cell> secondLastRow = selection.GetRow(selection.RowCount - 2);
+        
+        // First check if the last row is conform to a footer
+        if (lastRow[0] is not EmptyCell and not ValueCell<string> and not FormulaCell) return false;
+        if (lastRow.Skip(1).Any(c => c is not EmptyCell and not FormulaCell)) return false;
+        
+        // Check if the formulas in the last row are all aggregation functions
+        bool allAggergationFunctions = lastRow
+            .Index()
+            .Where(f => f.Item is FormulaCell)
+            .All(c =>
+            {
+                var cell = c.Item as FormulaCell;
+                
+                // Get the references of the formula
+                var references = cell.Formula.GetReferences();
+
+                return references.All(r =>
+                {
+                    if (r is Range range)
+                    {
+                        // Range should get the whole column above itself
+                        var column = selection.Range.From.Column + c.Index;
+                        bool oneColumn = range.From.Column == range.To.Column &&
+                                         range.From.Column == column;
+                        
+                        
+                        int startOffset = (hasTitle ? 1 : 0) + (headers is not null ? 1 : 0);
+                        int start = selection.Range.From.Row + startOffset;
+                        int end = selection.Range.To.Row - 1;
+                        bool wholeTable = range.From.Row == start && range.To.Row == end;
+                        
+                        return oneColumn && wholeTable;;
+                    }
+
+                    if (r is ExcelCompiler.Representations.References.TableReference tr)
+                    {
+                        // Right now, it is hard to check if the table is the same.
+                        return tr.ColumnNames.Count == 1 && tr.ColumnNames[0] == (headers?[c.Index] as ValueCell<string>).Value;
+                    }
+                    
+                    return false;
+                });
+            });
+        
+        if (!allAggergationFunctions) return false;
+        
+        // Check if the last row is the same as the second last row
+        // If not, there is probably a footer.
+        for (int i = 0; i < lastRow.Count; i++)
+        {
+            Cell footerCell = lastRow[i];
+            Cell secondLastCell = secondLastRow[i];
+
+            if (footerCell is EmptyCell) continue;
+            
+            if (footerCell is FormulaCell footerFormula && secondLastCell is FormulaCell secondLastFormula)
+            {
+                if (TransformEqual(footerFormula.Formula, secondLastFormula.Formula)) continue;
+            }
+
+            if (footerCell.Type == secondLastCell.Type) continue;
+            
+            footer = lastRow;
+            return true;
+        }
+
+        return false;
+    }
+
+    protected bool IsComputedColumn(List<Cell> column, Area area, List<Cell>? header = null)
     {
         // First check if all cells are formula cells
         if (column.Any(c => c is not FormulaCell)) return false;
@@ -142,7 +222,15 @@ public class DetectTables
         FormulaCell[] formulaCells = column.Cast<FormulaCell>().ToArray();
         
         // Check if the formula has a formula that refers to the table
-        if (!formulaCells.Any(c => c.Formula.GetReferences().Any(r => area.Range.Contains(r)))) return false;
+        if (!formulaCells.Any(c => c.Formula.GetReferences().Any(r =>
+            {
+                if (header is not null && r is ExcelCompiler.Representations.References.TableReference tr)
+                {
+                    return header.Any(r => r is ValueCell<string> v && v.Value == tr.ColumnNames[0]);
+                }
+                
+                return area.Range.Contains(r);
+            }))) return false;
         
         // Then, check if any references inside the FormulaCell are inside the area
         // If they are, check if they fall in the same row.
