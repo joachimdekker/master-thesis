@@ -6,7 +6,7 @@ Within compiler construction, we can take as many steps as we want. Sometimes, i
 
 === One IR
 
-Using a single IR simplifies the architecture and makes the compiler pipeline easier to reason about. With one representation, all transformation steps happen in a unified format, and the state of the compilation is centralized.
+Using a single IR simplifies the architecture and makes the compiler pipeline easier to reason about. With one representation, all transformation steps happen in a unified format, and the state of the compilation is centralised.
 
 However, a monolithic IR must serve too many purposes—capturing structure, logic, and target code layout simultaneously—which often leads to a bloated and inconsistent format. It becomes harder to maintain and more challenging to distinguish between high-level intent and low-level mechanics.
 

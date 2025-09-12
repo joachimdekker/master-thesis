@@ -1,6 +1,8 @@
 #include "frontpage.typ"
 #include "abstract.typ"
 
+#set text(region: "GB")
+
 #import "@preview/wordometer:0.1.4": word-count, total-words
 
 // #show: word-count
@@ -98,12 +100,17 @@
 #show raw: set text(font: "JetBrains Mono")
 
 #show "Excelerate": smallcaps
+#show "Csharp": "C#"
 
 // ========================================================== //
 
 // There are #total-words no words.
 
 #include "chapters/introduction/main.typ"
+
+#include "chapters/basic-compiler/main.typ"
+
+#include "chapters/excelerate/main.typ"
 
 #include "chapters/compiling-excel/main.typ"
 
