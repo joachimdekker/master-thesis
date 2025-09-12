@@ -41,7 +41,7 @@ public class Selection
         List<List<Cell>> selection = _cells[range];
         
         int startOffset = range.Start.IsFromEnd ? RowCount - range.Start.Value : range.Start.Value;
-        int endOffset = range.End.IsFromEnd ? RowCount - range.End.Value : range.End.Value;
+        int endOffset = range.End.IsFromEnd ? RowCount - (range.End.Value + 1) : range.End.Value - 1;
 
         Location start = Range.From with
         {

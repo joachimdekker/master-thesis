@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using Range = ExcelCompiler.Representations.References.Range;
 
-ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+ExcelPackage.License.SetNonCommercialPersonal("Joachim Dekker");
 
 // Get the config files
 IConfigurationRoot config = new ConfigurationBuilder()

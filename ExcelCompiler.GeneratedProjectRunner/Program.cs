@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using ExcelCompiler.GeneratedProjectRunner;
 
-internal class FamilyBudgetMonthly
+internal class ServiceInvoice
 {
     public static async Task Main(string[] args)
     {
@@ -12,12 +12,13 @@ internal class FamilyBudgetMonthly
 
         double total = 0;
 
-        int count = 10_000;
-        const string workbookPath = @"C:\Users\joachimd\source\is\master-thesis\spreadsheets\Holiday budget planner (Adapted).xlsx";
+        int count = 1;
+        const string workbookPath = @"C:\Users\joachimd\source\is\master-thesis\spreadsheets\Service invoice.xlsx";
+        
         var outputDefintiion = new
         {
-            Sheet = "Holiday budget planner",
-            Cell = "N6"
+            Sheet = "Service invoice",
+            Cell = "E29"
         };
 
 
@@ -43,7 +44,7 @@ internal class FamilyBudgetMonthly
             var input = inputs[i];
             calculationTime.Start();
             individualCalculationTime.Restart();
-            var output = program.Main(input.Gifts, input.Meals, input.Packaging, input.Entertainment, input.Travel, input.Miscellaneous);
+            var output = program.Main(input.SalesTax, input.InvoiceDetails);
             individualCalculationTime.Stop();
             calculationTime.Stop();
     
@@ -153,62 +154,19 @@ internal class FamilyBudgetMonthly
 
         void PutInputIntoSpreadsheet(Inputs inp, Microsoft.Office.Interop.Excel.Workbook wb, Stopwatch sw)
         {
-            // Gifts
-            object[,] gifts = new object[inp.Gifts.Count, 2];
-            for (int i = 0; i < inp.Gifts.Count; i++)
+            object[,] qty = new object[inp.InvoiceDetails.Count, 1];
+            object[,] price = new object[inp.InvoiceDetails.Count, 1];
+            for (int i = 0; i < inp.InvoiceDetails.Count; i++)
             {
-                gifts[i, 0] = inp.Gifts[i].Budget;
-                gifts[i, 1] = inp.Gifts[i].Actual;
-            }
-            
-            // Meals
-            object[,] meals = new object[inp.Meals.Count, 2];
-            for (int i = 0; i < inp.Meals.Count; i++)
-            {
-                meals[i, 0] = inp.Meals[i].Budget;
-                meals[i, 1] = inp.Meals[i].Actual;
-            }
-            
-            // Packaging
-            object[,] packaging = new object[inp.Packaging.Count, 2];
-            for (int i = 0; i < inp.Packaging.Count; i++)
-            {
-                packaging[i, 0] = inp.Packaging[i].Budget;
-                packaging[i, 1] = inp.Packaging[i].Actual;
-            }
-            
-            // Entertainment
-            object[,] entertainment = new object[inp.Entertainment.Count, 2];
-            for (int i = 0; i < inp.Entertainment.Count; i++)
-            {
-                entertainment[i, 0] = inp.Entertainment[i].Budget;
-                entertainment[i, 1] = inp.Entertainment[i].Actual;
-            }
-            
-            // Travel
-            object[,] travel = new object[inp.Travel.Count, 2];
-            for (int i = 0; i < inp.Travel.Count; i++)
-            {
-                travel[i, 0] = inp.Travel[i].Budget;
-                travel[i, 1] = inp.Travel[i].Actual;
-            }
-            
-            // Miscellaneous
-            object[,] miscellaneous = new object[inp.Miscellaneous.Count, 2];
-            for (int i = 0; i < inp.Miscellaneous.Count; i++)
-            {
-                miscellaneous[i, 0] = inp.Miscellaneous[i].Budget;
-                miscellaneous[i, 1] = inp.Miscellaneous[i].Actual;
+                qty[i, 0] = inp.InvoiceDetails[i].Qty;
+                price[i, 0] = inp.InvoiceDetails[i].UnitPrice;
             }
             
             // Write to spreadsheet
             sw.Start();
-            wb.Sheets["Holiday budget planner"].Range["D11:E16"].Value2 = gifts;
-            wb.Sheets["Holiday budget planner"].Range["L11:M16"].Value2 = meals;
-            wb.Sheets["Holiday budget planner"].Range["D21:E27"].Value2 = packaging;
-            wb.Sheets["Holiday budget planner"].Range["L21:M27"].Value2 = entertainment;
-            wb.Sheets["Holiday budget planner"].Range["D32:E35"].Value2 = travel;
-            wb.Sheets["Holiday budget planner"].Range["L32:M35"].Value2 = miscellaneous;
+            wb.Sheets["Service invoice"].Range["B17:B25"].Value2 = qty;
+            wb.Sheets["Service invoice"].Range["D17:D25"].Value2 = price;
+            wb.Sheets["Service invoice"].Range["E28"].Value2 = (object)inp.SalesTax;
             sw.Stop();
         }
 
@@ -227,45 +185,24 @@ internal class FamilyBudgetMonthly
 
 file class Inputs
 {
-    public List<EntertainmentItem> Entertainment { get; set; }
+    public double SalesTax { get; set; }
     
-    public List<GiftsItem> Gifts { get; set; }
-    
-    public List<MealsItem> Meals { get; set; }
-    
-    public List<PackagingItem> Packaging { get; set; }
-    
-    public List<TravelItem> Travel { get; set; }
-    
-    public List<MiscellaneousItem> Miscellaneous { get; set; }
+    public List<InvoiceDetailsItem> InvoiceDetails { get; set; }
 
     public static Inputs Create(Random random)
     {
         var lengths = new
         {
-            Meals = 6,
-            Gifts = 6,
-            Entertainment = 7,
-            Packaging = 7,
-            Miscellaneous = 4,
-            Travel = 4,
+            Items = 9,
         };
         
-        var entertainment = Enumerable.Range(0, lengths.Entertainment).Select(_ => new EntertainmentItem(random.Next(100, 200), random.Next(100, 200))).ToList();
-        var gifts = Enumerable.Range(0, lengths.Gifts).Select(_ => new GiftsItem(random.Next(100, 200), random.Next(100, 200))).ToList();
-        var meals = Enumerable.Range(0, lengths.Meals).Select(_ => new MealsItem(random.Next(100, 200), random.Next(100, 200))).ToList();
-        var packaging = Enumerable.Range(0, lengths.Packaging).Select(_ => new PackagingItem(random.Next(100, 200), random.Next(100, 200))).ToList();
-        var miscellaneous = Enumerable.Range(0, lengths.Miscellaneous).Select(_ => new MiscellaneousItem(random.Next(100, 200), random.Next(100, 200))).ToList();
-        var travel = Enumerable.Range(0, lengths.Travel).Select(_ => new TravelItem(random.Next(100, 200), random.Next(100, 200))).ToList();
-
+        var invoiceDetails = Enumerable.Range(0, lengths.Items).Select(_ => new InvoiceDetailsItem(random.Next(1, 50), random.Next(100, 200))).ToList();
+        var salesTax = random.NextDouble(0.1, 0.2);
+        
         return new Inputs()
         {
-            Entertainment = entertainment,
-            Gifts = gifts,
-            Meals = meals,
-            Packaging = packaging,
-            Miscellaneous = miscellaneous,
-            Travel = travel,
+            InvoiceDetails = invoiceDetails,
+            SalesTax = salesTax,
         };
     }
 }

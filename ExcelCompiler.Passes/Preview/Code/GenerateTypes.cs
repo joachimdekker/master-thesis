@@ -1,3 +1,4 @@
+using ExcelCompiler.Passes.Helpers;
 using ExcelCompiler.Representations.CodeLayout;
 using ExcelCompiler.Representations.CodeLayout.Expressions;
 using ExcelCompiler.Representations.CodeLayout.Statements;
@@ -100,7 +101,9 @@ file record TypeTransformer() : ComputeGraphTransformer<Expression, Expression>
         => new ListExpression(dependencies.ToList());
 
     protected override Expression TableReference(TableReference tableReference, IEnumerable<Expression> dependencies)
-        => throw new InvalidOperationException();
+    {
+        return new Variable(tableReference.Reference.ColumnNames[0].ToPascalCase());
+    }
 
     protected override Expression DataReference(DataReference dataReference, IEnumerable<Expression> dependencies)
         => throw new NotImplementedException();

@@ -39,7 +39,7 @@ public class DetectTables
             Location = area.Range,
             Header = hasHeader ? (Selection)header : null,
             Data = tableData,
-            Footer = footer,
+            Footer = footer is null ? null : (Selection)footer,
             Columns = columns.Zip(columnRanges, (name, range) => (name, (LineSelection)range)).ToDictionary()
         };
     }
@@ -100,7 +100,7 @@ public class DetectTables
         bool hasFooter = TryGetFooter(tableCells, hasTitle, header, out footer);
 
         int startData = (hasTitle ? 1 : 0) + (hasHeader ? 1 : 0);
-        int endData = tableCells.RowCount - 1 - (hasFooter ? 1 : 0);
+        int endData = tableCells.RowCount - (hasFooter ? 1 : 0);
         
         var dataPart = tableCells.GetRows(startData..endData);
         return dataPart;

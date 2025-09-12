@@ -36,7 +36,7 @@ public record FormulaExpression
                 GrammarNames.Constant => Parse(node.ChildNodes[0]),
                 GrammarNames.Text => new Constant(node.ChildNodes[0].Token.ValueString),
                 GrammarNames.Number => new Constant(double.Parse(node.ChildNodes[0].Token.ValueString)),
-                _ => throw new InvalidOperationException("Node type is not supported.")
+                _ => throw new InvalidOperationException("Node type is not supported: " + node.Print())
             };
         }
 
@@ -62,7 +62,7 @@ public record FormulaExpression
                     "/" => Operator.Divide(left, right),
                     "^" => Operator.Power(left, right),
                     "%" => Operator.Modulo(left, right),
-                    _ => throw new ArgumentException("Unsupported operator.", nameof(node))
+                    _ => throw new ArgumentException("Unsupported operator: " + node.ChildNodes[1].Token.ValueString, nameof(node))
                 };
             }
         

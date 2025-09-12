@@ -237,6 +237,12 @@ public class RoslynGenerator
             ExpressionSyntax left = Generate(functionCall.Arguments[0]);
             ExpressionSyntax right = Generate(functionCall.Arguments[1]);
 
+            // For anything other than addition, the order of operations must be preserved
+            if (kind != SyntaxKind.AddExpression)
+            {
+                right = ParenthesizedExpression(right);
+            }
+            
             return BinaryExpression(kind, left, right);
         }
         

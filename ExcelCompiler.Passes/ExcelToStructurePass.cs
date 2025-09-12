@@ -32,8 +32,10 @@ public class ExcelToStructurePass
             Spreadsheet spreadsheet = new Spreadsheet(name: sheet.Name);
             
             // Convert all the cells in the spreadsheet
-            foreach (var cellPosition in sheet.DimensionByValue)
+            foreach (var cellPosition in sheet.Dimension)
             {
+                if (cellPosition is null || (string.IsNullOrEmpty(cellPosition.Formula) && string.IsNullOrEmpty(cellPosition.Value?.ToString()))) continue;
+                
                 // Convert the cell.
                 Location location = Location.FromA1(cellPosition.Address, spreadsheet.Name);
                 Cell? cell = GetCell(location, p);
