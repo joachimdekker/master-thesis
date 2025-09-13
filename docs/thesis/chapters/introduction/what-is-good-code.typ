@@ -1,6 +1,6 @@
 #import "../../utils/cite-tools.typ": citeauthor
 
-= Idiomatic Code
+= Idiomatic Code<sec:intro:idiomatic-code>
 
 _Idiomatic_ means "containing expressions that are natural to a native speaker of a language" @lea_idiomatic_2025. While this definition is meant for natural languages, we can also extend it to programming languages: "containing expressions that are natural to a senior programmer writing the language".
 While software engineers consider creating code as a big part of their job @jetbrains_software_2024, one universal definition of what is considered 'good' code is hard to determine. This was made clear by #citeauthor(<borstler_i_2018>) in their paper---aptly titled "I know it when I see it"---indicating that factors of code quality are diverse across demographics @borstler_i_2018. 

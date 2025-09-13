@@ -2,7 +2,7 @@ A compiler cannot be fully assessed on the design considerations alone. Its effe
 
 The proposed evaluation in this chapter serves two purposes: to approach the correctness of the compiler, and to assess the qualitative aspects of the generated code including performance, readability and adherence to idiomatic C\# practices. 
 
-As such, this chapter reports on the evaluation along multiple factors. We first introduce the methods and metrics in @sec:eval:methods where we also touch upon what is considered idiomatic C\# code. Then, we show the results of the experiments in semantic equality and performance in @sec:eval:semantic-equality and @sec:eval:performance respectively. Furthermore, we discuss the readability of the code through several examples. Finally, we consolidate the findings in a discussion in @sec:eval:discussion, also denoting the threats to validity of the research and experiments.
+As such, this chapter reports on the evaluation along multiple factors. We first introduce the methods and metrics in @sec:eval:methods where we also touch upon what is considered idiomatic C\# code. Then, we show the results of the experiments in semantic equality and performance in @sec:eval:results. Furthermore, we discuss the readability of the code through several examples. Finally, we consolidate the findings in a discussion in @sec:eval:discussion, also denoting the threats to validity of the research and experiments.
 
 = Methods<sec:eval:methods>
 
@@ -38,9 +38,11 @@ To compare the methods we require evaluators for Excelerate and the spreadsheet 
 
 Running the trials with the Excel calculation engine is more complex since we need the exact Excel application, not an external library. Hence, we utilize a part of the Microsoft Office Suite called the _Interop_. This enables us to alter a spreadsheet using C\# and evaluate formulas using the original calculation engine. Every spreadsheet is loaded using this method and the inputs of the Trial are copied into the spreadsheet. Using a C\# method provided by the _Interop_, we calculate the value in the output cell and append the Trial Result object with this value.
 
+Using the _Interop_ comes at a cost since we need to transfer the data between the Excel application and the C\# evaluation code. This is done through the .NET COM interface, which involves moving data between processes. This introduces a non-deterministic overhead that is required to run Excel from C\#.
+
 === Comparing the methods
 
-We compare the methods along two axes: 
+We compare the methods along two metrics: 
 + semantic equality through the calculated outputs and 
 + performance on several components through timers in the evaluation script.
 
@@ -60,106 +62,39 @@ where
   - $t_c$ is the _Calculation Time_: The time it takes for Excel to finish calculating the dirty cells in the whole spreadsheet.
   - $t_e$ is the _Extraction Time_: The time it takes to extract the values out of the spreadsheet, measured by the time it takes to read the output cell property of the _Interop_ Excel worksheet object.
 
-Durations are measured in nanoseconds using the .NET Diagnostics `StopWatch` class, which uses a high-resolution performance counter @microsoft_stopwatch_2025. However, due to the long nature of the experiments, we present the duration in milliseconds. 
+When measuring performance, we exclude outliers. These outliers are often caused by demanding background processes and are not representative samples for the methods. An outlier is identified as $o < Q_1 - 1.5 * "IQR" or o > Q_3 + 1.5 * "IQR"$. This should decrease variability and produce samples that are representative of the methods. In order to assess variability, we ran repeated experiments. Every spreadsheet was evaluated 100 000 times with random input. Durations are measured using the .NET Diagnostics `Stopwatch` class, which uses a high-resolution performance counter to achieve nanosecond precision @microsoft_stopwatch_2025 . However, due to the long nature of the experiments, we present the duration in milliseconds.
 
 === Setup
 
 All experiments have been done on a Dell Latitude Laptop with an Intel Core i7-12600VH VPRO and 32GB DDR4 RAM. The system was set to high-performance mode and was charging at all times.
 
 ==== Variability
-
-In order to assess variability, we ran repeated experiments. When running repeated experiments, we used a seeded random number generator to ensure the same inputs were always used. The seed that was used in the following results was `42`.
-
-To capture the variability of the results, we report the mean, the sample standard deviation (with Bessel's correction), and the standard error of the mean (SEM). For a series of samples: $(x_1, x_2, ..., x_n)$ we calculate the following:
+To capture the variability of the results, we report the mean and the standard error. For a series of samples: $(x_1, x_2, ..., x_n)$ we calculate the following:
 
 $ overline(X) = 1 / (n) sum_(i=1)^n x_i $
 
 $ sigma = sqrt(1/(n-1) sum^n_(i=1) (x_i - overline(X))^2) $
 
-$ "SEM" = sigma / sqrt(n) $
-
-
-// == Semantic Equality
-
-// A big part of the effort is the validation of semantic equality: does the Excel spreadsheet calculate the same thing as the compiled version. We test this empirically, essentially unit testing the spreadsheets and compiled code. While this could also tests the performance of the compiler and compiled program, this method is primarily used for testing the semantic equality.
-
-// Our method randomly selects an input and output cell. Then, it provides random values to the input cell and calculates the value in the output cell using two methods: the compiled spreadsheet and the spreadsheet loaded in Excel. If the results do not compare, we cannot have semantic equality.
-
-// === Selection and preparation
-// We provide a corpus of spreadsheets, containing spreadsheets found in a Template Directory provided by Microsoft. These spreadsheets were chosen to represent the different features of the compiler, and have been manually checked to only contain functions the compiler supports.
-
-// For every workbook, we select random pairs in the spreadsheets. For instance, we might choose cell `B11` from the `Interest` sheet as input and `E10` from the `Monthly budget report` as output. We call this random pair a _Trial_. This is done in a uniform distribution out of a list of eligible cells. Eligible cells include cells that have numeric values or compute numeric values. For every workbook, we gather a predetermined number of _Trials_ to select. The randomness of the algorithm is seeded and persisted, meaning we get the same results every time.
-
-// For every _Trial_, we want to run it several times to ensure that it works for multiple values. We assign a random number to every _Trial_ several times. One assignment is persisted as a _Trial Run_. For instance, the _Trial_ in the paragraph above might get three _Trial Runs_, and thus three numbers (100, 200, 300) assigned to the `B11` input. This would result in three _Trial Runs_.
-
-// === Running and comparing
-
-// In order to compare the results, we need to have two evaluators: the compiled program and the spreadsheet in Excel. The compiled program can be obtained by running the compiler on a spreadsheet to get the compiled program with the defined inputs and outputs in a _Trial_. If the compilation fails, the whole trial fails and all associated trials runs as well. Then, in order to get the results, we call the compiled program with the input values defined in a _Trial Run_.
-
-// Getting values out of the spreadsheet is more complex. We utilize a part of the Microsoft Office Suite called the _Interop_. This enables us to alter a spreadsheet using C\# and evaluate formulas using the original calculation engine of Excel. For every _Trial_, we load the spreadsheet and load the values of a _Trial Run_ into the spreadsheet to calculate the values in the output as defined by the _Trial Run_.
-
-// For every _Trial Run_, two components are run. First, the _Trial Run_ is evaluated against a compiled version of the spreadsheet. This result is stored as an incomplete _Trial Run Result_. To complete this object, we also evaluate the _Trial Run_ against the spreadsheet in Excel. The results are appended to the already existing _Trial Run Result_ for this _Trial Run_.
-
-// In the end, the _Trial Run Result_ object is checked for equality. The output of both components should be the same, while accounting for floating point imprecisions. To test this, we use the following formula:
-
-// $abs(x_"Compiled" - x_"Excel") <= epsilon$
-
-// where $epsilon$ is a very small value that accounts for floating point imprecisions.
-
-// === Metrics
-
-// There are several metrics that are collected in this experiment. We briefly cover the metrics here and explain their importance for the compiler. 
-
-// ==== Equality Rate
-// The most important metric is the _Equality Rate_ or _Accuracy_ of the compiler. This is measured as the percentage of outputs that match between Excel and the compiled code. We also obtain this metric for every spreadsheet, in order to compare the equality rate between spreadsheets. If one spreadsheet has a low equality rate, it could be because the compiler does not support a certain edge case.
-
-// A bonus metric that derives from the equality rate is the _Discrepancy Count_, which is the number of mismatches observed. As such, it is inversely related to the equality rate.
-
-// ==== Execution Time
-// The _Execution Time_ measures the time in milliseconds it takes to obtain the results when providing a program with input to output. We discuss this further in @subsec:eval:speed-comparisons. Within this experiment, we obtain this metric two times: once for the compiled program and one for Excel. We do not measure the execution time of one single iteration. Instead, we measure the time it takes for all _Trial Runs_ to complete for a certain _Trial_ and then divide this by the amount of _Trial Runs_.
-
-// == Speed Comparisons<subsec:eval:speed-comparisons>
-// Another essential part of the evaluation is the speedup observed when running the compiled code. Obviously, there would not be many advantages of using the compiler if the compiled code would be slower. As such, this experiment measures both methods---compiled code or Excel spreadsheet---in multiple ways. In this subsection, we first discuss what we are measuring. Then, we cover how we did this for both methods.
-
-// === Method
-
-// We measure the speed of both methods in several ways. We identified two stages that the compiled program would improve upon: the input and output, and the computation itself. As such, we test these hypotheses with several experiments. A big difference with the previous semantic equality experiment is the selection of the input and output cells. While the previous experiment chose the input and output randomly, this experiment carefully chooses the input and output cells in order to get the most diverse set of inputs. For instance, we always take the longest path through the spreadsheet as an input/output pair. 
-
-// ==== Single Input
-// This part purely measures the speed of the computation itself. We run the compiled code and Excel spreadsheet several times with random inputs. 'Running' the Excel Spreadsheet in this case means inserting the input value in the spreadsheet and letting Excel recalculate the output spreadsheet. This is done for 100, 1000, 10000, 100000, and 1000000 iterations. 
-
-// ==== Structure Input
-// One of the features of the compiler is the direct support of structure input. Instead of defining the individual cells as input, we can directly input the data for the structure itself. This part of the experiment measures the speed of the input and output. We generate random structure data and  Just like the single input, we measure this in iterations, in increasing numbers.
-
-// An important limitation is that the length of the structure (i.e. the amount of rows in a table) should be the same as the original structure in the spreadsheet. For example, if the `Montly Expenses` table contains 20 rows, we must have 20 rows, not any more or less due to this limitation. This is because the range references in Excel are not dynamic and the table will not expand automatically to include extra rows (or inversely shrink and exclude rows).
-
-// === Implementation
-
-// In order to test the two methods (compiled code and Excel) we provide two implementations to test them. Abstractly, they are the same: We choose an input from a predefined list, we run the method and measure the iteration time. We do this for a predefined amount of iterations. Next, we briefly cover the details of how we got this to work on both the compiled code and excel.
-
-// ==== Compiled Code
-// For the compiled code, we take a spreadsheet and compile it to a class library. In the test project, we reference this class library. The input and output of the compiled code is elementary as it is just C\# objects and does not require further processing. We provide the input to the entry point of the library and measure the time it takes to complete.
-
-// ==== Excel
-// Just like the semantic equality experiment, Excel is more difficult to work with than the compiled code. Again, we utilize the Microsoft Office _Interop_ library that enables us to evaluate the spreadsheet using the Excel engine. The input is placed inside the the spreadsheet and we ask Excel to recalculate the cells. This yields the output.
-
-// === Metrics
-// There are several metrics that are collected in this experiment. We briefly cover the metrics here and explain their importance for the compiler. 
-
-// ==== Execution Time
-// The _Execution Time_ measures the time in milliseconds it takes to obtain the results when providing a program with input to output. The Execution Time is measured across all iterations. As such, we obtain the mean and standard deviation of the Execution Time. 
-
-// #set enum(indent: 1em)
-
-// In this experiment, we split the Execution Time into three stages:
-// 1. Input Injection,
-// 2. Calculation,
-// 3. Output Retrieval.
-
-// This allows us to accurately measure the time it takes to retrieve values and compare all aspects that contribute to the total execution time.
+$ "SE" = sigma / sqrt(n) $
 
 == Readability
 
-- Describe the methods used to test the Excel Compiler
-- Describe the metrics used in testing, such as seconds and the qualitative examples.
-- Describe what is considered as idiomatic C\# code.
+The second experiment assesses the readability of the code emitted by the Excel compiler. This is a subjective assessment, since judging the readability of code is hard to do objectively as we covered in @sec:intro:idiomatic-code. The main objective of this experiment is to showcase the improvements in readability between the 'basic' compiler and Excelerate. In the next sections, we briefly discuss how to obtain this code and what criteria we use for discussing the readability, based on @sec:intro:idiomatic-code. 
+
+=== Preparation
+
+Obtaining the code is done in two ways. We obtain the code for Excelerate by running the compiler for every spreadsheet, generating a project and storing the files. For the 'basic' compiler, we run the same compiler, but without the steps for structure detection as described in @sec:excelerate:compiler-changes. Essentially, we force that no structure is found by clearing the array of structures in the _Structure Model_ at the end of the _Structure Phase_. This forces Excelerate to fall back on the 'basic' compiler, compiling the code without structural guidance.
+
+We use the same spreadsheets as in the previous experiment, as they represent a wide range of use-cases.
+
+=== Criteria
+
+Before we present the results and discuss the readability, we first reflect on the criteria of 'readable' code. As we covered in @sec:intro:idiomatic-code, we consider this highly subjective metric to be good if the code seems to be written by a good or senior developer in that particular language. This means that the code should be:
+- _Expressive_ and _Comprehensible_: It should be very simple to figure out what the program does. This can be communicated through the use of variable names or smart use of language features such as LINQ.
+- _Extensible_ and _Maintainable_: Since Excelerate is meant to be used as a class library, it should be easy to build programs on top of it. If a change needs to be made to the code, it needs to be easy to fix this. This also means that code should express a calculation only once and avoid code duplication.
+- In accordance with the style guide: we use the Microsoft Style Guide for Csharp @microsoft_net_2025 for this. All Csharp code should adhere to this style guide. For instance, it states naming conventions for local variables, classes, properties, etc; which language constructs we should use and more.
+
+
+// - Describe the methods used to test the Excel Compiler
+// - Describe the metrics used in testing, such as seconds and the qualitative examples.
+// - Describe what is considered as idiomatic C\# code.

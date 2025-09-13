@@ -35,9 +35,9 @@
 
 #chapter("Excelerate")
 
-= Structures
+= Structure-aware compilation
 
-= Changes to the Compiler
+= Changes to the Compiler<sec:excelerate:compiler-changes>
 
 = Finding the Structures
 

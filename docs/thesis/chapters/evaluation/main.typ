@@ -4,10 +4,6 @@
 
 #include "methods.typ"
 
-#include "semantic-equality.typ"
-
-#include "speed-comparisons.typ"
-
-#include "readability.typ"
+#include "results.typ"
 
 #include "discussion.typ"

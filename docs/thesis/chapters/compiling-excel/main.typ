@@ -3,7 +3,7 @@
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 #import "../../utils/cite-tools.typ": citeauthor
 
-#chapter("Compiling Excel")
+#chapter("Compiling Excel vPrev")
 
 // #include "compiler-structure.typ"
 
@@ -180,7 +180,7 @@ Consequently, we introduce _structure-aware compilation_ in this thesis: compila
   placement: top,
 )<sps:structural-compilation:non-idiomatic>
 
-For instance, take @sps:budget:income, which is an obvious table. Now compare this to @sps:structural-compilation:non-idiomatic, which is semantically equivalent but structurally totally different. The underlying computational model is the same. However, using structure-aware compilation, the former spreadsheet will be compiled with more idiomatic code than the latter, because the compiler is guided by the structure of the table.
+For instance, take @sps:budget:income, which is an obvious table. Now compare this to @sps:structural-compilation:non-idiomatic, which is semantically equivalent but structurally totally different. The underlying computational model is the same. However, using structure-aware compilation, the former spreadsheet will be compiled with more idiomatic code than the latter, because the compiler is guided by the structure of the table. 
 
 In order for this to work, it is vital to have an abstracted representation of the structure of the source program. This representation can be used by all subsequent passes to guide the process. Consequently, the compilation should begin with the extraction of the structure to a dedicated intermediate representation. This intermediate representation will be domain specific. 
 
