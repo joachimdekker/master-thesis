@@ -1,6 +1,6 @@
 #heading([Acknowledgements], bookmarked: false, )
 
-First, I would like to thank Info Support for their continuous support, even when things outside of my control confronted me _head on_. Their understanding and patience during this time was truly appreciated. Especially my process supervisor Nikki Thissen, without whose encouragement and help this thesis would not have been written this easily.
+First, I would like to thank Info Support for their continuous support, even when things outside of my control confronted me _head on_. Their understanding and patience during this time was truly appreciated. Especially my process supervisor Nikki Thissen. Without their encouragement and help this thesis would not have been written this easily.
 
 Naturally, I thank my supervisors. [Write something to Bjorn and Andrés]
 

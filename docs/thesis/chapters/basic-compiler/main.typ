@@ -402,7 +402,7 @@ Traversing the graph and making updates to the graph is a common operation withi
 
 The compiler takes cell references (_Locations_ like `'Sheet1'!A1`) as input that can be used as parameters for the generated code. These inputs need to be inserted into the graph. Utilising the graph traversal algorithm discussed in the previous section, we find the first Compute Unit with a location of one of the inputs. This _Compute Unit_ is replaced with an _Input Compute Unit_. Since the input compute unit represents a future value, it does not have any dependencies. As such, the dependencies of the _Compute Unit_ it replaced will be pruned unless they are referenced by other _Compute Units_ in the graph.
 
-=== Type Resolution
+=== Type Resolution<par:compute-graph:type-resolution>
 In general, when compiling to strongly-typed languages, you need to know the types of the computations you want to model. We already saw in @sec:structural-phase that Excel provides the types at cell level: we used those to infer the types of the cells in a structure and could infer the type of a column based on that. The types we discovered in @sec:structural-phase do not cover the formulas. These types are automatically inferred by Excel and are not disclosed when parsing them. In other words, we need to resolve the types for individual compute units.
 
 Since we do know the types of the leaves of the graph, as they are constant values and have been given a type from the start, we can infer the types of their dependents, and thus recursively build a typed Compute Graph. In order to know what the type is of a certain compute unit, we rely on the types of the dependencies and an inference rule. This inference rule describes what a valid inference is for this compute unit, and what its type might be if there is a valid inference. There can be multiple inference rules for one compute unit.
@@ -639,7 +639,7 @@ Furthermore, we rely on a few helper methods from the _Code Model_ to create con
 ==== Layout
 During emission, we must also address the organisation of code into files, namespaces, and classes. The code layout model describes a project as a collection of classes and methods, but leaves file system organization abstract. The emission pass generates a dedicated C\# file for each top-level class, placing them within a common namespace so they can be accessed easily. This is a common practice in Csharp @microsoft_net_2025. 
 
-= Reflecting on the Compiler
+= Reflecting on the Compiler<sec:basic-compiler:reflection>
 
 The three phases of the compiler: _Structure_, _Compute_, and _Code_ produce a class library with the same semantics as the Excel file. In this section, we discuss the readability of the code, reflecting on the current compiler, and highlighting areas that can be improved.
 
@@ -715,7 +715,7 @@ The second spreadsheet contains a linear calculation path, calculating the inter
       }
   }
   ```,
-  caption: [A compiled version of the spreadsheet in @sps:structure-reflection:spreadsheet2 using the basic compiler described in @chapter-compiling-excel.],
+  caption: [A compiled version of the spreadsheet in @sps:structure-reflection:spreadsheet2 using the basic compiler described in @chapter-compiling-excel. The code shows a repetition in calculating the cells in the _Interest_ and _Balance_ column.],
   placement: auto,
 )<code:structure-reflection:spreadsheet2>
 
@@ -752,12 +752,12 @@ Another clear issue in both listings is the lack of extensibility. The Excel spr
             new(2500, 1500)
           ]
           
-          double sheet1D5 = incomes.Select(i => i.Difference).Sum();
-          return sheet1D5;
+          double differences = incomes.Select(i => i.Difference).Sum();
+          return differences;
       }
   }
   ```,
-  caption: [A compiled version of the spreadsheet in @sps:structure-reflection:spreadsheet1 using the basic compiler described in @chapter-compiling-excel.],
+  caption: [A more idiomatic version of the spreadsheet in @sps:structure-reflection:spreadsheet1. Written by the author.],
   placement: auto,
 )<code:structure-reflection:spreadsheet1-solution>
 

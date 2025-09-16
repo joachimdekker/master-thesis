@@ -208,14 +208,13 @@ The grid of the Excel Spreadsheet can contain patterns of specialized structures
 === Tables<subsec:structures:tables>
 Tables are essential structures in Excel. Almost all spreadsheets contain some sort of table. That is not surprising, since spreadsheets are tabular by nature, so chances are high that tables are created in this format. 
 
-The table structure we recognize is a structure with clear division between the headers and data rows. The table represents a class of entities. Each row represents a distinct entity, and each column corresponds to a specific attribute or metric of that class. Columns can contain data, or be computed, just like an Excel table (see @subsec:excel-overview:tables).
+The table structure we recognise is a structure with clear division between the headers and data rows. The table represents a class of entities. Each row represents a distinct entity, and each column corresponds to a specific attribute or metric of that class. Columns can contain data, or be computed, just like an Excel table (see @subsec:excel-overview:tables).
 
 An important property of the table structure is that the rows are independent of each other. This mostly applies to the calculated columns such as the _Difference_ column in the E column in @sps:structures:table. The dependencies of every cell in this column is only 'horizontal', meaning that they depend on cells in their respective rows.
 
 A common pattern that we see is a operation on a whole column of the table. For example, in the _Monthly Expenses_ spreadsheet seen in @fig:family-budget:monthly-expenses, one of the operations is to sum up all the projected costs and actual costs. Without the structure, the code would look like a bunch of variables being put into an array, and an operation being performed on them. 
 [Create example here to illustrate it with code.]
 With the table structure, the data is abstracted away, and we can cleanly use columns in the data. 
-
 
 #figure(
   spreadsheet(

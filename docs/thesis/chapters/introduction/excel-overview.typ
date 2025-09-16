@@ -10,7 +10,7 @@ All information of an Excel file is stored in an _Excel Workbook_. The workbook 
 
 Historically, the _Excel Workbook_ file has been housed under the `.xls` extension. However, since Excel 2007 the Excel workbook is saved as an `.xlsx` file: a zip compressed folder comprised of XML files. These files contain information on metadata, or contain the actual data and formulae of the worksheets.
 
-The real data is stored in the _Excel Worksheet_. This spreadsheet is a two-by-two grid of cells, which can be filled with values. The values in a cell can also be calculated, but the user will only see the value unless clicking on the cell. Besides the cell-strcuture, the Excel worksheet can also contain graphs and images. Furthermore, the cells can be styled in a certain format, and will follow the standard style of the workbook by default. That said, in this thesis, we mostly look at the data and the computations on the data.
+The real data is stored in the _Excel Worksheet_. This spreadsheet is a two-by-two grid of cells, which can be filled with values. The values in a cell can also be calculated, but the user will only see the value unless clicking on the cell. Besides the cell-structure, the Excel worksheet can also contain graphs and images. Furthermore, the cells can be styled in a certain format, and will follow the standard style of the workbook by default. That said, in this thesis, we mostly look at the data and the computations on the data.
 
 Excel also has other _special structures_. These structures live inside the grid, but augment the functionality of excel, simplifying certain operations.
 

@@ -124,7 +124,7 @@
 
 #include "chapters/excelerate/main.typ"
 
-#include "chapters/compiling-excel/main.typ"
+// #include "chapters/compiling-excel/main.typ"
 
 #include "chapters/evaluation/main.typ"
 

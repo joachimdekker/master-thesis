@@ -41,6 +41,6 @@
       edge(<minus-2-arg2>, <minus-2>, "-}>"),    
     )
   },
-  caption: [The compute graph generated from the formulae and dependencies of @sps:budget:income:formulae.],
+  caption: [The compute graph generated from the formulae and dependencies.],
   placement: auto
 )<fig:high-level-overview:compute-graph>
