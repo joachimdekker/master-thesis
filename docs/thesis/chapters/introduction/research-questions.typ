@@ -1,12 +1,11 @@
 == Research Questions
-On the basis of the description of the problem and challenges, we propose the following research questions.
+To address these problems, we utilise an exploratory study with design elements. Within the study, we propose the following research questions to guide the design process:
 
 #enum(numbering: n => strong[(RQ#n)], indent: 10pt, 
-  [How can complex Excel formula compositions be mapped to human-readable C\# code?<RQ1>] + enum(numbering: n => strong[(RQ1.#n)], indent: -15pt,
-    [How can cyclic dependencies with iterative calculations be mapped to C\# code?<RQ1.1>],
-    [What are the performance differences between the Excel Formulas and the compiled code?<RQ1.2>]
-  ),
-  [How can the mapping between excel formulas and code be verified?<RQ2>],
-)<researchQuestions:subQuestions>
+  [How can complex Excel formula compositions be mapped to human-readable C\# code?<research-questions:main> ],
+  [What are common excel structures and how can they be applied to optimise the compilation of excel formula compositions?<research-questions:structures> ],
+  [What are the performance differences between Excelerate and Excel?<research-questions:performance> ],
+  [How can the mapping between excel formulas and code be verified?<research-questions:mapping-verfication> ],
+)<research-questions>
 
-The relevance of #link(<RQ1>, [*(RQ1)*]), *(RQ1.1)*, and *(RQ2)* was discussed in @sec:problem-description; we will now elaborate on *(RQ1.2)*. Since the previous tool was quite slow, and this research has the potential to be used in calculations of over 1 million users, we want to measure if using the compilation tool is faster than the Excel calculations.
+The relevance of these research questions have been made clear in the previous sections. The main research question (RQ1) is the main goal of the compiler design, since we need to find a way to convert the Excel files to code in a idiomatic way. The second research question (RQ2) helps with this, providing structures and seeing if they can help guide the compiler. The last two research questions are the evaluation of the compiler, searching for performance improvements and semantic equality.

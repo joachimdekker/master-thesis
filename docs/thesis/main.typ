@@ -27,6 +27,18 @@
 #set heading(numbering: "1.", offset: 1)
 #set page(numbering: "1")
 
+#show figure: it => {
+  show raw.where(block: true): r => {
+    set text(font: "JetBrains Mono", size: 0.7em)
+  
+    // The raw block should be encased in a box
+    align(left,
+      block(r, fill: luma(97%), inset: 1em, radius: .25em, width: 100%)
+    )
+  }
+  it
+}
+
 #show ref: it => if it.element == none or it.element.func() != heading or it.element.level != 1 { it } else {
   let l = it.target // label
   let h = it.element // heading
@@ -112,7 +124,7 @@
 
 #include "chapters/excelerate/main.typ"
 
-#include "chapters/compiling-excel/main.typ"
+// #include "chapters/compiling-excel/main.typ"
 
 #include "chapters/evaluation/main.typ"
 

@@ -15,15 +15,6 @@
 }
 
 #show figure: it => {
-  show raw.where(block: true): r => {
-    set text(font: "JetBrains Mono", size: 0.7em)
-  
-    // The raw block should be encased in a box
-    align(left,
-      block(r, fill: luma(97%), inset: 1em, radius: .25em, width: 100%)
-    )
-  }
-
   show raw.where(block: false): r => {
     set text(font: "JetBrains Mono", size: 1em)
     r
@@ -411,7 +402,7 @@ Traversing the graph and making updates to the graph is a common operation withi
 
 The compiler takes cell references (_Locations_ like `'Sheet1'!A1`) as input that can be used as parameters for the generated code. These inputs need to be inserted into the graph. Utilising the graph traversal algorithm discussed in the previous section, we find the first Compute Unit with a location of one of the inputs. This _Compute Unit_ is replaced with an _Input Compute Unit_. Since the input compute unit represents a future value, it does not have any dependencies. As such, the dependencies of the _Compute Unit_ it replaced will be pruned unless they are referenced by other _Compute Units_ in the graph.
 
-=== Type Resolution
+=== Type Resolution<par:compute-graph:type-resolution>
 In general, when compiling to strongly-typed languages, you need to know the types of the computations you want to model. We already saw in @sec:structural-phase that Excel provides the types at cell level: we used those to infer the types of the cells in a structure and could infer the type of a column based on that. The types we discovered in @sec:structural-phase do not cover the formulas. These types are automatically inferred by Excel and are not disclosed when parsing them. In other words, we need to resolve the types for individual compute units.
 
 Since we do know the types of the leaves of the graph, as they are constant values and have been given a type from the start, we can infer the types of their dependents, and thus recursively build a typed Compute Graph. In order to know what the type is of a certain compute unit, we rely on the types of the dependencies and an inference rule. This inference rule describes what a valid inference is for this compute unit, and what its type might be if there is a valid inference. There can be multiple inference rules for one compute unit.
@@ -587,14 +578,14 @@ Precision is key, especially in the actuarial calculations context. We do not wa
 Having covered the most important elements of the _Code Model_, we can dicuss how to create it from the _Compute Model_. This is done in four steps. First (1), we transform the _Compute Model_ into the _Code Model_ by mapping the different nodes from the _Compute Model_ to _Expressions_ in the _Code Model_. Simultaneously, we introduce variables by using the references to the _Structure Model_ found in the _Compute Model_. Then we iterate upon that model and (2) inline variables and (3) transform the _Let_ expressions into statements. Finally (4), we emit the code layout model as code to the disk. In the upcoming sections, we discuss these steps further.
 
 === Variables
-The first step of the code layout model is the introduction of variables. Like we covered in @sec:trivial-compiler, the Excel compute model can be seen as one big expression that needs to be evaluated. However, as we saw, that would quickly become unreadable. As such, we need to introduce variables to make sense of the big sub-expressions. We also use variables to refer to the structures we created.
+The first step of the code layout model is the introduction of variables. LIke we covered in @sec:compute-phase, the _Compute Model_ is essentially one big expression that needs to be evaluated. However, emitting this big expression will significantly decrease the readability of the program. As such, we need to introduce variables to make sense of the big sub-expressions.
 
-In Excelerate, we use the _Formula Cells_ as reference points for the variables. In more precise terms, we start at a root of the Compute Graph, and work our way down the graph. Every time we encounter a compute unit that is from a new cell, we begin constructing a new variable and put the old one in a _Let_ expression. In other words, we recursively build a big expression of _Lets_. 
+Every _Compute Unit_ contains the location it originated from in the _Spreadsheet_ of the _Structure Model_. In order to increase legibility and resemblance to the original Excel file, we use these locations to store computations. 
 
-From there, we can mutate the whole compute model as one big expression: extract functions, optimise access logic, etc.
+In more precise terms, we use a top-down approach, starting at a root of the _Compute Graph_, and transform every node to a _Code Model_ node. Every time we encounter a _Compute Unit_ that is from a new cell, we begin constructing a new variable and put the other---already constructed one---in a _Let_ expression. In other words, we recursively build a big expression of _Lets_.
 
 === Inlining
-Within some sheets, it is common to display the values from another sheet in a separate cell, and then use that cell for calculations in the sheet, essentially making the display cell a proxy to the other sheets. In the code layout model, this creates a variable that is being assigned to another variable:
+A common practice in an Excel file is to display the values from another sheet in a separate cell, and then use that cell for calculations in the sheet. This essentially makes the display cell a proxy to the other sheets. As a result of the variable creation compiler step discussed in the previous section, this creates a variable that is being assigned to another variable:
 
 ```cs 
 double interestJ12 = interestF65 - interestF5 - interestJ11;
@@ -602,7 +593,7 @@ double monthlyBudgetReportJ7 = interestJ12;
 double monthlyBudgetReportD10 = monthlyBudgetReportJ7;
 ```
 
-In this optimization pass, this will be removed. We do this by refactoring the `Let` nodes, checking if a `Let` node contains another `Let` node with the assignment just a variable name. In the end, we will remove this node, and just assign the value directly to the last variable. As such, the example above becomes:
+In this optimisation pass, these proxy variables will be removed. We do this by refactoring the `Let` nodes, checking if a `Let` node contains another `Let` node with the assignment just a variable name. In the end, we will remove this node, and just assign the value directly to the last variable. As such, the example above becomes:
 
 ```cs
 double monthlyBudgetReportD10 = interestF65 - interestF5 - interestJ11;
@@ -611,7 +602,7 @@ double monthlyBudgetReportD10 = interestF65 - interestF5 - interestJ11;
 and is instantly more readable.
 
 === Statements
-After the optimisations, we need to convert the _Let_ expression to statements, since many programming languages do not support the _Let_ expression. As such, we employ a very simple algorithm that just converts every assignment in every _Let_ expression to a statement. The following code layout model would be transformed:
+After inlining, we begin the language-specific part, as we need to convert the _Let_ expression to statements, since Csharp does not support the _Let_ expression. As such, we employ a straightforward algorithm that converts every assignment in every _Let_ expression to a statement. The following code layout model would be transformed:
 
 ```
 DeclarationStatement z (Let y = 10
@@ -636,18 +627,144 @@ Just before emission, at the end of the _Code Phase_, we have constructed a lang
 ==== Roslyn API
 The Roslyn API is an open-source .NET compiler platform developed by Microsoft. It exposes the whole compiler process, from internal data structures to transformations, to the programmer and let's the programmer use the compiler within the C\# language itself. 
 
-Like we spoke about earlier, the Roslyn API is incredible flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive, verbose, and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Layout Model_ grants.
+Like we spoke about earlier, the Roslyn API is flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive, verbose, and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Model_ grants.
 
-It is important to emphasize that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimization, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations. It does this on the Roslyn syntax tree as it is being generated, such as choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used.
+It is important to emphasize that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimisation, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations to improve readability. These optimisations include choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used. It does this on the Roslyn syntax tree as it is being generated.
 
 ==== Mapping
-Translating from the _Code Layout Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this direct, and not much work is needed.  For example, a list initialization in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimisations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
+Translating from the _Code Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this direct, and not much work is needed.  For example, a list initialisation in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimisations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
 
-Furthermore, we rely on a few helper methods from the _Code Layout Model_ to create constructors for types, as they are not explicitly defined in the model but rather derived from the settable data in the structures.
+Furthermore, we rely on a few helper methods from the _Code Model_ to create constructors for types, as they are not explicitly defined in the model but rather derived from the settable data in the structures.
 
 ==== Layout
-During emission, we must also address the organization of code into files, namespaces, and classes. The code layout model describes a project as a collection of classes and methods, but leaves file system organization abstract. The emission pass generates a dedicated C\# file for each top-level class, placing them within a common namespace so they can be accessed easily. 
+During emission, we must also address the organisation of code into files, namespaces, and classes. The code layout model describes a project as a collection of classes and methods, but leaves file system organization abstract. The emission pass generates a dedicated C\# file for each top-level class, placing them within a common namespace so they can be accessed easily. This is a common practice in Csharp @microsoft_net_2025. 
 
-= Reflecting on the Compiler
+= Reflecting on the Compiler<sec:basic-compiler:reflection>
 
-== Missing the structure
+The three phases of the compiler: _Structure_, _Compute_, and _Code_ produce a class library with the same semantics as the Excel file. In this section, we discuss the readability of the code, reflecting on the current compiler, and highlighting areas that can be improved.
+
+== Two Examples
+
+Before we begin the discussion, we present two examples of Excel files that have been compiled to Csharp. 
+These files are small so the code fits on the page. The first spreadsheet is the same as @sps:hlo:spreadsheet1 in the High Level Overview in @sec:hlo. It describes a calculation of the Difference between Projected and Actual income. This example has many independent code paths, such as the calculation of the differences: to calculate the difference of one row, we do not have dependencies on the other row.
+
+#figure(
+  spreadsheet(
+    columns: 4,
+    [], [*Projected*], [*Actual*], [*Difference*],
+    [Income 1], [6.000], [5.800], [`=C2-B2`],
+    [Income 2], [1.000], [2.300], [`=C3-B3`],
+    [Extra Income], [2.500], [1.500], [`=C4-B4`],
+    [TOTAL], [], [], [`=SUM(D2:D4)`]
+  ),
+  caption: [A extract of the 'Family monthly budget' sheet in the 'Family monthly budget'. This spreadsheet calculates the differences in projected and actual income.],
+  supplement: "Spreadsheet",
+  placement: auto,
+)<sps:structure-reflection:spreadsheet1>
+
+@code:structure-reflection:spreadsheet1 shows the compiled code if we run the compiler with `D5` specified as output cell. The _Inline Variables_ compiler step has inlined the constants into the difference calculations.
+
+#figure(
+  ```cs
+  public class Program
+  {
+      public double Main()
+      {
+          double sheet1D2 = 5800 - 6000;
+          double sheet1D3 = 2300 - 1000;
+          double sheet1D4 = 1500 - 2500;
+          double sheet1D5 = new List<double> { sheet1D2, sheet1D3, sheet1D4 }.Sum();
+          return sheet1D5;
+      }
+  }
+  ```,
+  caption: [A compiled version of the spreadsheet in @sps:structure-reflection:spreadsheet1 using the basic compiler described in @chapter-compiling-excel.],
+  placement: auto,
+)<code:structure-reflection:spreadsheet1>
+
+The second spreadsheet contains a linear calculation path, calculating the interest and current balance in a savings account. It can be seen in @sps:structure-reflection:spreadsheet2. This spreadsheet was compiled using the 'basic' compiler with `C5` as output cell configured. The code can be found in @code:structure-reflection:spreadsheet2. 
+
+#figure(
+  spreadsheet(
+    columns: 4,
+    [], [*Interest*], [*Balance*], [*Deposit*],
+    [May], [], [10 000], [],
+    [June], [=$0.01 dot #[C2]$], [=C2+B3+D3], [500],
+    [July], [=$0.01 dot #[C3]$], [=C3+B4+D4], [500],
+    [August], [=$0.01 dot #[C4]$], [=C4+B5+D5], [500],
+  ),
+  caption: [An extract of the 'Interest' sheet in the 'Family monthly budget' Excel file. This spreadsheet calculates the ],
+  placement: auto,
+  supplement: "Spreadsheet",
+)<sps:structure-reflection:spreadsheet2>
+
+#figure(
+  ```cs
+  public class Program
+  {
+      public double Main()
+      {
+          double sheet1C2 = 10000;
+          double sheet1B3 = 0.01 * sheet1C2;
+          double sheet1C3 = sheet1C2 + sheet1B3 + 500; 
+          double sheet1B4 = 0.01 * sheet1C3;
+          double sheet1C4 = sheet1C3 + sheet1B4 + 500;
+          double sheet1B5 = 0.01 * sheet1C4;
+          double sheet1C5 = sheet1C4 + sheet1B5 + 500;
+          return sheet1C5;
+      }
+  }
+  ```,
+  caption: [A compiled version of the spreadsheet in @sps:structure-reflection:spreadsheet2 using the basic compiler described in @chapter-compiling-excel. The code shows a repetition in calculating the cells in the _Interest_ and _Balance_ column.],
+  placement: auto,
+)<code:structure-reflection:spreadsheet2>
+
+#place.flush()
+
+== Missing structure
+
+When evaluating the compiled code, two things are investigated: the semantics and the readability and extensibility. The compiler should emit code that is semantically equivalent to Excel---without this, the compiled code would require extra human intervention to be useful.
+Running the evaluation as described in @sec:eval:methods, it produces the same output as Excel. As such, we can assume the semantics of Excel are preserved.
+
+As discussed previously in @sec:intro:idiomatic-code, the code the compiler emits should be readable and extensible: the code written should be on the same level as how a good software engineer would have written the code. Applying this arguably subjective definition on the two samples, we argue a few problems emerge.
+
+@code:structure-reflection:spreadsheet1 is considered good, simple code without duplication and contains use of idiomatic LINQ constructs (SUM) rather than using loops. This reduces the cognitive complexity and increases comprehensibility and readability. On the other hand, the code in @code:structure-reflection:spreadsheet2 is less readable. It contains lots of duplicate code, since the calculation for the balance is repeated three times. Furthermore, since the values in the _Deposit_ column are inlined, it is not clear that these are variable values and look like one single constant value added to the balance.
+
+The compiled versions are currently without parameters. When we add parameters to @code:structure-reflection:spreadsheet1, we quickly discover a problem: there will be too many parameters. For every row, we would have two parameters, resulting in six parameters for this simple problem. Expanding the spreadsheet would result in even more parameters. This could be fixed with an _Input_ class containing all inputs as properties, but that is not idiomatic.
+
+Another clear issue in both listings is the lack of extensibility. The Excel spreadsheets may be expanded to include the month _September_ in the savings calculation, or remove a source of income in the _family budget_ In both cases, the compiled code would have to be recompiled. Ideally, the compiled code is flexible that it should not have to be recompiled, since the underlying computational model does not change: the only change is the extra argument in the SUM and how that argument is calculated, but that is done in the same way as the other rows.
+
+== Guided by structure
+
+#figure(
+  ```cs
+  public record Income(double Projected, double Actual) {
+    public double Difference => Actual - Projected;
+  }
+  
+  public class Program
+  {
+      public double Main()
+      {
+          List<Income> incomes = [
+            new(6000, 5800),
+            new(1000, 2300),
+            new(2500, 1500)
+          ]
+          
+          double differences = incomes.Select(i => i.Difference).Sum();
+          return differences;
+      }
+  }
+  ```,
+  caption: [A more idiomatic version of the spreadsheet in @sps:structure-reflection:spreadsheet1. Written by the author.],
+  placement: auto,
+)<code:structure-reflection:spreadsheet1-solution>
+
+A way to solve the problems is to analyse the code and introduce refactoring. For instance, the repetition in @code:structure-reflection:spreadsheet2 could be fixed by statically analysing the code, discovering this recurrence of calculations and abstracting the repetition. However, for the problem of extensibility and parameters, the fix is not easy. A solution would be to introduce a structure that models the data in such a way that it fits the computations, like in @code:structure-reflection:spreadsheet1-solution. This introduces a new class `Income` that models the rows found in the spreadsheet. It also creates a computed property `Difference` that would have removed duplicated code. Furthermore, it uses the `Select` LINQ statement to only sum the differences. Furthermore, if we take this new `incomes` local variable as parameter instead, adding or removing rows from the income is easier than ever without creating any more parameters---increasing the extensibility at no expense of readability.
+
+However, creating these structures with the _Code Model_ alone will be hard: detecting which operations should be part of the structure is hard since the scope of the structure is highly dependent on the context. Besides, in small examples like @sps:structure-reflection:spreadsheet1 and @sps:structure-reflection:spreadsheet2 this might be do-able but uncovering possibly multiple structures within a large spreadsheet with many data is highly complex.
+
+That said, a similarity can be found between the newly added `Income` structure and the _structure_ of the _Spreadsheet_ in @sps:structure-reflection:spreadsheet1. If we see this spreadsheet as a table, with columns _Projected_, _Actual_, and _Difference_, the structure basically describes one row of this table. This demonstrates the fact that the semantics is often encoded in the spreadsheet structure.  The meaning of the nodes used in the _Code Model_ can be inferred from the structure. For instance, The `SUM` in `D5` does not just denote the sum of the range, but more likely means the total of the _difference_ column of the table.
+
+When we use this heuristic as part of the compiler, we are able to create more readable code that fits more closely to the semantics of the spreadsheet. In the next chapter, we introduce exactly this form of compilation, called _structure-aware compilation_, that takes structural information and metadata into account in order to improve the readability of the emitted code.

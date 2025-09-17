@@ -1,10 +1,9 @@
-= Further Work
+= Future Work
 
-- Describe further work on the excel compiler
-  - Use of AI for compilation/readability
-  - Better variable names
-  - Just better support for Excel operations.
-  - Support for Excel dynamic arrays and formulas. 
-  - String support?
-  - Extra optimalisation passes
-  - Extra structure extraction
+The limitation we described in @chapter-excelerate directly fuel the future work that can be done on the compiler. In this section, we briefly iterate over possible directions for future work.
+
+An obvious direction is to expand the current supported feature set. This can be as simple as adding formulas and types like strings we do not support yet. However, more interesting is adding formula's like IF() that would result in conditional logic. This brings challenges like the type inference as we discussed in @par:compute-graph:type-resolution. The most challenging addition would be support for Excel dynamic arrays and formulas that were introduced in Excel 2021. These features allow to work with matrices that 'spill out' into the worksheet, essentially creating cells that have different types of content depending on the calculation or input. Finally, support for a dynamic range operator like INDEX would greatly increase the amount of spreadsheets supported. This operator allows for the range to be dependent on the value of a cell. The last two features would require a rework of the current _Compute Model_ to support this dynamic behaviour, since it may require an interpreter. // Should I explain the challenges?
+
+The compiler can always have more optimalisations that increase the readability of the code. We discussed this already in @sec:eval:discussion, where we indicated the compiler could benefit from extra steps that increase the logical separation, such as adding whitespace or extracting functions. For this to work, we need reliable heuristics, which may include the current sheet (Cells on different sheets often compute something different, semantically). Furthermore, the detection of extra structures would improve the _structure-aware compilation_, which may be an area for future work. Besides, using context clues for better variable names may be a great improvement: we can use the neighbouring cells to detect for possible labels and use this as the variable name.
+
+Finally, the recent rise of LLM models may be utilised to create a different compiler that uses an LLM (agent) to convert the spreadsheet to code. We expect this should result in more idiomatic code that conveys the domain. However, this directly complements the current deterministic method of compilation. Several checks should be utilised to ensure the converted code is semantically equivalent to the Excel file.

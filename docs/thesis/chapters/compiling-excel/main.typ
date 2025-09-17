@@ -3,7 +3,7 @@
 #import "@preview/fletcher:0.5.8" as fletcher: diagram, node, edge
 #import "../../utils/cite-tools.typ": citeauthor
 
-#chapter("Compiling Excel")
+#chapter("Compiling Excel vPrev")
 
 // #include "compiler-structure.typ"
 
@@ -180,7 +180,7 @@ Consequently, we introduce _structure-aware compilation_ in this thesis: compila
   placement: top,
 )<sps:structural-compilation:non-idiomatic>
 
-For instance, take @sps:budget:income, which is an obvious table. Now compare this to @sps:structural-compilation:non-idiomatic, which is semantically equivalent but structurally totally different. The underlying computational model is the same. However, using structure-aware compilation, the former spreadsheet will be compiled with more idiomatic code than the latter, because the compiler is guided by the structure of the table.
+For instance, take @sps:budget:income, which is an obvious table. Now compare this to @sps:structural-compilation:non-idiomatic, which is semantically equivalent but structurally totally different. The underlying computational model is the same. However, using structure-aware compilation, the former spreadsheet will be compiled with more idiomatic code than the latter, because the compiler is guided by the structure of the table. 
 
 In order for this to work, it is vital to have an abstracted representation of the structure of the source program. This representation can be used by all subsequent passes to guide the process. Consequently, the compilation should begin with the extraction of the structure to a dedicated intermediate representation. This intermediate representation will be domain specific. 
 
@@ -208,14 +208,13 @@ The grid of the Excel Spreadsheet can contain patterns of specialized structures
 === Tables<subsec:structures:tables>
 Tables are essential structures in Excel. Almost all spreadsheets contain some sort of table. That is not surprising, since spreadsheets are tabular by nature, so chances are high that tables are created in this format. 
 
-The table structure we recognize is a structure with clear division between the headers and data rows. The table represents a class of entities. Each row represents a distinct entity, and each column corresponds to a specific attribute or metric of that class. Columns can contain data, or be computed, just like an Excel table (see @subsec:excel-overview:tables).
+The table structure we recognise is a structure with clear division between the headers and data rows. The table represents a class of entities. Each row represents a distinct entity, and each column corresponds to a specific attribute or metric of that class. Columns can contain data, or be computed, just like an Excel table (see @subsec:excel-overview:tables).
 
 An important property of the table structure is that the rows are independent of each other. This mostly applies to the calculated columns such as the _Difference_ column in the E column in @sps:structures:table. The dependencies of every cell in this column is only 'horizontal', meaning that they depend on cells in their respective rows.
 
 A common pattern that we see is a operation on a whole column of the table. For example, in the _Monthly Expenses_ spreadsheet seen in @fig:family-budget:monthly-expenses, one of the operations is to sum up all the projected costs and actual costs. Without the structure, the code would look like a bunch of variables being put into an array, and an operation being performed on them. 
 [Create example here to illustrate it with code.]
 With the table structure, the data is abstracted away, and we can cleanly use columns in the data. 
-
 
 #figure(
   spreadsheet(
