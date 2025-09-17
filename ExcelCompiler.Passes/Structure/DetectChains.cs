@@ -64,7 +64,9 @@ public class DetectChains(ILogger<DetectChains> logger) : DetectTables
     {
         // Now the difficult part, we need to check if the rows are all the same 'type'.
         var dataPart = ExtractChainData(spreadsheet, area, out _, out _);
-        
+
+        if (dataPart.Data.RowCount <= 1) return false;
+
         // A chain MUST have an initialisation
         if (dataPart.Initialisation.RowCount == 0) return false;
         

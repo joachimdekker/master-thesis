@@ -23,7 +23,7 @@ public class FileWriter
             
             // Write the file
             await using var writer = File.CreateText(filePath);
-            await writer.WriteAsync(unit.NormalizeWhitespace().ToFullString());
+            await writer.WriteAsync(unit.NormalizeWhitespace(elasticTrivia: true).ToFullString());
         }
     }
 }

@@ -23,6 +23,18 @@ public class TypeInference
                 return types[0];
             }
         },
+        { 
+            "EXP", types =>
+            {
+                if (types.Count != 1)
+                    throw new InvalidOperationException("EXP is not supported for more than one type");
+
+                string[] numericalTypes = ["Double", "double", "int", "Int32", "long"];
+                if (!numericalTypes.Contains(types[0].Name))
+                    throw new InvalidOperationException("EXP is not supported for types other than double, int, or long");
+                return new Type("double");
+            }
+        },
         {
             "IF", types =>
             {
@@ -41,7 +53,18 @@ public class TypeInference
             }
         },
         {
-            "-", t => CheckOperatorTypes(t, "MINUS")
+            "-", types =>
+            {
+                if (types.Count > 2) throw new InvalidOperationException("The - operator is not supported for more than two arguments.");
+
+                string[] numericalTypes = ["Double", "double", "int", "Int32", "long"];
+                if(types.Exists(t => !numericalTypes.Contains(t.Name))) throw new InvalidOperationException($"- is not supported for types other than double, int, or long (signature is ({string.Join(", ", types)}))");
+
+                if (types.Exists(t => t.Name != types[0].Name))
+                    throw new InvalidOperationException("- is not supported for types other than the same type");
+
+                return types[0];
+            }
         },
         {
             "+", t => CheckOperatorTypes(t, "PLUS")
@@ -62,11 +85,11 @@ public class TypeInference
             throw new InvalidOperationException($"{name} is not supported for more than two types");
         }
 
-        if (types[0] != types[1]) throw new InvalidOperationException($"{name} is not supported for types other than the same type");
+        if (types[0].Name != types[1].Name) throw new InvalidOperationException($"{name} is not supported for types other than the same type (Signature is {name}({string.Join(", ", types)})");
 
         // Should be a numerical type
         string[] numericalTypes = ["Double", "double", "int", "Int32", "long"];
-        if (!numericalTypes.Contains(types[0].Name)) throw new InvalidOperationException($"{name} is not supported for types other than double, int, or long");
+        if (!numericalTypes.Contains(types[0].Name)) throw new InvalidOperationException($"{name} is not supported for types other than double, int, or long (Signature is {name}({string.Join(", ", types)})");
 
         return types[0];
     }

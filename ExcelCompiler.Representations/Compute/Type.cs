@@ -4,16 +4,16 @@ namespace ExcelCompiler.Representations.Compute;
 
 public record Type
 {
-    public string Name { get; }
+    public string Name { get; init; }
 
-    public object DefaultValue { get; } = null!;
+    public object DefaultValue { get; init; } = null!;
 
     public Type(string name)
     {
         Name = name;
     }
 
-    public Type(System.Type type) : this(type.Name)
+    public Type(System.Type type) : this(type.Name.ToLower())
     {
         DefaultValue = type.GetDefaultValue();
     }

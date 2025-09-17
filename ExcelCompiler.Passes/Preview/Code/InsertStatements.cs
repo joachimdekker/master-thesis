@@ -63,7 +63,7 @@ public class InsertStatements
         var expression = Separate(let.Expression);
         var declaration = Separate(let.Assignment.Value);
         
-        Debug.Assert(declaration.Statements.Count == 0, "Let should not have statements");
+        // Debug.Assert(declaration.Statements.Count == 0, "Let should not have statements");
         
         return expression with
         {

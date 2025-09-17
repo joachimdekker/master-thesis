@@ -161,19 +161,22 @@ public class RoslynGenerator
         {
             Assignment assignment => AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName(assignment.Variable.Name), Generate(assignment.Value)),
             Constant { Type.Name: "Double" or "double" } constant => LiteralExpression(SyntaxKind.NumericLiteralExpression,
-                Literal((double)constant.Value)),
+                Literal(((double)constant.Value).ToString() + "d", (double) constant.Value)),
             Constant { Type.Name: "String" or "string" } constant => LiteralExpression(SyntaxKind.StringLiteralExpression,
                 Literal((string)constant.Value)),
             Constant { Type.Name: "Int32" or "int" } constant => LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal((int)constant.Value)),
             Variable variable => IdentifierName(variable.Name),
-            ListExpression list when list.Members.Count != 0 => ObjectCreationExpression(
-                    GenericName(Identifier("List"))
-                    .WithTypeArgumentList(
-                        TypeArgumentList(SingletonSeparatedList<TypeSyntax>(IdentifierName((list.Type as ListOf)!.ElementType.Name)))))
-                .WithInitializer(InitializerExpression(SyntaxKind.CollectionInitializerExpression)
-                .AddExpressions(list.Members.Select(Generate).ToArray())),
+            ListExpression list when list.Members.Count != 0 => CollectionExpression(
+                SeparatedList<CollectionElementSyntax>(
+                    list.Members.Select(m => 
+                    ExpressionElement(
+                        Generate(m).WithTrailingTrivia(CarriageReturnLineFeed))))).WithOpenBracketToken(
+        Token(SyntaxKind.OpenBracketToken)
+            .WithTrailingTrivia(CarriageReturnLineFeed))
+    .WithCloseBracketToken(
+        Token(SyntaxKind.CloseBracketToken)),
             PropertyAccess accessor => MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                Generate(accessor.Self), IdentifierName(accessor.Name)),
+                    Generate(accessor.Self), IdentifierName(accessor.Name)),
             FunctionCall functionCall => GenerateFunction(functionCall),
             ObjectCreation constructor => GenerateConstructor(constructor),
             Lambda lambda => lambda.Parameters.Count == 1 
@@ -214,9 +217,7 @@ public class RoslynGenerator
         ArgumentListSyntax argumentListSyntax = ArgumentList()
             .AddArguments(arguments);
 
-        var invocation = ObjectCreationExpression(
-            IdentifierName(objectCreation.Type.Name)
-        ).WithArgumentList(argumentListSyntax);
+        var invocation = ImplicitObjectCreationExpression().WithArgumentList(argumentListSyntax);
         
         return invocation;
     }
@@ -245,7 +246,15 @@ public class RoslynGenerator
             
             return BinaryExpression(kind, left, right);
         }
-        
+
+        // Monkeypatch for the "EXP" function to use Math.Exp
+        if (functionCall.Name.Equals("EXP", StringComparison.OrdinalIgnoreCase) && functionCall.Arguments.Count == 1)
+        {
+            ExpressionSyntax argument = Generate(functionCall.Arguments[0]);
+            ExpressionSyntax mathExp = MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("Math"), IdentifierName("Exp"));
+            return InvocationExpression(mathExp).AddArgumentListArguments(Argument(argument));
+        }
+
         // Generate the normal function call
         ExpressionSyntax invocation = functionCall.Object is null ? IdentifierName(functionCall.Name) : MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,Generate(functionCall.Object),IdentifierName(functionCall.Name));
         var invocationExpression = InvocationExpression(invocation);

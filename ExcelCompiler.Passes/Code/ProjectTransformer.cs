@@ -29,7 +29,7 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
     
     protected abstract TExpr Variable(Variable variable);
     
-    protected abstract TExpr FunctionCall(FunctionCall functionCall, List<TExpr> arguments);
+    protected abstract TExpr FunctionCall(FunctionCall functionCall, TExpr? self, List<TExpr> arguments);
     
     protected abstract TExpr ListExpression(ListExpression listExpression, List<TExpr> members);
     
@@ -90,13 +90,18 @@ public abstract record ProjectTransformer<TRes, TClass, TMethod, TProperty, TSta
         };
     }
 
+    private TExpr? SafeTransform(Expression? expression)
+    {
+        return expression is null ? default : Transform(expression);
+    }
+
     public TExpr Transform(Expression expression)
     {
         return expression switch
         {
             Constant constant => Constant(constant),
             Variable variable => Variable(variable),
-            FunctionCall functionCall => FunctionCall(functionCall, functionCall.Arguments.Select(Transform).ToList()),
+            FunctionCall functionCall => FunctionCall(functionCall, SafeTransform(functionCall.Object), functionCall.Arguments.Select(Transform).ToList()),
             ListExpression listExpression => ListExpression(listExpression,
                 listExpression.Members.Select(Transform).ToList()),
             ListAccessor listAccessor => ListAccessor(listAccessor, Transform(listAccessor.List),Transform(listAccessor.Accessor) ),
@@ -215,10 +220,11 @@ public abstract record UnitProjectTransformer : ProjectTransformer<Project, Clas
         return variable;
     }
     
-    protected override Expression FunctionCall(FunctionCall functionCall, List<Expression> arguments)
+    protected override Expression FunctionCall(FunctionCall functionCall, Expression self, List<Expression> arguments)
     {
         return functionCall with
         {
+            Object = self,
             Arguments = arguments
         };
     }
@@ -315,8 +321,8 @@ public abstract record BulkTransformer<TRes> : ProjectTransformer<TRes, TRes, TR
             ? body.Prepend(condition) 
             : body.Prepend(condition).Concat(@else));
 
-    protected override TRes FunctionCall(FunctionCall functionCall, List<TRes> arguments)
-        => Combine(arguments);
+    protected override TRes FunctionCall(FunctionCall functionCall, TRes self, List<TRes> arguments)
+        => Combine([self, ..arguments]);
 
     protected override TRes ListExpression(ListExpression listExpression, List<TRes> members)
         => Combine(members);

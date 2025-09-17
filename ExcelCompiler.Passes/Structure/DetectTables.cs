@@ -27,7 +27,7 @@ public class DetectTables
         var tableData = ExtractTableData(spreadsheet, area, out string? title, out List<Cell>? header, out var footer);
         
         // Get the columns
-        bool hasHeader = header.All(c => c is ValueCell<string>);
+        bool hasHeader = header?.All(c => c is ValueCell<string>) ?? false;
         var columns = ExtractColumnHeaders(header, tableData.ColumnCount);
         var columnRanges = tableData.Columns;
 
@@ -60,6 +60,11 @@ public class DetectTables
         // Check if the table has an header
         // A header is classified if the first row of the area contains all text.
         var dataPart = ExtractTableData(spreadsheet, area, out _, out var headers, out _);
+
+        //if (headers is null) return false;
+
+        // We have to be certain it is a table, so one line of data won't help
+        if (dataPart.RowCount <= 1) return false;
         
         // Columns are the same
         int noColumns = dataPart.ColumnCount;

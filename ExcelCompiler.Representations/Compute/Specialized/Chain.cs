@@ -6,23 +6,10 @@ namespace ExcelCompiler.Representations.Compute.Specialized;
 
 public record Chain(string Name, Range Range) : Construct(Name, Range)
 {
-    public record ColumnReference(string chainName, string columnName, Location location) : ComputeUnit(location)
-    {
-        public string ChainName { get; init; } = chainName;
-        public string ColumnName { get; init; } = columnName;
-    }
-
-    public record CellReference(string chainName, string columnName, Location location) : ComputeUnit(location)
-    {
-        public string ChainName { get; init; } = chainName;
-    }
-
     public List<ChainColumn> Columns { get; init; } = [];
 
-    public DataReference Data { get; set; }
-    
     public ChainStructureData StructureData { get; set; } = new();
-    
+
     public int NoBaseCases => Columns.OfType<RecursiveChainColumn>().Select(x => x.NoBaseCases).MaxOrDefault(0);
 }
 
@@ -55,6 +42,6 @@ public record RecursiveChainColumn : ChainColumn
     public ComputeUnit? Computation { get; set; }
 
     public ComputeUnit? Footer { get; set; }
-    
+
     public int NoBaseCases { get; set; }
 }

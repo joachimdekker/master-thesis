@@ -31,7 +31,9 @@ public class GenerateTypes
 
     public Class Generate(Chain chain)
     {
-        var typeTransformer = new TypeTransformer();
+        var baseCases = chain.Columns.OfType<RecursiveChainColumn>()
+            .Where(c => c.Initialization is not null)
+            .Select(c => new Property(c.Name + "BaseCase", c.Type.Convert()));
 
         var properties = chain.Columns.OfType<DataChainColumn>().Select(c => new Property(c.Name, new ListOf(c.Type.Convert()))).ToList();
         var computedProperties = chain.Columns
@@ -57,7 +59,7 @@ public class GenerateTypes
             })
             .ToList();
 
-        return new(chain.Name, [..properties], [..chainProperties,..computedProperties]);
+        return new(chain.Name, [..properties, ..baseCases], [..chainProperties,..computedProperties]);
     }
 
     private Statement[] GenerateRecursiveBody(RecursiveChainColumn recursiveChainColumn, Variable counter)
@@ -67,14 +69,14 @@ public class GenerateTypes
 
         if (recursiveChainColumn.Initialization is not null)
         {
-            Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(transformer.Transform(recursiveChainColumn.Initialization!))]);
+            Statement baseCase = new If(new FunctionCall("Equals", [counter, new Constant(new Type(typeof(int)), 0)]), [new Return(new Variable(recursiveChainColumn.Name + "BaseCase"))]);
             body.Add(baseCase);
         }
-        
+
 
         Statement recursiveCase = new Return(transformer.Transform(recursiveChainColumn.Computation!));
-        
-        
+
+
         return [..body, recursiveCase];
     }
 
@@ -88,7 +90,7 @@ public class GenerateTypes
             Getter = typeTransformer.Transform(tc.Computation!),
         }).ToList();
 
-        return new(table.Name + "Item", [..properties, ..computedProperties], []);
+        return new("Table" + table.Name.ToPascalCase() + "Item", [..properties, ..computedProperties], []);
     }
 }
 

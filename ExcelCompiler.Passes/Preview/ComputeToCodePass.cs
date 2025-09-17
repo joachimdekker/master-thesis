@@ -27,7 +27,7 @@ public class ComputeToCodePass
     private ComputeGraph _computeGraph;
     private List<Class> _classes;
     private Dictionary<Construct, Type> _constructRepresentation= new();
-    
+
     public ComputeToCodePass(GenerateTypes typeGenerator)
     {
         _typeGenerator = typeGenerator;
@@ -45,7 +45,7 @@ public class ComputeToCodePass
 
         // Set the global variables (yeah yeah I know, this is a big no no but please, I just want it to work)
         _computeGraph = computeGraph;
-        
+
         var types = _typeGenerator.Generate(computeGraph);
         _classes = types.Select(t => t.Type).ToList();
         output.AddRange(_classes);
@@ -57,10 +57,10 @@ public class ComputeToCodePass
             {
                 type = new ListOf(type);
             }
-            
+
             return type;
         });
-        
+
         // var constructVariables = PopulateConstructClasses(computeGraph, dataManager, types);
         //
         // var tableVariables = GenerateTableVars(computeGraph, dataManager, types);
@@ -68,12 +68,12 @@ public class ComputeToCodePass
         var inputs = computeGraph.Inputs;
         Variable[] parameters = inputs.Select(i => new Variable(VariableName(i.Location), i.Type.Convert())).ToArray();
         Variable[] structureParams = computeGraph.Constructs.Where(c => c.IsInput).Select(c => new Variable(c.Id.ToCamelCase(), _constructRepresentation[c])).ToArray();
-        
+
         // var body = constructVariables.Concat(GenerateStatements(computeGraph)).Where(s => s is not Declaration a || parameters.All(p => p.Name != a.Variable.Name)).ToArray();
         var body = GenerateStatements(computeGraph)
             .Where(s => s is not Declaration a || parameters.All(p => p.Name != a.Variable.Name))
             .ToArray();
-        
+
         var main = new Method("Main", [..parameters, ..structureParams], body);
         var program = new Class("Program", [], [main]);
 
@@ -91,27 +91,41 @@ public class ComputeToCodePass
     private Expression CreateChainConstructor(Class type)
     {
         Method constructor = type.GenerateConstructor();
-        
+
         Chain? construct = _computeGraph.Constructs.Single(c => c.Id.ToPascalCase() == type.Name) as Chain;
-        
-        IEnumerable<Expression> arguments = 
-            from parameter in constructor.Parameters 
-            let column = construct.StructureData.Columns.Single(x => x.ColumnId.ToCamelCase() == parameter.Name)
-            let values = column.Data
-            let expressions = 
-                values.Select<ComputeUnit, Expression>(value => value is Nil
-                    ? new Constant(column.Type.Convert(), column.Type.DefaultValue)
-                    : new Variable(VariableName(value), column.Type.Convert()))
-            select new ListExpression(expressions.ToList());
-        
-        Expression creation = new ObjectCreation(type, arguments.ToList());
+
+        IEnumerable<Expression> arguments =
+            from parameter in constructor.Parameters
+            select GetArgument(parameter);
+
+        Expression creation = new ObjectCreation(type, [..arguments]);
         return creation;
+
+        Expression GetArgument(Variable parameter)
+        {
+            if (parameter.Name.EndsWith("BaseCase")) return GetBaseCase(parameter);
+
+            var column = construct!.StructureData.Columns.Single(x => x.ColumnId.ToCamelCase() == parameter.Name);
+            List<Expression> values = column.Data.Select<ComputeUnit, Expression>(v => VariableOrDefault(v, column)).ToList();
+            return new ListExpression(values);
+        }
+
+        Expression GetBaseCase(Variable parameter)
+        {
+            var column = construct!.StructureData.Initialisations.Single(x
+                => parameter.Name.Contains(x.ColumnId.ToCamelCase(), StringComparison.InvariantCultureIgnoreCase)
+            );
+            var value = column.Data.Single();
+            return Generate(value);
+        }
+
+        Expression VariableOrDefault(ComputeUnit value, ColumnData column) => value is Nil ? new Constant(value.Type.Convert(), column.Type.DefaultValue) : new Variable(VariableName(value), column.Type.Convert());
     }
 
     private Expression CreateTableConstructor(Class type)
     {
         Method constructor = type.GenerateConstructor();
-        Table? construct = _computeGraph.Constructs.Single(c => c.Id.ToPascalCase() + "Item" == type.Name) as Table;
+        Table? construct = _computeGraph.Constructs.Single(c => "Table" + c.Id.ToPascalCase() + "Item" == type.Name) as Table;
 
         List<Expression> newExpressions = [];
         for (int i = 0; i < construct!.StructureData!.Columns[0].Data.Count; i++)
@@ -120,7 +134,7 @@ public class ComputeToCodePass
             {
                 // Get the type
                 var values = construct!.StructureData!.Columns.Single(x => x.ColumnId.ToCamelCase() == p.Name);
-                
+
                 // Get the value
                 var value = values.Data[i];
 
@@ -128,7 +142,7 @@ public class ComputeToCodePass
                 {
                     return new Constant(values.Type.Convert(), values.Type.DefaultValue);
                 }
-                
+
                 return new Variable(VariableName(value), values.Type.Convert());
             }).ToList();
             var item = new ObjectCreation(type, arguments);
@@ -156,39 +170,39 @@ public class ComputeToCodePass
         foreach (var cell in graph.EntryPointsOfCells().Reverse())
         {
             if (_computeGraph.Inputs.Contains(cell)) continue;
-            
+
             if (cell is ConstructCreation cc)
             {
                 Construct construct = _computeGraph.Constructs.Single(c => c.Id == cc.ConstructId);
-                
+
                 if (construct.IsInput) continue;
-                
+
                 string constructName = cc.ConstructId.ToCamelCase();
                 var expression = CreateConstruct(cc);
-                Type type = expression.Type; 
+                Type type = expression.Type;
                 statements.Add(new Declaration(new Variable(constructName, type), expression));
                 continue;
             }
-            
+
             string varName = VariableName(cell);
             statements.Add(new Declaration(new Variable(varName.ToCamelCase(), cell.Type.Convert()), Generate(cell)));
         }
 
         // Instead of the statement, we use a Let In
-        
-        
+
+
         // Return all the roots
         // Right now, we only support a single root
         var root = graph.Roots.Single();
         Type rootType = new Type("double");
         Expression let = statements.Reverse().Aggregate( new Variable(VariableName(root), rootType),
-            (Expression acc, Statement stat) => 
+            (Expression acc, Statement stat) =>
             {
                 if (stat is not Declaration decl) throw new InvalidOperationException();
-                
+
                 Expression expr = decl.Expression;
                 Variable var = decl.Variable;
-                
+
                 return new Let(new Assignment(var, expr), acc);
             });
 
@@ -201,49 +215,59 @@ public class ComputeToCodePass
         {
             ConstantValue<double> @double => new Constant(new Type("double"), @double.Value),
 
-            Function {Name: "SUM", Dependencies: [RangeReference or TableReference or ColumnOperation]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
-            
+            Function { Name: "SUM", Dependencies: [RangeReference] } func => new Let(new Assignment(new Variable(VariableName(cell) + "List", new ListOf(new Type("double"))), Generate(func.Dependencies[0])), new FunctionCall(new Variable(VariableName(cell) + "List"), "Sum", [])),
+
+
+            Function { Name: "SUM", Dependencies: [TableReference or ColumnOperation]} func => new FunctionCall(Generate(func.Dependencies[0]), "Sum", []),
+
             Function func => new FunctionCall(func.Name, func.Dependencies.Select(Generate).ToList()),
-            
+
             CellReference cellRef => new Variable(VariableName(cellRef.Reference), cellRef.Type.Convert()),
-            
+
             RangeReference range => new ListExpression(range.Dependencies.Select(l => new Variable(VariableName(l.Location))).ToList<Expression>(), new Type("double")),
-            
+
             TableReference tableRef => new FunctionCall(
                 new Variable(tableRef.Reference.TableName.ToCamelCase()),
                 "Select",
                 [new Lambda([new Variable("t")],
                     new PropertyAccess(Type.Derived, new Variable("t"), tableRef.Reference.ColumnNames[0].ToPascalCase()))]),
-            
+
             RecursiveChainColumn.RecursiveCellReference recursiveCellReference => new FunctionCall(new Variable(recursiveCellReference.ChainName.ToCamelCase()), recursiveCellReference.ColumnName.ToPascalCase() + "At", [new Constant(recursiveCellReference.Recursion)]),
             RecursiveResultReference recursiveCellReference => new FunctionCall(new Variable(recursiveCellReference.StructureName.ToCamelCase()), recursiveCellReference.ColumnName.ToPascalCase() + "At", [new Constant(recursiveCellReference.Row)]),
-            
+
             ComputedChainColumn.CellReference computedChainColumn => new ListAccessor(
-                computedChainColumn.Type.Convert(), 
-                new PropertyAccess(new ListOf(computedChainColumn.Type.Convert()), new Variable(computedChainColumn.ChainName.ToCamelCase()), computedChainColumn.ColumnName.ToCamelCase()), 
+                computedChainColumn.Type.Convert(),
+                new PropertyAccess(new ListOf(computedChainColumn.Type.Convert()), new Variable(computedChainColumn.ChainName.ToCamelCase()), computedChainColumn.ColumnName.ToCamelCase()),
                 new Constant(computedChainColumn.Index)),
-            
+
             ColumnOperation { Structure: Table table } op => new FunctionCall(
                 new Variable(table.Name.ToCamelCase()),
                 "Select",
                 [new Lambda([new Variable("t")],
                     new PropertyAccess(Type.Derived, new Variable("t"), op.ColumnName))]),
-            
+
             ColumnOperation { Structure: Chain chain } op => new PropertyAccess(Type.Derived,
                 new Variable(chain.Name.ToCamelCase()),
                 op.ColumnName),
-            
+
             DataChainColumn.Reference dataRef => new ListAccessor(
-                dataRef.Type.Convert(), 
-            new PropertyAccess(new ListOf(dataRef.Type.Convert()), new Variable(dataRef.ChainName.ToCamelCase()), dataRef.ColumnName.ToPascalCase()), 
+                dataRef.Type.Convert(),
+            new PropertyAccess(new ListOf(dataRef.Type.Convert()), new Variable(dataRef.ChainName.ToCamelCase()), dataRef.ColumnName.ToPascalCase()),
             new Constant(dataRef.Index)),
-            
+
             Input input => new Variable(VariableName(input.Location)),
-            
-            TableColumn.CellReference cr => new Variable(cr.TableName + cr.ColumnName + cr.Index),
-            
+
+            TableColumn.CellReference cr => new PropertyAccess(
+                new Type("double"), 
+                new ListAccessor(
+                    Type.Derived,
+                    new Variable(cr.TableName.ToCamelCase()),
+                    new Constant(cr.Index)),
+                cr.ColumnName.ToPascalCase()    
+            ),
+
             ConstructCreation cc => CreateConstruct(cc),
-            
+
             _ => throw new InvalidOperationException($"Unsupported compute unit {cell.GetType()}"),
         };
     }

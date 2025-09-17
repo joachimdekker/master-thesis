@@ -46,6 +46,7 @@ public class ConversionWorker
         ExtractConstructs extractConstructsPass = _serviceProvider.GetRequiredService<ExtractConstructs>();
         ReplaceConstructDependencies replaceConstructDependenciesPass = _serviceProvider.GetRequiredService<ReplaceConstructDependencies>();
         Passes.Preview.ComputeToCodePass computeToCodePass = _serviceProvider.GetRequiredService<Passes.Preview.ComputeToCodePass>();
+        NormalizeTypes normalizeTypesPass = _serviceProvider.GetRequiredService<NormalizeTypes>();
         TypeInference typeInferencePass = _serviceProvider.GetRequiredService<TypeInference>();
         PruneEmptyCells pruneEmptyCellsPass = _serviceProvider.GetRequiredService<PruneEmptyCells>();
         ExtractStructureData structureDataPass = _serviceProvider.GetRequiredService<ExtractStructureData>();
@@ -69,6 +70,7 @@ public class ConversionWorker
         Workbook workbook = excelToStructurePass.Transform(excelFile);
         List<Area> areas = detectAreasPass.Detect(workbook).Where(a => !a.Range.IsSingleReference).ToList();
         List<Construct> constructs = detectStructuresPass.Detect(workbook, areas, structureInputs.ToList());
+        //constructs = constructs.Where(c => c.Name == "TBL_MonthlyExpenses").ToList();
         workbook.Constructs.AddRange(constructs);
         
         // Extract data
@@ -86,6 +88,8 @@ public class ConversionWorker
         
         _logger.LogInformation("Executing Construct Compute Graph pass");
         var graph = constructComputeGraphPass.Transform(grid, outputs);
+        _logger.LogInformation("Executing Normalize Types pass");
+        graph = normalizeTypesPass.Transform(graph);
         _logger.LogInformation("Inferencing Types");
         graph = typeInferencePass.Transform(graph);
         _logger.LogInformation("Executing Link Identical nodes pass");

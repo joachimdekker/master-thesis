@@ -40,11 +40,11 @@ file record InlineVariableTransformer : UnitProjectTransformer
 
     private Expression Replace(Expression expression, Variable variable, Expression replacement)
     {
-        if (expression is Variable v && v == variable) return replacement;
+        if (expression is Variable v && v.Name == variable.Name) return replacement;
 
         return expression switch
         {
-            FunctionCall functionCall => FunctionCall(functionCall,
+            FunctionCall functionCall => FunctionCall(functionCall, Replace(functionCall.Object, variable, replacement),
                 functionCall.Arguments.Select(a => Replace(a, variable, replacement)).ToList()),
             ListExpression listExpression => ListExpression(listExpression,
                 listExpression.Members.Select(a => Replace(a, variable, replacement)).ToList()),

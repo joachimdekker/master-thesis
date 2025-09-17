@@ -150,7 +150,7 @@ file record RecursiveCounter(Class TargetClass, Method TargetMethod, Project Tar
         return elements.Sum();
     }
 
-    protected override int FunctionCall(FunctionCall functionCall, List<int> arguments)
+    protected override int FunctionCall(FunctionCall functionCall, int _, List<int> arguments)
     {
         if ((functionCall.Object is null || functionCall.Object.Type == TargetClass) &&
             functionCall.Name == TargetMethod.Name)

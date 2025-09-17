@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using OfficeOpenXml;
+using System.Diagnostics;
 using Range = ExcelCompiler.Representations.References.Range;
 
 ExcelPackage.License.SetNonCommercialPersonal("Joachim Dekker");
@@ -47,11 +48,17 @@ var outputs = fileConfig.Outputs!.Select(i => Reference.Parse(i)).OfType<Locatio
 
 // Run the worker
 ConversionWorker worker = provider.GetRequiredService<ConversionWorker>();
+
+Stopwatch sw = Stopwatch.StartNew();
 var project = await worker.ExecuteAsync(
     inputs, //[Location.FromA1("E10", "Monthly budget report")], 
     structureInputs, //[Range.FromString("C14:F17", "Monthly budget report")], 
-    outputs);
-    
+    outputs);    
+
 // Run the project creation worker
 ProjectCreationWorker projectWorker = provider.GetRequiredService<ProjectCreationWorker>();
 await projectWorker.ExecuteAsync(project);
+
+sw.Stop();
+ILogger<Program> logger = provider.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Total conversion took {Time} ms", sw.ElapsedMilliseconds);
