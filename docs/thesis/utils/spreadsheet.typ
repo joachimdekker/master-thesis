@@ -8,10 +8,10 @@
 ) = {
   show raw: r => {
     set text(font: "JetBrains Mono", size: 1em)
-    r
+    r.text
   }
   
-  let border(t) = table.cell(text(t, fill: luma(80%), weight: "bold", size: 0.6em), fill: black, inset: (x:0.5em, y:0.3em), align: center + horizon,)
+  let border(t) = table.cell(text(t, fill: luma(20%), weight: "bold", size: 0.6em), fill: luma(80%), inset: (x:0.5em, y:0.3em), align: center + horizon, )
 
   let chars = ("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K")
 
@@ -41,12 +41,13 @@
   let endOffset = if (hasFooter) { 1 } else { 0 }
   
   set table(
-    stroke: (x, y) => (
-      top: if (y >= (rowCount + 1) - endOffset) { 2pt } else { 1pt },
-      bottom: if (y + 1 <= beginOffset) { 2pt } else {1pt},
-      left: 1pt,
-      right: 1pt,
-    ),
+    stroke: 1pt + luma(80%)
+    // (x, y) => (
+    //   top: if (y == 0 ) {1pt + luma(80%)},
+    //   bottom: if (x == 0) { 1pt + luma(80%) } else { 1pt + luma(80%) },
+    //   left: if (y == 0 or x == 0) { 1pt + luma(80%) },
+    //   right: if (y == 0) { 1pt + luma(80%) } else { 1pt },
+    // ),
   )
 
   show table.cell: set align(left)

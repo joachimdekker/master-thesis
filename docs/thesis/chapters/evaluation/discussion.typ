@@ -1,19 +1,21 @@
-#pagebreak(weak:true)
 = Discussion<sec:eval:discussion>
 
 In this section, we discuss the results described in @sec:eval:results. We also discuss the readability of the compiled code based on compiled snippets. 
 
-The results show a reported total equality across all benchmark spreadsheets. This indicates that the compiled C\# code reproduce the exact behaviour of Excel's calculation engine. The findings directly answer RQ3, demonstrating that there is a way to verify semantic equivalence between Excel and generated code for the supported feature set. More precisely, the bit-wise equivalence found in many compared results indicates Excelerate often produces the same order of operations as Excel.
+The results show a reported total equality across all benchmark spreadsheets. This indicates that the compiled C\# code reproduce the exact behaviour of Excel's calculation engine. 
+The findings directly answer RQ3, demonstrating that there is a way to verify semantic equivalence between Excel and generated code for the supported feature set. More precisely, the bit-wise equivalence found in many compared results indicates Excelerate often produces the same order of operations as Excel.
 
-Our performance measurements indicate an average speedup of 500x. The main contributor to this speedup is the removal of the COM interface: Excelerate can be directly called from C\# code. However, this is not the only contribution. It can be seen that in larger spreadsheets such as _Family budget monthly_, the actual calculation time doubles in comparison with a smaller spreadsheet such as _Service Invoice_. The overhead of the COM interface should only interfere when data and commands are moving between program boundaries, not when the actual Excel sheet is calculating. This indicates that the Excel Calculation engine is also performing slower than Excelerates compiled code.
+Our performance measurements indicate an average speedup of $677 plus.minus 90$x. The main contributor to this speedup is the removal of the COM interface: Excelerate can be directly called from C\# code. However, this is not the only contribution. It can be seen that in larger spreadsheets such as _Family budget monthly_, the actual calculation time doubles in comparison with a smaller spreadsheet such as _Service Invoice_. The overhead of the COM interface should only interfere when data and commands are moving between program boundaries, not when the actual Excel sheet is calculating. This indicates that the Excel Calculation engine is also performing slower than Excelerates compiled code.
 
-This can be explained by the optimised execution path. Excel Calculation engine is an interpreter and interpreted the cells. Conversely, the code Excelerate emits is further optimised by the .NET JIT compiler, significantly boosting performance @microsoft_managed_2025. Although the .NET compiler compiles and interpretes the code in IL, sections of the code are converted on-demand to machine code and directly run afterwards @microsoft_managed_2025. This gives a small overhead the first time we call a function for example.
+This can be explained by the optimised execution path. The Excel Calculation engine is an interpreter. Conversely, the code Excelerate emits is compiled ahead-of-time and further optimised by the .NET JIT compiler, significantly boosting performance @microsoft_managed_2025. Although the .NET compiler compiles and interpretes the code in IL, sections of the code are converted on-demand to machine code and directly run afterwards @microsoft_managed_2025. This gives a small overhead the first time we call a function for example. This is what we saw as the JIT warmup in @sec:eval:results.
+
+The relationship between the complexity of the spreadsheet (measured in the number of Compute Units) appears to be linear for both Excel and Excelerate. Based on @table:results:scatterplot, the outlier is the _Actuarial Example_ spreadsheet. For Excelerate this speedup can be explained: since the chain in the spreadsheet was not correctly detected due to limitations discussed in @sec:excelerate:discussion, the code is very verbose. While this reduces readability, the compiled code can be much better optimised as the chain calculation is effectively completely inlined. Consequently, the code executes much faster.
 
 The performance measurement revealed that instead of calculation, the insertion of data is the biggest slowing factor for Excel. Due to the large overhead of the COM interface, every time a outside program tries to insert a range of value, it gets this COM overhead, quickly accumulating when having multiple input ranges. Instead, Excelerate produces a class library with little to no input and output extraction overhead.
 
 The increases in performance and evidence for semantic equality indicate Excelerate as a possible substitution for the use of Excel in business critical applications. Applying Excel to the example in the introduction, the two weeks it took to calculate the pension prediction for all 200 000 customers, would take approximately 5 minutes with Excelerate. That said, the limited operator and function set supported by Excelerate is a critical limiting factor. However, Excelerate can be extended to support more operators, functions and paradigms.
 
-Furthermore, having compiled code instead of interpreted code with Excel does not only have performance advantages. Excelerate itself is language agnostic and can compile to many languages if extended. This allows the spreadsheet to also be compiled to code that can be run on device that do not have Excel installed.
+Furthermore, having compiled code instead of interpreted code with Excel does not only have performance advantages. Excelerate itself is language agnostic and can compile to many languages if extended. This allows the spreadsheet to also be compiled to code that can be run on device that do not have Excel installed. Besides, compiled code is also easier to audit and is more easily tested using automated tests. This is important for financial companies such as the pension funds.
 
 // // The results show complete equality, meaning that any input can be calculated the same way in Excelerate at minimal precision loss. The fact that many floating point outputs are exactly the same indicates Excelerate often produces the same order of operations as Excel.
 
@@ -33,13 +35,101 @@ Furthermore, having compiled code instead of interpreted code with Excel does no
 
 == Readability and Idiomaticity<sec:eval:readability>
 
-For this section, we use the code generated from the _Family Monthly Budget_ spreadsheet. This spreadsheet best represents the code improvements made by Excelerate over the 'basic' compiler. We present the new code in @code:discussion:fbm-new and the old code in @code:discussion:fbm-old. The code of some of the other spreadsheets can be found in the appendix.
+In this section, we show the differences between the 'basic' compiler and Excelerate. Based on different spreadsheets, we compare the old and new code for improvements in readability and idiomaticity, based on the definition in @sec:intro:idiomatic-code and @par:readability:criteria. The full files can be found in the appendix.
 
 === Structural Abstraction
 
+#import "@preview/zebraw:0.5.5": *
+#show: zebraw.with(lang: false)
+
 From a readability and comprehensibility standpoint, Excelerate code bundles common logic into classes that communicate their meaning directly. This removes the scattered variables that convey nothing about their semantics. 
 
+#figure(text(grid(columns: 1, gutter: 1em,
+  zebraw(
+    header: [Excelerate > Main()],
+    // highlight-lines: (
+    //   (1, [The Fibonacci sequence is defined through the recurrence relation $F_n = F_(n-1) + F_(n-2)$\
+    //   It can also be expressed in _closed form:_ $ F_n = round(1 / sqrt(5) phi.alt^n), quad
+    //   phi.alt = (1 + sqrt(5)) / 2 $]),
+    //   // Passing a range of line numbers in the array should begin with `..`
+    //   ..range(9, 14),
+    //   (13, [The first \#count numbers of the sequence.]),
+    // ),
+    lang: false,
+    block-width: 100%,
+    wrap: false,
+    
+    ```cs      
+      List<TBL_MonthlyExpensesItem> tBL_MonthlyExpenses = [new(40, 40), new(0, 0), ..., new(0, 0), new(450, 450)];
+      double monthlyBudgetReportE8 = tBL_MonthlyExpenses.Select(t => t.ActualCost).Sum();
+      double monthlyBudgetReportD8 = tBL_MonthlyExpenses.Select(t => t.ProjectedCost).Sum();
+  ```),
+  zebraw(
+    header: [Basic Compiler > Main()],
+    // highlight-lines: (
+    //   (1, [The Fibonacci sequence is defined through the recurrence relation $F_n = F_(n-1) + F_(n-2)$\
+    //   It can also be expressed in _closed form:_ $ F_n = round(1 / sqrt(5) phi.alt^n), quad
+    //   phi.alt = (1 + sqrt(5)) / 2 $]),
+    //   // Passing a range of line numbers in the array should begin with `..`
+    //   ..range(9, 14),
+    //   (13, [The first \#count numbers of the sequence.]),
+    // ),
+    lang: false,
+    block-width: 100%,
+    wrap: false,
+    
+    ```cs
+      List<double> monthlyBudgetReportE8List = 
+      [
+          40,
+          0,
+          ...
+          0,
+          450
+      ];
+      double monthlyBudgetReportE8 = monthlyBudgetReportE8List.Sum();
+      double monthlyBudgetReportE7 = monthlyBudgetReportE9 + interestJ12 - (monthlyBudgetReportE8);
+      List<double> monthlyBudgetReportD9List = [
+        6000,
+        1000,
+        2500
+      ];
+      double monthlyBudgetReportD9 = monthlyBudgetReportD9List.Sum();
+      List<double> monthlyBudgetReportD8List = 
+      [ 
+          40,
+          0,
+          ...
+          0,
+          450
+      ];
+      double monthlyBudgetReportD8 = monthlyBudgetReportD8List.Sum();
+  ```)
+
+), size: 0.7em))
+
 The use of LINQ extends this. For instance, calls that compute the sum of a column with `Sum` and `Select` clearly state what part of an entity is being processed, and how it is being done. In comparison with @code:discussion:fbm-old, where it is just a `Sum` on a variable with no real meaning, this increases the comprehensibility of the code.
+
+#figure(text(grid(columns: 2,
+  zebraw(
+    header: [Main.cs],
+    // highlight-lines: (
+    //   (1, [The Fibonacci sequence is defined through the recurrence relation $F_n = F_(n-1) + F_(n-2)$\
+    //   It can also be expressed in _closed form:_ $ F_n = round(1 / sqrt(5) phi.alt^n), quad
+    //   phi.alt = (1 + sqrt(5)) / 2 $]),
+    //   // Passing a range of line numbers in the array should begin with `..`
+    //   ..range(9, 14),
+    //   (13, [The first \#count numbers of the sequence.]),
+    // ),
+    lang: false,
+    block-width: 100%,
+    wrap: false,
+    
+    ```cs
+    List<MonthlyBudgetReportC14F17Item> monthlyBudgetReportC14F17 = [new(6000, 5800), ..., new(2500, 1500)];
+  ```),
+
+), size: 0.7em))
 
 A side effect of this structural abstraction is significant less lines of codes and application of the DRY principle (see @sec:intro:idiomatic-code). In @code:discussion:fbm-new, the columns of the 'Monthly Expenses' now get merged into one construction instead of the two separate declarations in @code:discussion:fbm-old. Furthermore, the main repetition that calculates the values in the interest spreadsheet is abstracted in @code:discussion:fbm-new through a new class that recursively calculates. This improves maintainability and readability.
 
@@ -57,8 +147,7 @@ Finally, in both versions, the structure of the code can be improved by introduc
 
 These shortcomings highlight that---while there are positive properties of the code---there is still room for improvement in making the code idiomatic. Based on the above facts, we do note that the code that was produced by Excelerate was more idiomatic than the code produced by the 'basic' compiler.
 
-#import "@preview/zebraw:0.5.5": *
-#show: zebraw.with(lang: false)
+
 
 #figure([
   #zebraw(
@@ -217,6 +306,113 @@ These shortcomings highlight that---while there are positive properties of the c
   }
   ```
 )<code:discussion:fbm-old>
+
+
+```cs 
+    public double Main(List<TableRenteparameter_Psi_RA1C100Item> renteparameter_Psi_RA1C100, List<TableRenteparameter_phi_R_NLA1D100Item> renteparameter_phi_R_NLA1D100)
+    {
+        double renteparameter_phi_R_NLB1 = renteparameter_phi_R_NLA1D100[0].Column1;
+        double renteparameter_Psi_RA1 = renteparameter_Psi_RA1C100[0].Column0;
+        double renteparameter_Psi_RB1 = renteparameter_Psi_RA1C100[0].Column1;
+        double renteparameter_Psi_RC1 = renteparameter_Psi_RA1C100[0].Column2;
+        double voorbeeldRTSE4 = Math.Exp(-(1) / (1) * (renteparameter_phi_R_NLB1 + 0.03296211605999014 * (renteparameter_Psi_RA1) + 0.014349731117662046 * (renteparameter_Psi_RB1) + 0.010609776508980583 * (renteparameter_Psi_RC1))) - (1);
+        double voorbeeldRTSF4 = 100000 * (1 + voorbeeldRTSE4);
+        double renteparameter_phi_R_NLB2 = renteparameter_phi_R_NLA1D100[1].Column1;
+        double renteparameter_Psi_RA2 = renteparameter_Psi_RA1C100[1].Column0;
+        double renteparameter_Psi_RB2 = renteparameter_Psi_RA1C100[1].Column1;
+        double renteparameter_Psi_RC2 = renteparameter_Psi_RA1C100[1].Column2;
+        double voorbeeldRTSE5 = Math.Exp(-(1) / (2) * (renteparameter_phi_R_NLB2 + 0.03296211605999014 * (renteparameter_Psi_RA2) + 0.014349731117662046 * (renteparameter_Psi_RB2) + 0.010609776508980583 * (renteparameter_Psi_RC2))) - (1);
+        ...(97 more)
+        double renteparameter_phi_R_NLB100 = renteparameter_phi_R_NLA1D100[99].Column1;
+        double renteparameter_Psi_RA100 = renteparameter_Psi_RA1C100[99].Column0;
+        double renteparameter_Psi_RB100 = renteparameter_Psi_RA1C100[99].Column1;
+        double renteparameter_Psi_RC100 = renteparameter_Psi_RA1C100[99].Column2;
+        double voorbeeldRTSE103 = Math.Exp(-(1) / (100) * (renteparameter_phi_R_NLB100 + 0.03296211605999014 * (renteparameter_Psi_RA100) + 0.014349731117662046 * (renteparameter_Psi_RB100) + 0.010609776508980583 * (renteparameter_Psi_RC100))) - (1);
+        double voorbeeldRTSF103 = voorbeeldRTSF102 * (1 + voorbeeldRTSE103);
+        double voorbeeldRTSI1 = voorbeeldRTSF103 - (100000);
+        return voorbeeldRTSI1;
+    }
+}
+```
+
+```cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ExcelCompiler.Generated;
+public class WithdrawalCalculatorD26G287
+{
+    public List<double> AdditionalWithdrawal { get; set; }
+    public double WithdrawalAmountBaseCase { get; set; }
+    public double BalanceBaseCase { get; set; }
+    public Dictionary<Int32,Double> _withdrawalAmountAtMemoization { get; set; } = new();
+    public Dictionary<Int32,Double> _balanceAtMemoization { get; set; } = new();
+
+    public double InterestEarnedAt(Int32 counter) => BalanceAt(counter - (1)) - (WithdrawalAmountAt(counter - (1))) * (0.04d / (12d));
+    public double WithdrawalAmountAt(Int32 counter)
+    {
+        Int32 key = counter;
+        if (_withdrawalAmountAtMemoization.ContainsKey(key))
+        {
+            return _withdrawalAmountAtMemoization[key];
+        }
+
+        if (Equals(counter, 0))
+        {
+            return WithdrawalAmountBaseCase;
+        }
+
+        double result = Math.Min(BalanceAt(counter - (1)) + InterestEarnedAt(counter - (0)), 1d + 0.025d / (12d) * (WithdrawalAmountAt(counter - (1))));
+        _withdrawalAmountAtMemoization.Add(key, result);
+        return result;
+    }
+
+    public double BalanceAt(Int32 counter)
+    {
+        Int32 key = counter;
+        if (_balanceAtMemoization.ContainsKey(key))
+        {
+            return _balanceAtMemoization[key];
+        }
+
+        if (Equals(counter, 0))
+        {
+            return BalanceBaseCase;
+        }
+
+        double result = BalanceAt(counter - (1)) - (WithdrawalAmountAt(counter - (0))) - (AdditionalWithdrawal[counter - (1)]) + InterestEarnedAt(counter - (0));
+        _balanceAtMemoization.Add(key, result);
+        return result;
+    }
+
+    public WithdrawalCalculatorD26G287(List<double> additionalWithdrawal, double withdrawalAmountBaseCase, double balanceBaseCase)
+    {
+        AdditionalWithdrawal = additionalWithdrawal;
+        WithdrawalAmountBaseCase = withdrawalAmountBaseCase;
+        BalanceBaseCase = balanceBaseCase;
+    }
+}```
+
+```cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ExcelCompiler.Generated;
+public class Program
+{
+    public double Main(WithdrawalCalculatorD26G287 withdrawalCalculatorD26G287)
+    {
+        double withdrawalCalculatorG287 = withdrawalCalculatorD26G287.BalanceAt(260);
+        return withdrawalCalculatorG287;
+    }
+}
+```
 
 == Threats to validity
 

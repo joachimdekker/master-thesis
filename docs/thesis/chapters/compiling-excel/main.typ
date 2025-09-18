@@ -670,7 +670,7 @@ The tables are detected according to the following specification and requirement
 + A computed table column MUST only use references from the same row. All cells in the computed column MUST be the same formula, excluding the differences for row references. It should have the same 'shape'.
 + A table MAY have a footer. If the table has a footer, it MUST be the last row of the table. If the first column is a data column, the first cell of the footer MAY be a string value cell (for the "TOTAL" text or similar). The operations in the cells MUST be aggregation operations, excluding the first cell.
 
-The area in @sps:monthly-expenses is a table. The table has a header, which is in the first row (since the table does not have a title) and all of them are strings. When the algorithm has detected title, headers and footers, it checks the suspected columns of the rows in-between the header and footer. In the case of the @sps:monthly-expenses, there are four data columns, since they all have the same type of cells. Notice that in the _Projected_ and _Actual_ columns, there are two empty cells. Even with those empty cells, we still recognize the columns as data columns.
+The area in @sps:monthly-expenses is a table. The table has a header, which is in the first row (since the table does not have a title) and all of them are strings. When the algorithm has detected title, headers and footers, it checks the suspected columns of the rows in-between the header and footer. In the case of @sps:monthly-expenses, there are four data columns, since they all have the same type of cells. Notice that in the _Projected_ and _Actual_ columns, there are two empty cells. Even with those empty cells, we still recognize the columns as data columns.
 
 #figure(
   spreadsheet(
@@ -683,11 +683,11 @@ The area in @sps:monthly-expenses is a table. The table has a header, which is i
   placement: auto
 )<table:shape:example1>
 
-To compare the formula cells in the computed columns, this thesis introduces the _shape_ of a formula. The _shape_ is the shape of the relative dependencies of the cell. With the shape of a cell, we can easily check if a cell has the same relative dependencies as other cells in the same column. For instance, the computed column in @table:shape:example1 has two cells with different shapes, since the relative dependencies are different: The `C4` cell misses the extra `+ A3` at the end.
+To compare the formula cells in the computed columns, this thesis introduces the _shape_ of a formula. The _shape_ is the relative position of the dependencies of the cell. With the shape of a cell, we can easily check if a cell has the same relative dependencies as other cells in the same column. For instance, the computed column in @table:shape:example1 has two cells with different shapes, since the relative dependencies are different: The `C4` cell misses the extra `+ A3` at the end.
 
 [Insert representation of the table here (we really need an upgraded spreadsheet package)]
 
-If all checks pass, the table will be converted to an actual table. The table will be converted into a range of selections. These selections represent a range on the worksheet and act as helper datastructures. We essentially 'mark' an area in the spreadsheet and say that area is the title, header, columns, or footer. It results in the _Table_ structure that is added to the workbook.
+If all checks pass, the table will be converted to an actual table. The table will be converted into a range of selections. These selections represent a range on the worksheet and act as helper data structures. We essentially 'mark' an area in the spreadsheet and say that area is the title, header, columns, or footer. It results in the _Table_ structure that is added to the workbook.
 
 ==== Chain
 The chain-table as described in @subsec:structures:chain can also be detected according to its characteristics. The chain table looks a lot like a normal table but has the changed restriction that it allows for recursive columns, where the dependencies of the cells in that column may be from another row. 
@@ -911,7 +911,7 @@ In the case that the user did not mark a structure as input, we need to capture 
 
 The data of a structure is often just plain, constant data, but it is possible that it references data outside of the table through compute unit references. Hence, we extract the data as compute units. 
 
-The extracted data is stored in a way depending on the structure. For instance, the table stores the data in a two-dimensional array since the table contains two-dimensional data. The chain however stores the data per column since some columns contain initialization vectors not found in data columns.
+The extracted data is stored in a way that depends on the structure. 
 
 It is important this compilation step is performed _before_ we embed the structures since that step replaces the contents of the structures with references to the extracted content. We could extract the content from the spreadsheets in the structure phase, but that would violate the separation of concerns that we have discussed in @sec:excelerate. Furthermore, we would be converting the formulas to compute units _again_.
 
@@ -941,7 +941,7 @@ The compute graph supports the operation for traversing the graph. This is done 
 Traversing the graph and making updates to the graph is a common operation within a compiler step.
 
 === Replacing references
-The most important step of all compiler steps is the replacement of the references. While we already cover a lot with the inserting of the references in the compute grid, one reference remains broken: the range reference. When the range reference is compiled to the compute graph, we store all the compute units of the cells in the range as dependencies. When we will compile this to code, we will get a list of all the dependencies. If the range reference just references a random range in the graph, that is exactly what we want. However, when the range reference references the column of a structure, we actually want it to be a special reference.
+The most important step of all compiler steps is the replacement of the references. While we already cover a lot with the inserting of the references in the compute grid, one reference remains broken: the range reference. When the range reference is compiled to the compute graph, we store all the compute units of the cells in the range as dependencies. When we compile this to code, we get a list of all the dependencies. If the range reference just references a random range in the graph, that is exactly what we want. However, when the range reference references the column of a structure, we actually want it to be a special reference.
 
 As such, the _Replace References_ compiler step converts range references that reference a column or other reference of a structure to their respective _Column Reference_. More importantly, this pass also introduces the _creation_ of the structures. Since the structures may have dependencies in their data, which would be stored in the _Structure Contents_ object, this data needs to be calculated first. As such, the calculations for this data is also inserted into the Compute Graph, taking existing nodes into account. Every reference to a structure will have a dependency on the creation of that structure.
 

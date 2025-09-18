@@ -41,7 +41,6 @@ We start with a high level overview of the compiler, briefly touching upon each 
 = High Level Overview<sec:hlo>
 
 #figure(
-  // [placeholder],
   image("sketch-basic-compiler-flow.png"),
  caption: [The flow of the basic compiler. The content of the Excel workbook is extracted and parsed into the _Structure Model_ (Workbook). Then this workbook is further analysed to find the underlying compute model and is transformed into a compute grid. The disconnected cells are then connected through their formula dependencies into a compute graph. Finally, a generic code layout model is created and C\# code is emitted through the Roslyn API.],
  placement: auto,
@@ -57,6 +56,7 @@ We start with a high level overview of the compiler, briefly touching upon each 
     [TOTAL], [], [], [`=SUM(D2:D4)`]
   ),
   caption: [A extract of the 'Family monthly budget' sheet in the 'Family monthly budget'. This spreadsheet calculates the differences in projected and actual income.],
+  kind: "spreadsheet",
   supplement: "Spreadsheet",
   placement: auto,
 )<sps:hlo:spreadsheet1>
@@ -367,7 +367,7 @@ The next step in compilation is the conversion to the _Compute Graph_, linking t
 
 Within the 'basic' compiler, the _Compute Graph_ fully represents the _Compute Model_. Unlike the previous phase, there are two compiler steps that enhance the _Compute Graph_ and therefore the _Compute Model_. In this subsection, we cover the conversion of the _Structure Model_ to the _Compute Graph_. Then, we discuss the two compiler steps: input insertion and type inference.
 
-=== Model to Model
+=== Model to Model<subsec:compute-graph:conversion>
 For the conversion of the _Structure Model_ to the _Compute Graph_ we look at the outputs the user has specified and convert that cell from the _Structure Model_ to a tree of _Compute Units_. This is recursive process, since the references of cell, and their references, etc, will be converted too. When a cell has been fully converted, it will be linked to its parent: it will become a dependency of the parent.
 
 To be more precise, for every cell that we convert from the _Structure Model_ we distinguish between the type of the cell:
@@ -385,6 +385,7 @@ When a cell is converted, it is added to a dictionary that is checked before con
   ),
   caption: [A simple representation of the _Structure Model_ of a spreadsheet that contains several cells that are referenced by formulae in other cells.],
   supplement: "Spreadsheet",
+  kind: "spreadsheet",
   placement: auto,
 )<sps:compute-phase:compute-graph-conversion>
 
@@ -409,6 +410,12 @@ Since we do know the types of the leaves of the graph, as they are constant valu
 
 For instance, take the _Function_ compute unit, especially the `F('+')` compute unit, which is basic addition between two dependencies. See the inference rule in @inf:type-resolution:addition, which uses some syntactic sugar to state that the function `F('+')` can be type $tau$ if and only if it has two arguments: which is denoted by the pattern matching `[a1, a2]` that denotes that the list should have two elements `a1` and `a2`; and that those two arguments are both of the same type.
 
+#[
+
+#show raw: r => {
+  r.text
+}
+  
 #import "@preview/curryst:0.5.1": rule, prooftree
 #figure(
   prooftree(
@@ -419,6 +426,7 @@ For instance, take the _Function_ compute unit, especially the `F('+')` compute 
     )
   ),
   caption: [The inference rule for the `F('+')` compute unit, stating that it needs 2 arguments, and both arguments need to be of the same type.],
+  kind: "rule",
   supplement: "Rule"
 )<inf:type-resolution:addition>
 
@@ -432,6 +440,7 @@ Some functions, such as `RAND()`, return a random number and does not take any i
     )
   ),
   caption: [The inference rule for the `F('RAND')` compute unit. It is always an integer.],
+  kind: "rule",
   supplement: "Rule"
 )<inf:type-resolution:rand>
 
@@ -448,6 +457,7 @@ The compiler currently lacks support for Excel's `IF` function due to the thesis
     )
   ),
   caption: [The inference rule for the `F('RAND')` compute unit. It is always an integer.],
+  kind: "rule",
   supplement: "Rule"
 )<inf:type-resolution:if>
 
@@ -460,6 +470,7 @@ The compiler currently lacks support for Excel's `IF` function due to the thesis
   ),
   caption: [A simple representation of the _Structure Model_ of a spreadsheet that contains several cells that are referenced by formulae in other cells.],
   supplement: "Spreadsheet",
+  kind: "spreadsheet",
   placement: auto,
 )<sps:compute-phase:type-resolution-limitation>
 
@@ -477,6 +488,7 @@ However, Excel allows these two branch expressions to return different types. Th
 //   caption: [The inference rule for the _Range_ compute unit, which can have infinite elements. We require all elements to be of the same type.],
 //   supplement: "Rule"
 // )<inf:type-resolution:range>
+]
 
 = Generating Code
 
@@ -566,7 +578,7 @@ This simplifies the algorithm described above, as we only need to concern with e
 
 _Types_ are an important notion in the _Code Model_. Many high-level programming languages are strictly typed languages, which means that everything should have a type at compile time. As such, our model requires the typing of every single node in the syntax tree.
 
-Many types are automatically converted when we convert the compute graph to the code layout model. Furthermore, many expressions and statements do not require their own types, but can infer their types from the types of their children. For instance, take the `ListExpression` which is always of the `ListOf` complex type. The `ListExpression` models a sequence of values of the same type $tau$, and as such, the `ListExpression` will always be of type `ListOf(`$tau$`)`
+Many types are automatically converted when we convert the compute graph to the code layout model. Furthermore, many expressions and statements do not require their own types, but can infer their types from the types of their children. For instance, take the `ListExpression` which is always of the `ListOf` complex type. The `ListExpression` models a sequence of values of the same type `τ`, and as such, the `ListExpression` will always be of type `ListOf(τ)`
 
 ==== Precision
 As we discussed in @sec:structural-phase, Excel does not differentiate between integers and doubles. Under the hood, Excel follows the IEEE 754 Floating-Point Arithmetic specification @microsoft_floating-point_nodate. It utilises a double precision floating point value for the implementation of 'numeric values' @microsoft_floating-point_nodate. This results in 15 digits of significant precision @noauthor_ieee_2019. Within this Excel Compiler, we also use double precision floating point values for representing the numeric values.
@@ -575,10 +587,10 @@ Precision is key, especially in the actuarial calculations context. We do not wa
 
 == Creating the model
 
-Having covered the most important elements of the _Code Model_, we can dicuss how to create it from the _Compute Model_. This is done in four steps. First (1), we transform the _Compute Model_ into the _Code Model_ by mapping the different nodes from the _Compute Model_ to _Expressions_ in the _Code Model_. Simultaneously, we introduce variables by using the references to the _Structure Model_ found in the _Compute Model_. Then we iterate upon that model and (2) inline variables and (3) transform the _Let_ expressions into statements. Finally (4), we emit the code layout model as code to the disk. In the upcoming sections, we discuss these steps further.
+Having covered the most important elements of the _Code Model_, we can discuss how to create it from the _Compute Model_. This is done in four steps. First (1), we transform the _Compute Model_ into the _Code Model_ by mapping the different nodes from the _Compute Model_ to _Expressions_ in the _Code Model_. Simultaneously, we introduce variables by using the references to the _Structure Model_ found in the _Compute Model_. Then we iterate upon that model and (2) inline variables and (3) transform the _Let_ expressions into statements. Finally (4), we emit the code layout model as code to the disk. In the upcoming sections, we discuss these steps further.
 
 === Variables
-The first step of the code layout model is the introduction of variables. LIke we covered in @sec:compute-phase, the _Compute Model_ is essentially one big expression that needs to be evaluated. However, emitting this big expression will significantly decrease the readability of the program. As such, we need to introduce variables to make sense of the big sub-expressions.
+The first step of the code layout model is the introduction of variables. Like we covered in @sec:compute-phase, the _Compute Model_ is essentially one big expression that needs to be evaluated. However, emitting this big expression will significantly decrease the readability of the program. As such, we need to introduce variables to make sense of the big sub-expressions.
 
 Every _Compute Unit_ contains the location it originated from in the _Spreadsheet_ of the _Structure Model_. In order to increase legibility and resemblance to the original Excel file, we use these locations to store computations. 
 
@@ -629,15 +641,15 @@ The Roslyn API is an open-source .NET compiler platform developed by Microsoft. 
 
 Like we spoke about earlier, the Roslyn API is flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive, verbose, and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Model_ grants.
 
-It is important to emphasize that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimisation, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations to improve readability. These optimisations include choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used. It does this on the Roslyn syntax tree as it is being generated.
+It is important to emphasise that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimisation, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations to improve readability. These optimisations include choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used. It does this on the Roslyn syntax tree as it is being generated.
 
 ==== Mapping
-Translating from the _Code Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this direct, and not much work is needed.  For example, a list initialisation in the layout model becomes an object creation with a collection initializer in C\#. For others, such as properties and functions, we need to see if optimisations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
+Translating from the _Code Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this direct, and not much work is needed.  For example, a list initialisation in the layout model becomes an object creation with a collection initialiser in C\#. For others, such as properties and functions, we need to see if optimisations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.
 
 Furthermore, we rely on a few helper methods from the _Code Model_ to create constructors for types, as they are not explicitly defined in the model but rather derived from the settable data in the structures.
 
 ==== Layout
-During emission, we must also address the organisation of code into files, namespaces, and classes. The code layout model describes a project as a collection of classes and methods, but leaves file system organization abstract. The emission pass generates a dedicated C\# file for each top-level class, placing them within a common namespace so they can be accessed easily. This is a common practice in Csharp @microsoft_net_2025. 
+During emission, we must also address the organisation of code into files, namespaces, and classes. The code layout model describes a project as a collection of classes and methods, but leaves file system organisation abstract. The emission pass generates a dedicated C\# file for each top-level class, placing them within a common namespace so they can be accessed easily. This is a common practice in Csharp @microsoft_net_2025. 
 
 = Reflecting on the Compiler<sec:basic-compiler:reflection>
 
@@ -659,6 +671,8 @@ These files are small so the code fits on the page. The first spreadsheet is the
   ),
   caption: [A extract of the 'Family monthly budget' sheet in the 'Family monthly budget'. This spreadsheet calculates the differences in projected and actual income.],
   supplement: "Spreadsheet",
+  
+  kind: "spreadsheet",
   placement: auto,
 )<sps:structure-reflection:spreadsheet1>
 
@@ -695,6 +709,8 @@ The second spreadsheet contains a linear calculation path, calculating the inter
   ),
   caption: [An extract of the 'Interest' sheet in the 'Family monthly budget' Excel file. This spreadsheet calculates the ],
   placement: auto,
+  
+  kind: "spreadsheet",
   supplement: "Spreadsheet",
 )<sps:structure-reflection:spreadsheet2>
 
@@ -715,7 +731,7 @@ The second spreadsheet contains a linear calculation path, calculating the inter
       }
   }
   ```,
-  caption: [A compiled version of the spreadsheet in @sps:structure-reflection:spreadsheet2 using the basic compiler described in @chapter-compiling-excel. The code shows a repetition in calculating the cells in the _Interest_ and _Balance_ column.],
+  caption: [A compiled version of @sps:structure-reflection:spreadsheet2 using the basic compiler described in @chapter-compiling-excel. The code shows a repetition in calculating the cells in the _Interest_ and _Balance_ column.],
   placement: auto,
 )<code:structure-reflection:spreadsheet2>
 
@@ -757,7 +773,7 @@ Another clear issue in both listings is the lack of extensibility. The Excel spr
       }
   }
   ```,
-  caption: [A more idiomatic version of the spreadsheet in @sps:structure-reflection:spreadsheet1. Written by the author.],
+  caption: [A more idiomatic version of @sps:structure-reflection:spreadsheet1. Written by the author.],
   placement: auto,
 )<code:structure-reflection:spreadsheet1-solution>
 

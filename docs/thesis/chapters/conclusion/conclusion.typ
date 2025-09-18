@@ -1,6 +1,6 @@
 = Conclusion
 
-In this thesis, we set out to create an Excel compiler that produces clear, human-readable C\# code using experimental compiler design. We introduce _structure-aware compilation_ that uses the structure of the Excel file as heuristic for more readable code. We found two structures commonly found in Excel files. We implemented a three-phase compiler called Excelerate that utilises this technique using a separate IR for each stage.
+In this thesis, we set out to create an Excel compiler that produces clear, human-readable C\# code using experimental compiler design. We introduce _structure-aware compilation_ that uses the structure of the Excel file as heuristic for more readable code. We found two structures commonly used in Excel files. We implemented a three-phase compiler called Excelerate that utilises this technique using a separate IR for each stage.
 
 This study was based on three research questions:
 

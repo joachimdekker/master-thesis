@@ -39,6 +39,13 @@
   it
 }
 
+#set figure(numbering: it => { 
+      let count = counter(heading).get()
+      numbering("1.1", count.at(0), it)    
+})
+
+// Example: Reset the atom counter at the start of a section if needed
+
 #show ref: it => if it.element == none or it.element.func() != heading or it.element.level != 1 { it } else {
   let l = it.target // label
   let h = it.element // heading
@@ -77,37 +84,6 @@
 }
 
 // Chapter page
-#show heading.where(level: 1): it => {
-  pagebreak(weak: true)
-  let number = context counter(heading).get().at(0)
-  place(bottom, float: false, dy: -0em, dx: -2em, scope: "column", text(number, size: 30em, fill: gray))
-  let content = [
-    #text([_Chapter #number _], weight: "regular", size: 2em)
-    #v(-2.5em)
-    #text(it.body, size: 3em)
-  ]
-  
-  let topLevelOutline = context {
-    let sections = heading.where(level: 2).after(here(), inclusive: false)
-    let chapterNr = counter(heading).get().at(0)
-    if chapterNr != counter(heading).final().at(0) {
-      let nextChapter = query(heading.where(level: 1).after(here(), inclusive: false)).at(0)
-      sections = sections.before(nextChapter.location())
-    } else {
-      let bib = query(bibliography.where().after(here())).at(0)
-      sections = sections.before(bib.location())
-    }
-    v(2em)
-    set align(left)
-    outline(title: none, target: sections, indent: 50%)
-  }
-  
-  set align(horizon + right)
-  content
-  topLevelOutline
-  
-
-}
 
 #show raw: set text(font: "JetBrains Mono")
 
@@ -132,4 +108,17 @@
 
 #pagebreak()
 #bibliography("zotero.bib", title: [Bibliography], style: "short-cite.csl")
+
+#pagebreak()
+
+#counter(figure.where(kind: image)).update(0)
+#counter(figure.where(kind: table)).update(0)
+#counter(figure.where(kind: raw)).update(0)
+#counter(math.equation).update(0);
+#counter(heading).update(0);
+#counter(figure.where(kind: "spreadsheet")).update(0)
+
+#heading([Appendix], level: 1, numbering: "A.")
+
+#include "chapters/evaluation/full-code.typ"
 
