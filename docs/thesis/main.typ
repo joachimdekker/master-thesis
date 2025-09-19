@@ -123,7 +123,7 @@
 #counter(heading).update(0);
 #let c = counter("appendix");
 
-#heading([Appendix], level: 1, numbering: "A.")
+#heading([Full code samples], level: 1, numbering: "A.")
 
 #include "chapters/evaluation/full-code.typ"
 

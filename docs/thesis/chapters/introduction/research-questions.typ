@@ -9,3 +9,10 @@ To address these problems, we utilise an exploratory study with design elements.
 )<research-questions>
 
 The relevance of these research questions have been made clear in the previous sections. The main research question (RQ1) is the main goal of the compiler design, since we need to find a way to convert the Excel files to code in a idiomatic way. The second research question (RQ2) helps with this, providing structures and seeing if they can help guide the compiler. The last two research questions are the evaluation of the compiler, searching for performance improvements and semantic equality.
+
+
+== Contributions
+
+Within this thesis, we make theoretical and practical contributions. First, we introduce a novel three-phase compiler design that compiles Microsoft Excel workbooks into human-readable, idiomatic C\# libraries. The compiler is structured with three segregated phases: the _Structural Phase_ that parses worksheets, the _Compute Phase_ that captures the dependency graph, and the _Code Phase_ that produces idiomatic code and emits C\# libraries.
+
+Furhtermore, we propose _structure-aware compilation_. This approach detects and embeds higher-level structures from the spreadsheets into the dependency graph. We present and implement two structures in this thesis: the table and the chain. Using _structure-aware compilation_, we avoid duplication and improve readability and comprehensibility.

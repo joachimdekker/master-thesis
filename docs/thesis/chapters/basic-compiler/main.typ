@@ -41,7 +41,7 @@ We start with a high level overview of the compiler, briefly touching upon each 
 = High Level Overview<sec:hlo>
 
 #figure(
-  image("sketch-basic-compiler-flow.png"),
+  image("fig-basic-compiler.png"),
  caption: [The flow of the basic compiler. The content of the Excel workbook is extracted and parsed into the _Structure Model_ (Workbook). Then this workbook is further analysed to find the underlying compute model and is transformed into a compute grid. The disconnected cells are then connected through their formula dependencies into a compute graph. Finally, a generic code layout model is created and C\# code is emitted through the Roslyn API.],
  placement: auto,
 )<fig:high-level-overview>
@@ -189,7 +189,7 @@ We distinguish between these references since they contain information that we c
 The _Formula Model_ models the Excel Formula language. It is a simple DSL that allows us to capture the functions, constant and references used in the formulae in a cell. The _Formula Model_ is a Intermediate Representation  In this subsection, we briefly discuss the formula model.
 As we will cover in @sec:compute-phase, the Formula Model was the inspiration for the _Compute Model_. As such, many elements will look the same. The formal definition can be found in @ir:formula-model
 
-All entities we cover in the next sections are _Formula Expressions_. A formula is always one big _Formula Expression_ that can be composed of several sub-expression. For instance, the '`=SUM(A1:B3)`' can be converted to the `Function("SUM", Range(A1:B3))` _Formula Expression_, which in turn contains the `Range(A1:B3)` sub-expression.
+All entities we cover in the next sections are _Formula Expressions_. A formula is always one big _Formula Expression_ that can be composed of several sub-expression. For instance, the `=SUM(A1:B3)` can be converted to the `Function("SUM", Range(A1:B3))` _Formula Expression_, which in turn contains the `Range(A1:B3)` sub-expression.
 
 === Function
 The _Function_ represents a named procedure with optional parameters. It takes other _Formula Expressions_ as input and computes a value as output.
@@ -202,8 +202,6 @@ A _Constant_ is a value of any type that is used as dependencies in other _Formu
 
 === Reference
 The _Reference_ uses the references discussed in the previous section to reference values calculated by _formulae_ in other cells. We consider three self-explanatory types: _Cell References_, _Range References_ and _Table References_. 
-
----
 
 With the _Structural Model_ and _Formula Model_ defined, we have made it possible to describe full Excel files. Within this phase we do not have any other compiler steps. In the next chapter, we will analyse the whole _Worksheet_ for so-called _Structures_. These _Structures_ enrich the _Structural Model_ and go beyond plainly copying the Excel sheet.
 
@@ -374,6 +372,8 @@ To be more precise, for every cell that we convert from the _Structure Model_ we
 + The cell is a _Value Cell_: the value and type of the cell is copied to a _Constant Value_ compute unit.
 + The cell is a _Formula Cell_: The formula is transformed from the _Formula Model_ to the _Compute Model_: Every _function_ and _operator_ is converted to a _Function Compute Unit_ and constant values are converted to _Constant Compute Unit_. When we encounter a _Reference_, we convert the cells in the Reference using the same method, recursively. When the cells are converted, they are added as a dependency to the dependent of the reference.
 
+#place.flush()
+
 When a cell is converted, it is added to a dictionary that is checked before converting a new cell. When the cell that we want to convert is already converted to a _Compute Unit_, we use that _Compute Unit_. Else, we convert it using the above algorithm.
 
 #figure(
@@ -386,12 +386,15 @@ When a cell is converted, it is added to a dictionary that is checked before con
   caption: [A simple representation of the _Structure Model_ of a spreadsheet that contains several cells that are referenced by formulae in other cells.],
   supplement: "Spreadsheet",
   kind: "spreadsheet",
-  placement: auto,
+  placement: bottom,
 )<sps:compute-phase:compute-graph-conversion>
 
 Take the _Structure Model_ of a simple spreadsheet in @sps:compute-phase:compute-graph-conversion for example. If `B3` is considered an output, this is where the conversion starts. It tries to convert the _Formula Cell_ and converts it to `Function('SUM', [])`. It contains a _Range Dependency_ and as such, cells `B1` and `B2` also have to be converted. We convert `B1` (`=2*A1`) to `Function('*', [2, 42])` after converting `A1` to the _Constant Value_ `42`. If we want to convert `B2` (`=1/B1 + A2`) we need to convert `B1` again. However, it is present in the dictionary, so we use the already converted `B1`. `B2` is converted to `Function('+', [Function('/', [1, Function('*', [2, 42])]), 1000])`. Both `B1` and `B2` are then added as dependency to `B3`. 
 
------------------------------------- *[Create picture]*
+#figure(
+  image("sps-compute-graph.png"),
+  caption: [The fully constructed compute graph of @sps:compute-phase:compute-graph-conversion. Due to the dependencies of `B3` on `B1` and `B2`],
+)
 
 An important side effect of this is that we only use the cells that are used in the calculation of the user specified output and ignore the rest. This makes this compilation step also an optimisation since we remove any cells that would be _dead code_.
 
@@ -533,7 +536,7 @@ The _Code Model_ is the intermediate representation that provides structural gui
     placement: auto,
 )<ir:code-model>
 
-In comparison with the Roslyn compiler model (introduced in ...) the _Code Model_ is much simpler. The Roslyn compiler model is used to model the AST of .NET languages. It allows for complete modification of the syntax of the language. However, this can also result in invalid C\# syntax. For instance, C\# has a `var` type that automatically infers the type at compile time, like the `auto` type in C++. This 'type' can only be used as a direct or simple type, not as part of a complex or generic type, i.e. `var i = 0;` is valid code, but `List<var> = [1,2,3];` is not. With the Roslyn Compiler, it is possible to create such a type. Instead, the _Code Model_ strictly forbids this.
+In comparison with the Roslyn compiler model (introduced in @subsec:code-model:emission) the _Code Model_ is much simpler. The Roslyn compiler model is used to model the AST of .NET languages. It allows for complete modification of the syntax of the language. However, this can also result in invalid C\# syntax. For instance, C\# has a `var` type that automatically infers the type at compile time, like the `auto` type in C++. This 'type' can only be used as a direct or simple type, not as part of a complex or generic type, i.e. `var i = 0;` is valid code, but `List<var> = [1,2,3];` is not. With the Roslyn Compiler, it is possible to create such a type. Instead, the _Code Model_ strictly forbids this.
 
 @ir:code-model presents an overview of the _Code Model_. Most of the nodes of this IR can be recognised from popular object-oriented and procedural programming languages, such as _Classes_, _Methods_ and _Function Calls_. As such, many elements will not be discussed. That said, some elements of the model, such as the _Let_ expression, require more elaboration.
 
@@ -636,12 +639,15 @@ The current layout model is looking more and more like a high level programming 
 
 Just before emission, at the end of the _Code Phase_, we have constructed a language-agnostic representation of the Excel computation. The final challenge is to convert this abstract model into concrete compilable code. In this thesis, we chose C\# for the target or destination language. In this subsection, we briefly cover the Roslyn API to explain what it does. Then we dive into the code generation and explain how we map the code: a straightforward process. Finally, we discuss some of the subtleties needed to make the project actually compile.
 
+==== Target Language
+We choose C\# for several reasons. C\# is a multi-paradigm language, which means it is possible to use both object-oriented imperative or functional code. Another reason is that C\# is one of the most widely used languages, with the .NET framework being the most used framework @stack_overflow_stack_2024. Lastly, the author has the most experience with the C\# language and we believe this is one of the most readable languages, but we acknowledge this is purely preference. That said, the language-agnostic nature of the _Code Model_ means that the compiler can be extended to Java, Kotlin or another programming language
+
 ==== Roslyn API
 The Roslyn API is an open-source .NET compiler platform developed by Microsoft. It exposes the whole compiler process, from internal data structures to transformations, to the programmer and let's the programmer use the compiler within the C\# language itself. 
 
 Like we spoke about earlier, the Roslyn API is flexible and expressive. However, this flexibility comes at a price since it demands explicit syntax and is able to produce invalid C\# code when misconfigured. While there are helper APIs to combat this issue, they are still very primitive, verbose, and allow for uncompilable code. Hence, we rely on the stricter semantics the _Code Model_ grants.
 
-It is important to emphasise that Roslyn, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimisation, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations to improve readability. These optimisations include choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used. It does this on the Roslyn syntax tree as it is being generated.
+It is important to emphasise that this Roslyn step, by design, does not improve the code generated by the layout model. We only define what it has to output and it renders this to a source file. This places the burden of correctness on the layout model and the transformations leading up to emission. This design choice ensures transparency and reusability: every optimisation, transformation, or refactoring is explicit in the layout or preceding passes, and not hidden inside the emission step for a specific language. This step does, however, apply some language-specific transformations to improve readability. These optimisations include choosing for one-liner if-statements instead of full bodied if-statements or making sure the latest language features are being used. It does this on the Roslyn syntax tree as it is being generated.
 
 ==== Mapping
 Translating from the _Code Model_ to the Roslyn syntax tree is fairly straightforward. Statements and expressions are recursively mapped to Roslyn’s corresponding syntax nodes. For many constructs, this direct, and not much work is needed.  For example, a list initialisation in the layout model becomes an object creation with a collection initialiser in C\#. For others, such as properties and functions, we need to see if optimisations can be made to the code layout, such as using onliners with expression bodies versus full scoped bodies.

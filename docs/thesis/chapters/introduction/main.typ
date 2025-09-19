@@ -12,3 +12,5 @@
 #include "literature-research.typ"
 
 #include "excel-overview.typ"
+
+#include "chapter-descriptions.typ"

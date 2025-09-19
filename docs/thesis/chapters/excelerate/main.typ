@@ -174,8 +174,8 @@ This calculation is a recursive definition. As @sps:structures:chain-dependencie
 = Changes to the Compiler<sec:excelerate:compiler-changes>
 
 #figure(
-  image("image.png"),
-  caption: [The new phases of the compiler.]
+  image("fig-excelerate-compiler.png"),
+  caption: [The new phases of the compiler that allow support for structures. The new models and compiler steps have been annotated by _cursive script_.]
 )
 
 Now that we have a intuition for the structures found in the spreadsheet, we introduce Excelerate: an improved compiler which uses _structure-aware compilation_ using the structures found in the previous section to emit more readable code. Excelerate builds upon the 'basic' compiler introduced in the previous chapter. It extends the _Structural_ and _Compute Model_ to allow for these new structures. In this section, we briefly discuss what is needed for the compiler to utilise these structures.
@@ -205,12 +205,10 @@ To express this, we should inject the structure into the _Compute Model_ so that
 Instead, we introduce the _Compute Grid_, a part of the _Compute Model_ that mixes the grid-like structure of the _Structural Model_ but utilises _Compute Units_ to represent the values and computations. 
 Using the _Compute Grid_, we can inject special _Compute Units_ describing the structures. For instance, the footer of the table will be updated to a _Table Footer Compute Unit_ that describes the operation done on the column of the _Table_. When we transform the _Compute Grid_ into the _Compute Graph_, we make sure that references like `E3:E6` actually reference the structure.
 
-== Structure code
-The references to the structures should also be reflected in the code. The best way to do this is to represent every structure as their own class. We need to add steps to the _Code Phase_ to generate these structures and add constructors in the main function to create the structures to utilise them.
+== Converting to code
+The references to the structures should also be reflected in the code. Excelerate does this by representing every structure as their own class. We need to add steps to the _Code Phase_ to generate these structures and add constructors in the main function to create the structures to utilise them.
 
----
-
-These changes should incorporate the structures into the compile flow 
+These changes should incorporate the structures into the compile flow and allow for more readable output.
 In the rest of this chapter, we describe what changed in the different models, and how we integrate the structures into the compiler to make more readable code.
 
 = Finding the Structures
@@ -570,6 +568,7 @@ It is important that this compilation step is performed _before_ we embed the st
 
 When the data is succesfully extracted and saved in the structure, we can replace the cells of the structure in the _Compute Grid_ with references to the structure. Every cell in _Compute Grid_ in the region of the _Structure_ will be replaced with a reference. The cells in the columns are replaced by a _Structure Cell Reference_, referencing the structure and the column of the cell. The footers are replaced with _Structure Footer Reference_, referencing the footer operation in a column.
 
+#text(size: 0.8em)[
 #figure(
   spreadsheet(
     columns: 6,
@@ -587,7 +586,7 @@ When the data is succesfully extracted and saved in the structure, we can replac
   kind: "spreadsheet",
   placement: auto
 )<sps:embedded-structure>
-
+]
 === Grid to Graph
 In order to go from the _Compute Grid_ to the _Compute Graph_, we use an algorithm not unlike the conversion of the _Structure Model_ to the _Compute Grid_. We begin with the outputs and look at the compute unit tree in those cells. Then, for every reference we encounter in that tree, we link the _Compute Unit_ in the referenced cell to the tree. As such, this is done in a recursive manner. In case of the range reference, we separately link all the roots of the cells in the range.
 
@@ -770,7 +769,7 @@ Finally, the removal of the _Data Model_ reduced the compilation flow from four 
 
 The current implementation of structures and their computed properties was implemented in a simple way. This is effective for most use-cases, but introduces some limitations on the compiler: A computed property cannot have an external input as reference. A computed property is currently evaluated in isolation of the global scope. This means that the input is not available and as such, the emitted code will not compile. This represents a potential threat to validity that could be addressed in a future redesign of structures.
 
-A possible redesign would be to rethink the structure design. Each externally referenced cell would be collected and stored seprately. When emitting the code, the classes representing the structure would include these external references as properties of the class and they would get their value from constructor parameters.
+A possible redesign would be to rethink the structure design. Each externally referenced cell would be collected and stored separately. When emitting the code, the classes representing the structure would include these external references as properties of the class and they would get their value from constructor parameters.
 
 This poses a limitation on the list, since it is not a class and cannot add Instead of a list with items, the table would be its own type, just like the chain. Once we have parity, we can introduce these new properties. Due to limited time, this more robust system was not implemented. 
 

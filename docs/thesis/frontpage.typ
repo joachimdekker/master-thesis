@@ -11,7 +11,7 @@
 
 #text([Joachim Dekker], size: 1.5em)
 
-#v(22em)
+#v(25em)
 
 _Master Software Engineering_
 

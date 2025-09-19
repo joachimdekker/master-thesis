@@ -5,7 +5,7 @@ In this section, we discuss the results described in @sec:eval:results. We also 
 The results show a reported total equality across all benchmark spreadsheets. This indicates that the compiled C\# code reproduce the exact behaviour of Excel's calculation engine. 
 The findings directly answer RQ3, demonstrating that there is a way to verify semantic equivalence between Excel and generated code for the supported feature set. More precisely, the bit-wise equivalence found in many compared results indicates Excelerate often produces the same order of operations as Excel.
 
-Our performance measurements indicate an average speedup of $677 plus.minus 90$x. The main contributor to this speedup is the removal of the COM interface: Excelerate can be directly called from C\# code. However, this is not the only contribution. It can be seen that in larger spreadsheets such as _Family budget monthly_, the actual calculation time doubles in comparison with a smaller spreadsheet such as _Service Invoice_. The overhead of the COM interface should only interfere when data and commands are moving between program boundaries, not when the actual Excel sheet is calculating. This indicates that the Excel Calculation engine is also performing slower than Excelerates compiled code.
+Our performance measurements indicate an average speedup of $1710$x. The main contributor to this speedup is the removal of the COM interface: Excelerate can be directly called from C\# code. However, this is not the only contribution. It can be seen that in larger spreadsheets such as _Family budget monthly_, the actual calculation time doubles in comparison with a smaller spreadsheet such as _Service Invoice_. The overhead of the COM interface should only interfere when data and commands are moving between program boundaries, not when the actual Excel sheet is calculating. This indicates that the Excel Calculation engine is also performing slower than Excelerates compiled code.
 
 This can be explained by the optimised execution path. The Excel Calculation engine is an interpreter. Conversely, the code Excelerate emits is compiled ahead-of-time and further optimised by the .NET JIT compiler, significantly boosting performance @microsoft_managed_2025. Although the .NET compiler compiles and interpretes the code in IL, sections of the code are converted on-demand to machine code and directly run afterwards @microsoft_managed_2025. This gives a small overhead the first time we call a function for example. This is what we saw as the JIT warmup in @sec:eval:results.
 
@@ -208,7 +208,7 @@ A more complex example of a chain can be seen in @code:discussion:chain. The cod
 
 #figure(
   zebraw(
-    header: [Main.cs],
+    header: [Basic compiler > Monthly Budget],
     // highlight-lines: (
     //   (1, [The Fibonacci sequence is defined through the recurrence relation $F_n = F_(n-1) + F_(n-2)$\
     //   It can also be expressed in _closed form:_ $ F_n = round(1 / sqrt(5) phi.alt^n), quad
@@ -229,21 +229,16 @@ A more complex example of a chain can be seen in @code:discussion:chain. The cod
       double interestD65 = interestJ9 * (interestF64);
       double interestF65 = interestF64 + interestD65 + 500;
   ```], size: 0.7em),
-), caption: [A snippet of the Monthly Budget workbook compiled with the 'basic' compiler. It shows redundant parenthsis on lin 1, 3, and 5.], placement: auto)<code:discussion:old-parenthesis>
+), caption: [A snippet of the Monthly Budget workbook compiled with the 'basic' compiler. It shows redundant parenthesis on lin 1, 3, and 5.], placement: auto)<code:discussion:old-parenthesis>
 
 Finally, in both versions, the structure of the code can be improved by introducing whitespace. Both listings do not use empty lines to separate the structures, which could help structurally separating functionality. Furthermore, there is no use of functions to explicitly separate related functionality. For instance, the interest calculations in @code:discussion:monthly-budget could have been in a function.
 
 #figure(
   zebraw(
-    header: [Main.cs],
-    // highlight-lines: (
-    //   (1, [The Fibonacci sequence is defined through the recurrence relation $F_n = F_(n-1) + F_(n-2)$\
-    //   It can also be expressed in _closed form:_ $ F_n = round(1 / sqrt(5) phi.alt^n), quad
-    //   phi.alt = (1 + sqrt(5)) / 2 $]),
-    //   // Passing a range of line numbers in the array should begin with `..`
-    //   ..range(9, 14),
-    //   (13, [The first \#count numbers of the sequence.]),
-    // ),
+    header: [Excelerate > Monthly Budget],
+    highlight-lines: (
+      ..range(5, 10)
+    ),
     lang: false,
     block-width: 100%,
     wrap: false,
@@ -268,7 +263,7 @@ Finally, in both versions, the structure of the code can be improved by introduc
         return monthlyBudgetReportF7;
     }
   ```], size: 0.7em), 
-), caption: [])<code:discussion:monthly-budget>
+), caption: [The full _Main_ method of the compiled version of the Monthly Budget workbook. ])<code:discussion:monthly-budget>
 
 These shortcomings highlight that---while there are positive properties of the code---there is still room for improvement in making the code idiomatic. Based on the above facts, we do note that the code that was produced by Excelerate was more idiomatic than the code produced by the 'basic' compiler.
 

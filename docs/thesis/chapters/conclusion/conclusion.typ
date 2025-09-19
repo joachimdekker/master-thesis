@@ -30,7 +30,7 @@ We employed randomized differential testing against Excels native calculation en
 
 == Performance differences
 
-The evaluation in @chapter-evaluation answered the final research question by conducting an experiment comparing Excel with compiled Excelerate code using randomised inputs. There were no discrepancies found in semantic equality. We observed a linear trend between spreadsheet complexity and calculation time. Furthermore, Excelerate was significantly faster, achieving an average speedup of $677 plus.minus 90$x. The omission of the COM interface played a big role in this. The significant speedup over Excel allows Excelerate to substitute in business applications where performance is critical.
+The evaluation in @chapter-evaluation answered the final research question by conducting an experiment comparing Excel with compiled Excelerate code using randomised inputs. There were no discrepancies found in semantic equality. We observed a linear trend between spreadsheet complexity and calculation time. Furthermore, Excelerate was significantly faster, achieving an average speedup of $1710$x. The omission of the COM interface played a big role in this. The significant speedup over Excel allows Excelerate to substitute in business applications where performance is critical.
 
 Due to scope limits, only a small subset of Excels functions and features was mapped. This limits generalisability of the results to all spreadsheets. Furthermore, due to the COM interface overhead that we have to use during testing, the results for speedup may be skewed if this interface is not used for communicating with Excel.
 
