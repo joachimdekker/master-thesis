@@ -7,5 +7,3 @@
 #include "conclusion.typ"
 
 #include "further-work.typ"
-
-#include "acknowledgements.typ"

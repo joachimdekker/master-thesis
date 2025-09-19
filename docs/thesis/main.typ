@@ -107,6 +107,9 @@
 #include "chapters/conclusion/main.typ"
 
 #pagebreak()
+
+#include "chapters/conclusion/acknowledgements.typ"
+
 #bibliography("zotero.bib", title: [Bibliography], style: "short-cite.csl")
 
 #pagebreak()
@@ -115,8 +118,10 @@
 #counter(figure.where(kind: table)).update(0)
 #counter(figure.where(kind: raw)).update(0)
 #counter(math.equation).update(0);
-#counter(heading).update(0);
 #counter(figure.where(kind: "spreadsheet")).update(0)
+
+#counter(heading).update(0);
+#let c = counter("appendix");
 
 #heading([Appendix], level: 1, numbering: "A.")
 

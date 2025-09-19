@@ -16,7 +16,7 @@ The Execution time was recorded for the compiled C\# code and the Excel evaluati
 #[
   #show figure: it => {
     show table: t => {
-      set text(size: 0.7em)
+      set text(size: 0.65em)
       t
     }
     it
@@ -24,21 +24,21 @@ The Execution time was recorded for the compiled C\# code and the Excel evaluati
   
   #figure(
     table(
-      columns: 5,
+      columns: 6,
       table.vline(x: 1, start: 2, stroke: 3pt),
-      table.header([*Spreadsheet*], table.cell([*Excel*], colspan: 3), [*Excelerate*]),
-      [], [_Insertion_], [_Calculation_], [_Extraction_], [_Calculation_],
+      table.header([*Spreadsheet*], table.cell([*Excel*], colspan: 3), [*Excelerate*], [*Speedup*]),
+      [], [_Insertion_], [_Calculation_], [_Extraction_], [_Calculation_], [],
       table.hline(stroke: 3pt),
-      [Monthly Budget], [$9.07 times 10^3 plus.minus 6.75 times 10^0$], [$4.26 times 10^3 plus.minus 2.68 times 10^0$], [$3.18 times 10^3 plus.minus 2.39 times 10^0$], [$5.12 times 10^0 plus.minus 1.52 times 10^(-2)$],
-      [Holiday Budget], [$2.07 times 10^4 plus.minus 1.33 times 10^1$], [$2.32 times 10^3 plus.minus 3.27 times 10^0$], [$3.70 times 10^3 plus.minus 3.16 times 10^0$], [$2.65 times 10^0 plus.minus 3.75 times 10^(-3)$],
-      [Service invoice], [$1.07 times 10^4 plus.minus 8.84 times 10^0$], [$2.57 times 10^3 plus.minus 4.80 times 10^0$], [$4.18 times 10^3 plus.minus 6.34 times 10^0$], [$4.07 times 10^(-1) plus.minus 4.28 times 10^(-2)$],
-      [Retirement planner], [$1.01 times 10^4 plus.minus 8.36 times 10^0$], [$1.26 times 10^4 plus.minus 4.43 times 10^0$], [$3.25 times 10^3 plus.minus 1.92 times 10^0$], [$2.25 times 10^1 plus.minus 3.73 times 10^(-2) $],
-      [Actuarial Example], [$5.75 times 10^3 plus.minus 4.71 times 10^0$], [$8.24 times 10^3 plus.minus 6.26 times 10^0$], [$2.65 times 10^3 plus.minus 2.17 times 10^0$], [$1.45 times 10^0 plus.minus 2.00 times 10^(-3)$],
+      [Monthly Budget], [$9.07 times 10^3 plus.minus 6.75 times 10^0$], [$4.26 times 10^3 plus.minus 2.68 times 10^0$], [$3.18 times 10^3 plus.minus 2.39 times 10^0$], [$5.12 times 10^0 plus.minus 1.52 times 10^(-2)$], [$8.32 times 10^2$],
+      [Holiday Budget], [$2.07 times 10^4 plus.minus 1.33 times 10^1$], [$2.32 times 10^3 plus.minus 3.27 times 10^0$], [$3.70 times 10^3 plus.minus 3.16 times 10^0$], [$2.65 times 10^0 plus.minus 3.75 times 10^(-3)$], [$8.75 times 10^2$],
+      [Service invoice], [$1.07 times 10^4 plus.minus 8.84 times 10^0$], [$2.57 times 10^3 plus.minus 4.80 times 10^0$], [$4.18 times 10^3 plus.minus 6.34 times 10^0$], [$4.07 times 10^(-1) plus.minus 4.28 times 10^(-2)$], [$6.32 times 10^3$],
+      [Retirement planner], [$1.01 times 10^4 plus.minus 8.36 times 10^0$], [$1.26 times 10^4 plus.minus 4.43 times 10^0$], [$3.25 times 10^3 plus.minus 1.92 times 10^0$], [$2.25 times 10^1 plus.minus 3.73 times 10^(-2) $], [$5.60 times 10^2$],
+      [Actuarial Example], [$5.75 times 10^3 plus.minus 4.71 times 10^0$], [$8.24 times 10^3 plus.minus 6.26 times 10^0$], [$2.65 times 10^3 plus.minus 2.17 times 10^0$], [$1.45 times 10^0 plus.minus 2.00 times 10^(-3)$], [$5.68 times 10^3$],
     ),
     caption: [Overview of the experiment results that measure performance of Excelerate and Excel in microseconds ($mu s$). Results are the average of $n=100000$. We also show the standard error.],
     placement: auto,
   )<table:results:performance>
-]
+] 
 
 #figure({
   let complexity = (701, 85, 53, 5733, 3007)
@@ -118,12 +118,9 @@ The Execution time was recorded for the compiled C\# code and the Excel evaluati
 )<table:results:scatterplot>
 
 
-Excelerate manages to achieve microsecond performance on many spreadsheets, while Excel takes around 2 milliseconds for the calculations. An average speedup of 
-The Excel calculations take considerably longer than Excelerate. The overhead of the COM interface is included in these figures. An average speedup of $677 plus.minus 90$x was observed. This speedup excludes the huge speedup found in the _Service invoice_ spreadsheet of $6.31 times 10^3$.
+Excelerate manages to achieve microsecond performance on many spreadsheets, while Excel takes around 2 milliseconds for the calculations. The Excel calculations take considerably longer than Excelerate. @table:results:performance shows the average speedup for every spreadsheet. The overhead of the COM interface is included in these figures. Taking the geometric mean, an average speedup of 1710x was observed. However, this includes the extreme speedups for both the simple _Service Invoice_ and _Actuarial Example_. The _Service Invoice_ is extremely simple, and investigating the _Actuarial Example_, we see that the chain that is present within the spreadsheet was not detected by Excelerate and as such, very verbose code was created.
 
-@table:results:scatterplot shows the number of compute units against the time it takes to calculate for Excelerate and Excel. Apart from the _Actuarial Example_ (blue) spreadsheet, the relationship between compute time and the complexity seems linear. The plots in @table:results:scatterplot are similar, indicating that both methods handle the complexity in the same way. 
-
-Investigating the _Actuarial Example_, we see that the chain that is present within the spreadsheet was not detected by Excelerate and as such, very verbose code was created.
+@table:results:scatterplot shows the number of compute units against the time it takes to calculate for Excelerate and Excel. Apart from the _Actuarial Example_ (blue) spreadsheet, the relationship between compute time and the complexity seems linear. The plots in @table:results:scatterplot are similar, indicating that both methods handle the complexity in the same way. Based on the speedup values in @table:results:performance and the linear trends in @table:results:scatterplot, we infer a negative relationship between the speed-up and the complexity of the spreadsheet.
 
 An interesting observation can be made for the _warmup_ for the Excelerate compiler. The first run of the Excelerate compiler is often 250 times slower than the next run due to the overhead of the JIT compiler. We do not include this in the performance measures since it is only the first run and it significantly skews the variability.
 

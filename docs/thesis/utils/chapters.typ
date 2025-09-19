@@ -13,12 +13,15 @@
     ]
     
     let topLevelOutline = context {
+      let bib = query(bibliography.where().after(here())).at(0)
       let sections = heading.where(level: 2).after(here(), inclusive: false)
       let chapterNr = counter(heading).get().at(0)
-      if chapterNr != counter(heading).final().at(0) {
-        let nextChapter = query(heading.where(level: 1).after(here(), inclusive: false)).at(0)
-        sections = sections.before(nextChapter.location())
-      } else {
+      
+      if chapterNr != counter(heading).at(bib.location()).at(0) {
+        let possibleNextChapter = query(heading.where(level: 1).after(here(), inclusive: false))
+        let nextChapter = possibleNextChapter.at(0)
+        sections = sections.before(bib.location()).before(nextChapter.location())
+      } else {        
         let bib = query(bibliography.where().after(here())).at(0)
         sections = sections.before(bib.location())
       }

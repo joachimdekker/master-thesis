@@ -1,6 +1,6 @@
 = Conclusion
 
-In this thesis, we set out to create an Excel compiler that produces clear, human-readable C\# code using experimental compiler design. We introduce _structure-aware compilation_ that uses the structure of the Excel file as heuristic for more readable code. We found two structures commonly used in Excel files. We implemented a three-phase compiler called Excelerate that utilises this technique using a separate IR for each stage.
+In this thesis, we set out to create an Excel compiler that produces clear, human-readable C\# code using experimental compiler design. We introduce _structure-aware compilation_ that uses the structure of the Excel file as heuristic for more readable code. We found two structures commonly used in Excel files and implemented a three-phase compiler called Excelerate that utilises this technique using a separate IR for each stage.
 
 This study was based on three research questions:
 
@@ -8,6 +8,7 @@ This study was based on three research questions:
   [How can complex Excel formula compositions be mapped to human-readable C\# code?],
   [What are common excel structures and how can they be applied to optimise the compilation of excel formula compositions?],
   [What are the performance differences between Excelerate (compiled code) and Excel?],
+  [How can the mapping between excel formulas and code be verified?]
 )
 
 == Mapping Excel formulae to human-readable C\# code
@@ -17,19 +18,19 @@ This AST is used in the _Compute Phase_ to create the _Compute Grid_, the first 
 
 The _Compute Graph_ is then transformed to the _Code Model_ in the _Code Phase_ where we apply final transformations to make the code human readable. Finally, we emit the _Code Phase_ to C\# using the Roslyn Compiler.
 
-The results in @chapter-evaluation show strong evidence for semantic equality, suggesting the mapping is successful for the supported subset of the Excel functions and operators. A qualitative analysis was done on the readability of the code, resulting in improvements from 'basic' compilation without _structure-aware compilation_, providing evidence that the code is human-readable while concluding that improvements can still be made.
-
 == Common Excel Structures
 
 We identified two structures based on the Microsoft Create Excel Template Repository: the _Table_ and the _Chain_. The _Table_ models a conventional rectangular worksheet region. The _Chain_ is a table with rows that depend on previous rows. 
 
 During the _Structure Phase_, we detect these structures and use their information to inject semantics about the domain of the spreadsheet into the generated C\# code. Furthermore, the detection of these structures eliminates repetitive calculations---especially in chain structures. Excelerate uses separate classes to remove this code duplication from the final generation. As a result, the compiler optimises the code for readability and performance.
 
+== Verification
+
+We employed randomized differential testing against Excels native calculation engine in order to verify the semantic preservation between Excel and Excelerate. The results in @chapter-evaluation show strong evidence for semantic equality, suggesting the mapping is successful for the supported subset of the Excel functions and operators. Furthermore, a qualitative analysis was done on the readability of the code, resulting in improvements from 'basic' compilation without _structure-aware compilation_, providing evidence that the code is human-readable while concluding that improvements can still be made.
+
 == Performance differences
 
-The evaluation in @chapter-evaluation answered the final research question by conducting an experiment comparing Excel with compiled Excelerate code using randomised inputs. There were no discrepancies found in semantic equality. Furthermore, Excelerate was significantly faster, achieving an average speedup of 500x. We observed that the larger the Excel file, the lower the speedup. However, the overhead of Excelerate would decrease when the Excel file grew larger. This significant speedup over Excel allows Excelerate to substitute in business applications where performance is critical.
-
----
+The evaluation in @chapter-evaluation answered the final research question by conducting an experiment comparing Excel with compiled Excelerate code using randomised inputs. There were no discrepancies found in semantic equality. We observed a linear trend between spreadsheet complexity and calculation time. Furthermore, Excelerate was significantly faster, achieving an average speedup of $677 plus.minus 90$x. The omission of the COM interface played a big role in this. The significant speedup over Excel allows Excelerate to substitute in business applications where performance is critical.
 
 Due to scope limits, only a small subset of Excels functions and features was mapped. This limits generalisability of the results to all spreadsheets. Furthermore, due to the COM interface overhead that we have to use during testing, the results for speedup may be skewed if this interface is not used for communicating with Excel.
 

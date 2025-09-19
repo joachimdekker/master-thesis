@@ -171,7 +171,8 @@
       double monthlyBudgetReportF7 = monthlyBudgetReportE7 - (monthlyBudgetReportD7);
       return monthlyBudgetReportF7;
   }
-  ```)
+  ```),
+  
 )<full-code:discussion:fbm-old>
 
 
@@ -238,13 +239,13 @@ public class WithdrawalCalculatorD26G287
     public List<double> AdditionalWithdrawal { get; set; }
     public double WithdrawalAmountBaseCase { get; set; }
     public double BalanceBaseCase { get; set; }
-    public Dictionary<Int32,Double> _withdrawalAmountAtMemoization { get; set; } = new();
-    public Dictionary<Int32,Double> _balanceAtMemoization { get; set; } = new();
+    public Dictionary<int,double> _withdrawalAmountAtMemoization { get; set; } = new();
+    public Dictionary<int,double> _balanceAtMemoization { get; set; } = new();
 
-    public double InterestEarnedAt(Int32 counter) => BalanceAt(counter - (1)) - (WithdrawalAmountAt(counter - (1))) * (0.04d / (12d));
-    public double WithdrawalAmountAt(Int32 counter)
+    public double InterestEarnedAt(int counter) => BalanceAt(counter - (1)) - (WithdrawalAmountAt(counter - (1))) * (0.04d / (12d));
+    public double WithdrawalAmountAt(int counter)
     {
-        Int32 key = counter;
+        int key = counter;
         if (_withdrawalAmountAtMemoization.ContainsKey(key))
         {
             return _withdrawalAmountAtMemoization[key];
@@ -260,9 +261,9 @@ public class WithdrawalCalculatorD26G287
         return result;
     }
 
-    public double BalanceAt(Int32 counter)
+    public double BalanceAt(int counter)
     {
-        Int32 key = counter;
+        int key = counter;
         if (_balanceAtMemoization.ContainsKey(key))
         {
             return _balanceAtMemoization[key];
